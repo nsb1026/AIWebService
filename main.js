@@ -92,6 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- JSON Parser Logic ---
     const jsonInput = document.getElementById('json-input');
     const jsonOutput = document.getElementById('json-output');
+    const jsonStatus = document.getElementById('json-status');
 
     const sortJSON = (o) => {
         if (Array.isArray(o)) return o.map(sortJSON);
@@ -104,11 +105,39 @@ document.addEventListener('DOMContentLoaded', () => {
         return o;
     };
 
+    const validateJSON = () => {
+        const raw = jsonInput.value.trim();
+        if (!raw) {
+            jsonStatus.textContent = '';
+            jsonStatus.className = 'json-status';
+            return;
+        }
+
+        try {
+            JSON.parse(raw);
+            jsonStatus.textContent = '✓ Valid JSON';
+            jsonStatus.className = 'json-status valid';
+        } catch (e) {
+            jsonStatus.textContent = '✗ ' + e.message;
+            jsonStatus.className = 'json-status invalid';
+        }
+    };
+
     const handleJSON = (action) => {
         try {
             const raw = jsonInput.value.trim();
             if (!raw) return;
-            let obj = JSON.parse(raw);
+            
+            // Try to handle relaxed JSON (like JS objects) by using a safer alternative or just better error reporting
+            // For now, let's stick to JSON.parse but with much better error info
+            let obj;
+            try {
+                obj = JSON.parse(raw);
+            } catch (e) {
+                // Check if it looks like a JS object (missing quotes around keys)
+                // We can't safely use eval(), so we just report the error well
+                throw e;
+            }
 
             if (action === 'prettify') {
                 jsonOutput.value = JSON.stringify(obj, null, 2);
@@ -117,17 +146,29 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (action === 'minify') {
                 jsonOutput.value = JSON.stringify(obj);
             }
+            
+            validateJSON();
         } catch (e) {
-            jsonOutput.value = 'Error: Invalid JSON\n' + e.message;
+            jsonOutput.value = 'Error: Invalid JSON\n-------------------\n' + e.message;
+            validateJSON();
         }
     };
+
+    jsonInput.addEventListener('input', validateJSON);
 
     document.getElementById('btn-json-prettify').addEventListener('click', () => handleJSON('prettify'));
     document.getElementById('btn-json-sort').addEventListener('click', () => handleJSON('sort'));
     document.getElementById('btn-json-minify').addEventListener('click', () => handleJSON('minify'));
+    document.getElementById('btn-json-apply').addEventListener('click', () => {
+        if (jsonOutput.value && !jsonOutput.value.startsWith('Error:')) {
+            jsonInput.value = jsonOutput.value;
+            validateJSON();
+        }
+    });
     document.getElementById('btn-json-clear').addEventListener('click', () => {
         jsonInput.value = '';
         jsonOutput.value = '';
+        validateJSON();
     });
 
     // --- Copy to Clipboard ---
