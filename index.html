@@ -18,6 +18,9 @@
             <a href="#" class="nav-link active" data-view="encoder-view">Encoder</a>
             <a href="#" class="nav-link" data-view="json-view">JSON Parser</a>
             <a href="#" class="nav-link" data-view="html-view">HTML Formatter</a>
+            <a href="#" class="nav-link" data-view="about-view">About</a>
+            <a href="#" class="nav-link" data-view="privacy-view">Privacy</a>
+            <a href="#" class="nav-link" data-view="contact-view">Contact</a>
         </div>
     </nav>
 
@@ -26,7 +29,10 @@
         <section id="encoder-view" class="view active">
             <header class="view-header">
                 <h1>String Encoder / Decoder</h1>
-                <p>Real-time processing for various formats and ciphers.</p>
+                <p>Real-time processing for various formats and ciphers. All processing happens in your browser, ensuring data security and privacy.</p>
+                <div class="tool-description">
+                    <p>Convert your strings into URL-safe formats, escape HTML for secure rendering, or use ciphers like ROT13 and Atbash. Perfect for developers debugging data or testing character encodings.</p>
+                </div>
             </header>
 
             <div class="input-section">
@@ -127,7 +133,10 @@
         <section id="json-view" class="view">
             <header class="view-header">
                 <h1>JSON Parser & Formatter</h1>
-                <p>Validate, prettify, and sort your JSON data.</p>
+                <p>Validate, prettify, and sort your JSON data. A powerful tool for debugging APIs and cleaning up data structures.</p>
+                <div class="tool-description">
+                    <p>Enter your raw JSON to validate its structure, format it for readability with 2-space indentation, or sort the keys alphabetically. All parsing occurs client-side.</p>
+                </div>
             </header>
 
             <div class="parser-container">
@@ -159,7 +168,10 @@
         <section id="html-view" class="view">
             <header class="view-header">
                 <h1>HTML Formatter</h1>
-                <p>Prettify or minify your HTML markup.</p>
+                <p>Prettify or minify your HTML markup. Improve the readability of your code or compress it for production.</p>
+                <div class="tool-description">
+                    <p>Clean up messy HTML code instantly. Our formatter handles tag nesting and indentation for a professional code look.</p>
+                </div>
             </header>
 
             <div class="parser-container">
@@ -185,10 +197,73 @@
                 </div>
             </div>
         </section>
+
+        <!-- About View -->
+        <section id="about-view" class="view">
+            <header class="view-header">
+                <h1>About Parse Utils</h1>
+                <p>A comprehensive developer utility platform.</p>
+            </header>
+            <div class="content-card">
+                <h3>Our Mission</h3>
+                <p>Parse Utils was created to provide developers with a fast, secure, and reliable way to handle common data transformations. We believe in high-quality tools that run entirely in the browser, ensuring that your sensitive data never leaves your machine.</p>
+                <h3>Why use Parse Utils?</h3>
+                <ul>
+                    <li><strong>Privacy First:</strong> No data is sent to any server. All transformations happen locally.</li>
+                    <li><strong>Real-time Feedback:</strong> See results as you type.</li>
+                    <li><strong>Developer Focused:</strong> Optimized for the most common tasks like JSON parsing and Base64 encoding.</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Privacy View -->
+        <section id="privacy-view" class="view">
+            <header class="view-header">
+                <h1>Privacy Policy</h1>
+                <p>How we handle your data.</p>
+            </header>
+            <div class="content-card">
+                <h3>Data Collection</h3>
+                <p>Parse Utils does not collect, store, or share any of the text or data you input into our tools. All processing is performed within your browser using JavaScript.</p>
+                <h3>Third-Party Services</h3>
+                <p>We use Google AdSense to display advertisements, which helps keep our tools free to use. AdSense may use cookies to serve personalized ads based on your visit to this site and other sites on the internet.</p>
+                <h3>Analytics</h3>
+                <p>We may use basic analytics to understand site traffic and improve our user experience, but we never track the content you process.</p>
+            </div>
+        </section>
+
+        <!-- Contact View -->
+        <section id="contact-view" class="view">
+            <header class="view-header">
+                <h1>Contact Us</h1>
+                <p>We'd love to hear your feedback or feature requests.</p>
+            </header>
+            <div class="contact-container">
+                <form action="https://formspree.io/f/xjgapyzr" method="POST" class="contact-form">
+                    <div class="form-group">
+                        <label for="email">Your email:</label>
+                        <input type="email" name="email" id="email" required placeholder="example@domain.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="message">Your message:</label>
+                        <textarea name="message" id="message" required placeholder="How can we help you?"></textarea>
+                    </div>
+                    <button type="submit" class="primary-btn submit-btn">Send Message</button>
+                </form>
+            </div>
+        </section>
     </main>
 
     <footer class="site-footer">
-        <p>&copy; 2026 Parse Utils - Optimized for Developers.</p>
+        <div class="footer-content">
+            <div class="footer-brand">Parse Utils</div>
+            <div class="footer-links">
+                <a href="#" class="footer-link" data-view="about-view">About Us</a>
+                <a href="#" class="footer-link" data-view="privacy-view">Privacy Policy</a>
+                <a href="#" class="footer-link" data-view="contact-view">Contact Us</a>
+            </div>
+            <p class="copyright">&copy; 2026 Parse Utils - Optimized for Developers.</p>
+        </div>
     </footer>
 
     <script src="main.js"></script>

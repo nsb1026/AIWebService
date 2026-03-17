@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- View Switching Logic ---
-    const navLinks = document.querySelectorAll('.nav-link');
+    const navLinks = document.querySelectorAll('.nav-link, .footer-link');
     const views = document.querySelectorAll('.view');
 
     navLinks.forEach(link => {
@@ -8,12 +8,19 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const targetViewId = link.getAttribute('data-view');
 
-            navLinks.forEach(l => l.classList.remove('active'));
-            link.classList.add('active');
+            // Remove active from all top-nav links
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            
+            // Add active to top-nav link corresponding to the target view
+            const topNavLink = document.querySelector(`.nav-link[data-view="${targetViewId}"]`);
+            if (topNavLink) topNavLink.classList.add('active');
 
             views.forEach(v => {
                 v.classList.toggle('active', v.id === targetViewId);
             });
+
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         });
     });
 

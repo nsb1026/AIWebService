@@ -47,6 +47,7 @@ body {
 .nav-links {
     display: flex;
     gap: 1.5rem;
+    overflow-x: auto;
 }
 
 .nav-link {
@@ -56,6 +57,7 @@ body {
     font-size: 0.9rem;
     transition: color 0.2s;
     padding: 0.5rem 0;
+    white-space: nowrap;
 }
 
 .nav-link:hover, .nav-link.active {
@@ -102,6 +104,48 @@ body {
 .view-header p {
     color: var(--text-muted);
     font-size: 1rem;
+    max-width: 800px;
+}
+
+.tool-description {
+    margin-top: 1rem;
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    border-left: 4px solid var(--accent-color);
+    padding-left: 1rem;
+    background: white;
+    padding: 1rem;
+    border-radius: 0 8px 8px 0;
+    box-shadow: var(--shadow);
+}
+
+/* Content Card (About/Privacy) */
+.content-card {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+    line-height: 1.7;
+}
+
+.content-card h3 {
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    color: var(--text-main);
+    font-size: 1.25rem;
+}
+
+.content-card h3:first-child {
+    margin-top: 0;
+}
+
+.content-card ul {
+    padding-left: 1.5rem;
+}
+
+.content-card li {
+    margin-bottom: 0.75rem;
 }
 
 /* Input Section */
@@ -271,8 +315,8 @@ body {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     gap: 1.5rem;
-    height: calc(100vh - 300px);
-    min-height: 750px;
+    height: calc(100vh - 350px);
+    min-height: 700px;
     align-items: stretch;
 }
 
@@ -286,7 +330,6 @@ body {
     flex: 1;
     padding: 1.25rem;
     border-radius: 12px;
-    min-height:700px;
     border: 1px solid var(--border-color);
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.9rem;
@@ -325,15 +368,106 @@ body {
     width: 140px;
 }
 
+/* Contact Us */
+.contact-container {
+    max-width: 600px;
+    margin: 0 auto;
+    background: white;
+    padding: 2.5rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+}
+
+.contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.form-group input, .form-group textarea {
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    background-color: #f9fafb;
+}
+
+.form-group textarea {
+    height: 150px;
+    resize: vertical;
+}
+
+.form-group input:focus, .form-group textarea:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.submit-btn {
+    width: 100%;
+    margin-top: 0.5rem;
+}
+
 /* Footer */
 .site-footer {
-    text-align: center;
-    padding: 2.5rem;
+    padding: 4rem 2rem 2.5rem;
     color: var(--text-muted);
     font-size: 0.875rem;
     border-top: 1px solid var(--border-color);
     background: white;
-    margin-top: 4rem;
+    margin-top: 5rem;
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+}
+
+.footer-brand {
+    font-size: 1.25rem;
+    font-weight: 800;
+    background: linear-gradient(to right, #818cf8, #c084fc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.footer-links {
+    display: flex;
+    gap: 2rem;
+}
+
+.footer-link {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.footer-link:hover {
+    color: var(--accent-color);
+}
+
+.copyright {
+    margin-top: 1rem;
+    opacity: 0.7;
 }
 
 @media (max-width: 1000px) {
@@ -347,5 +481,16 @@ body {
     }
     .parser-controls button {
         flex: 1 1 150px;
+    }
+}
+
+@media (max-width: 600px) {
+    .footer-links {
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+    .top-nav {
+        padding: 0.75rem 1rem;
     }
 }
