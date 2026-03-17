@@ -1,36 +1,65 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // --- View Switching Logic ---
+    const navLinks = document.querySelectorAll('.nav-link');
+    const views = document.querySelectorAll('.view');
+
+    navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetViewId = link.getAttribute('data-view');
+
+            navLinks.forEach(l => l.classList.remove('active'));
+            link.classList.add('active');
+
+            views.forEach(v => {
+                v.classList.toggle('active', v.id === targetViewId);
+            });
+        });
+    });
+
+    // --- Encoder Logic ---
     const mainInput = document.getElementById('main-input');
-    const outputs = {
+    const stats = {
+        chars: document.getElementById('stat-chars'),
+        words: document.getElementById('stat-words'),
+        lines: document.getElementById('stat-lines')
+    };
+
+    const encoderOutputs = {
         'url-encode': (s) => encodeURIComponent(s),
-        'url-decode': (s) => {
-            try { return decodeURIComponent(s); }
-            catch (e) { return 'Error: Invalid URL encoding'; }
-        },
         'html-escape': (s) => {
             const div = document.createElement('div');
             div.textContent = s;
             return div.innerHTML;
         },
-        'html-unescape': (s) => {
-            const div = document.createElement('div');
-            div.innerHTML = s;
-            return div.textContent;
+        'unicode-escape': (s) => {
+            return s.split('').map(char => {
+                const hex = char.charCodeAt(0).toString(16).padStart(4, '0');
+                return `\\u${hex}`;
+            }).join('');
         },
         'base64-encode': (s) => {
             try { return btoa(unescape(encodeURIComponent(s))); }
-            catch (e) { return 'Error: Cannot encode to Base64'; }
+            catch (e) { return 'Error'; }
         },
-        'base64-decode': (s) => {
-            try { return decodeURIComponent(escape(atob(s))); }
-            catch (e) { return 'Error: Invalid Base64'; }
+        'binary-string': (s) => {
+            return s.split('').map(char => char.charCodeAt(0).toString(2).padStart(8, '0')).join(' ');
         },
         'hex-encode': (s) => {
             return Array.from(s).map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join(' ');
         },
-        'upper-case': (s) => s.toUpperCase(),
-        'lower-case': (s) => s.toLowerCase(),
-        'title-case': (s) => {
-            return s.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+        'rot13': (s) => {
+            return s.replace(/[a-zA-Z]/g, (c) => {
+                return String.fromCharCode((c <= "Z" ? 90 : 122) >= (c = c.charCodeAt(0) + 13) ? c : c - 26);
+            });
+        },
+        'atbash': (s) => {
+            return s.replace(/[a-zA-Z]/g, (c) => {
+                const code = c.charCodeAt(0);
+                if (code >= 65 && code <= 90) return String.fromCharCode(155 - code);
+                if (code >= 97 && code <= 122) return String.fromCharCode(219 - code);
+                return c;
+            });
         },
         'camel-case': (s) => {
             return s.replace(/(?:^\w|[A-Z]|\b\w)/g, (word, index) => {
@@ -40,53 +69,68 @@ document.addEventListener('DOMContentLoaded', () => {
         'snake-case': (s) => {
             const matches = s.match(/[A-Z]{2,}(?=[A-Z][a-z]+[0-9]*|\b)|[A-Z]?[a-z]+[0-9]*|[A-Z]|[0-9]+/g);
             return matches ? matches.map(x => x.toLowerCase()).join('_') : s.toLowerCase();
-        },
-        'json-prettify': (s) => {
-            try { return JSON.stringify(JSON.parse(s), null, 2); }
-            catch (e) { return 'Error: Invalid JSON'; }
-        },
-        'json-sort': (s) => {
-            try {
-                const obj = JSON.parse(s);
-                const sortObject = (o) => {
-                    if (Array.isArray(o)) return o.map(sortObject);
-                    if (o !== null && typeof o === 'object') {
-                        return Object.keys(o).sort().reduce((acc, key) => {
-                            acc[key] = sortObject(o[key]);
-                            return acc;
-                        }, {});
-                    }
-                    return o;
-                };
-                return JSON.stringify(sortObject(obj), null, 2);
-            } catch (e) { return 'Error: Invalid JSON'; }
-        },
-        'json-minify': (s) => {
-            try { return JSON.stringify(JSON.parse(s)); }
-            catch (e) { return 'Error: Invalid JSON'; }
         }
     };
 
-    const updateOutputs = () => {
-        const value = mainInput.value;
-        if (!value) {
-            Object.keys(outputs).forEach(id => {
-                document.getElementById(id).value = '';
-            });
-            return;
-        }
+    const updateEncoder = () => {
+        const val = mainInput.value;
+        
+        // Update Stats
+        stats.chars.textContent = val.length;
+        stats.words.textContent = val.trim() ? val.trim().split(/\s+/).length : 0;
+        stats.lines.textContent = val ? val.split(/\r\n|\r|\n/).length : 0;
 
-        Object.entries(outputs).forEach(([id, func]) => {
-            const element = document.getElementById(id);
-            if (element) {
-                element.value = func(value);
-            }
+        // Update Outputs
+        Object.entries(encoderOutputs).forEach(([id, func]) => {
+            const el = document.getElementById(id);
+            if (el) el.value = val ? func(val) : '';
         });
     };
 
-    mainInput.addEventListener('input', updateOutputs);
+    mainInput.addEventListener('input', updateEncoder);
 
-    // Copy to clipboard functionality
+    // --- JSON Parser Logic ---
+    const jsonInput = document.getElementById('json-input');
+    const jsonOutput = document.getElementById('json-output');
+
+    const sortJSON = (o) => {
+        if (Array.isArray(o)) return o.map(sortJSON);
+        if (o !== null && typeof o === 'object') {
+            return Object.keys(o).sort().reduce((acc, key) => {
+                acc[key] = sortJSON(o[key]);
+                return acc;
+            }, {});
+        }
+        return o;
+    };
+
+    const handleJSON = (action) => {
+        try {
+            const raw = jsonInput.value.trim();
+            if (!raw) return;
+            let obj = JSON.parse(raw);
+
+            if (action === 'prettify') {
+                jsonOutput.value = JSON.stringify(obj, null, 2);
+            } else if (action === 'sort') {
+                jsonOutput.value = JSON.stringify(sortJSON(obj), null, 2);
+            } else if (action === 'minify') {
+                jsonOutput.value = JSON.stringify(obj);
+            }
+        } catch (e) {
+            jsonOutput.value = 'Error: Invalid JSON\n' + e.message;
+        }
+    };
+
+    document.getElementById('btn-json-prettify').addEventListener('click', () => handleJSON('prettify'));
+    document.getElementById('btn-json-sort').addEventListener('click', () => handleJSON('sort'));
+    document.getElementById('btn-json-minify').addEventListener('click', () => handleJSON('minify'));
+    document.getElementById('btn-json-clear').addEventListener('click', () => {
+        jsonInput.value = '';
+        jsonOutput.value = '';
+    });
+
+    // --- Copy to Clipboard ---
     document.querySelectorAll('.copy-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const targetId = btn.getAttribute('data-target');
@@ -107,6 +151,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Initial run in case there's content on load
-    updateOutputs();
+    // Initial runs
+    updateEncoder();
 });
