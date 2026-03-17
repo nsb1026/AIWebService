@@ -6,6 +6,10 @@
     <title>Parse Utils - Modern Encoding & Formatting Tools</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3936951598153524"
+     crossorigin="anonymous"></script>
+    <meta name="google-adsense-account" content="ca-pub-3936951598153524">
 </head>
 <body class="theme-modern">
     <nav class="top-nav">
@@ -144,11 +148,9 @@
                 <div class="parser-output-side">
                     <div class="input-header">
                         <label>Formatted Output</label>
+                        <button class="copy-btn btn-small" data-target="json-output">Copy Result</button>
                     </div>
-                    <div class="output-with-button large-output">
-                        <textarea id="json-output" readonly placeholder="Formatted output will appear here..."></textarea>
-                        <button class="copy-btn floating-copy" data-target="json-output">Copy Result</button>
-                    </div>
+                    <textarea id="json-output" readonly placeholder="Formatted output will appear here..."></textarea>
                 </div>
             </div>
         </section>
@@ -177,11 +179,9 @@
                 <div class="parser-output-side">
                     <div class="input-header">
                         <label>Formatted Output</label>
+                        <button class="copy-btn btn-small" data-target="html-output">Copy Result</button>
                     </div>
-                    <div class="output-with-button large-output">
-                        <textarea id="html-output" readonly placeholder="Formatted output will appear here..."></textarea>
-                        <button class="copy-btn floating-copy" data-target="html-output">Copy Result</button>
-                    </div>
+                    <textarea id="html-output" readonly placeholder="Formatted output will appear here..."></textarea>
                 </div>
             </div>
         </section>

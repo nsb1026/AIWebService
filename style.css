@@ -325,18 +325,6 @@ body {
     width: 140px;
 }
 
-.large-output {
-    position: relative;
-    height: 100%;
-}
-
-.floating-copy {
-    position: absolute;
-    top: 3.5rem;
-    right: 1.5rem;
-    box-shadow: var(--shadow-lg);
-}
-
 /* Footer */
 .site-footer {
     text-align: center;
