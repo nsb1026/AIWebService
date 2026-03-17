@@ -74,13 +74,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const updateEncoder = () => {
         const val = mainInput.value;
-        
-        // Update Stats
         stats.chars.textContent = val.length;
         stats.words.textContent = val.trim() ? val.trim().split(/\s+/).length : 0;
         stats.lines.textContent = val ? val.split(/\r\n|\r|\n/).length : 0;
 
-        // Update Outputs
         Object.entries(encoderOutputs).forEach(([id, func]) => {
             const el = document.getElementById(id);
             if (el) el.value = val ? func(val) : '';
@@ -88,6 +85,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     mainInput.addEventListener('input', updateEncoder);
+    document.getElementById('btn-encoder-clear').addEventListener('click', () => {
+        mainInput.value = '';
+        updateEncoder();
+    });
 
     // --- JSON Parser Logic ---
     const jsonInput = document.getElementById('json-input');
@@ -112,7 +113,6 @@ document.addEventListener('DOMContentLoaded', () => {
             jsonStatus.className = 'json-status';
             return;
         }
-
         try {
             JSON.parse(raw);
             jsonStatus.textContent = '✓ Valid JSON';
@@ -127,26 +127,10 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const raw = jsonInput.value.trim();
             if (!raw) return;
-            
-            // Try to handle relaxed JSON (like JS objects) by using a safer alternative or just better error reporting
-            // For now, let's stick to JSON.parse but with much better error info
-            let obj;
-            try {
-                obj = JSON.parse(raw);
-            } catch (e) {
-                // Check if it looks like a JS object (missing quotes around keys)
-                // We can't safely use eval(), so we just report the error well
-                throw e;
-            }
-
-            if (action === 'prettify') {
-                jsonOutput.value = JSON.stringify(obj, null, 2);
-            } else if (action === 'sort') {
-                jsonOutput.value = JSON.stringify(sortJSON(obj), null, 2);
-            } else if (action === 'minify') {
-                jsonOutput.value = JSON.stringify(obj);
-            }
-            
+            let obj = JSON.parse(raw);
+            if (action === 'prettify') jsonOutput.value = JSON.stringify(obj, null, 2);
+            else if (action === 'sort') jsonOutput.value = JSON.stringify(sortJSON(obj), null, 2);
+            else if (action === 'minify') jsonOutput.value = JSON.stringify(obj);
             validateJSON();
         } catch (e) {
             jsonOutput.value = 'Error: Invalid JSON\n-------------------\n' + e.message;
@@ -155,7 +139,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     jsonInput.addEventListener('input', validateJSON);
-
     document.getElementById('btn-json-prettify').addEventListener('click', () => handleJSON('prettify'));
     document.getElementById('btn-json-sort').addEventListener('click', () => handleJSON('sort'));
     document.getElementById('btn-json-minify').addEventListener('click', () => handleJSON('minify'));
@@ -171,18 +154,55 @@ document.addEventListener('DOMContentLoaded', () => {
         validateJSON();
     });
 
+    // --- HTML Formatter Logic ---
+    const htmlInput = document.getElementById('html-input');
+    const htmlOutput = document.getElementById('html-output');
+    const htmlStatus = document.getElementById('html-status');
+
+    const formatHTML = (html) => {
+        let formatted = '';
+        let indent = '';
+        const tab = '    ';
+        html.split(/>\s*</).forEach(function(element) {
+            if (element.match(/^\/\w/)) indent = indent.substring(tab.length);
+            formatted += indent + '<' + element + '>\r\n';
+            if (element.match(/^<?\w[^>]*[^\/]$/) && !element.match(/^(?:area|base|br|col|command|embed|hr|img|input|keygen|link|meta|param|source|track|wbr)$/i)) {
+                indent += tab;
+            }
+        });
+        return formatted.substring(1, formatted.length - 3);
+    };
+
+    const handleHTML = (action) => {
+        const raw = htmlInput.value.trim();
+        if (!raw) return;
+        if (action === 'prettify') {
+            htmlOutput.value = formatHTML(raw);
+        } else if (action === 'minify') {
+            htmlOutput.value = raw.replace(/\s+/g, ' ').replace(/>\s+</g, '><');
+        }
+    };
+
+    document.getElementById('btn-html-prettify').addEventListener('click', () => handleHTML('prettify'));
+    document.getElementById('btn-html-minify').addEventListener('click', () => handleHTML('minify'));
+    document.getElementById('btn-html-apply').addEventListener('click', () => {
+        if (htmlOutput.value) htmlInput.value = htmlOutput.value;
+    });
+    document.getElementById('btn-html-clear').addEventListener('click', () => {
+        htmlInput.value = '';
+        htmlOutput.value = '';
+    });
+
     // --- Copy to Clipboard ---
     document.querySelectorAll('.copy-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const targetId = btn.getAttribute('data-target');
             const input = document.getElementById(targetId);
-            
             if (input && input.value) {
                 navigator.clipboard.writeText(input.value).then(() => {
                     const originalText = btn.textContent;
                     btn.textContent = 'Copied!';
                     btn.classList.add('copied');
-                    
                     setTimeout(() => {
                         btn.textContent = originalText;
                         btn.classList.remove('copied');

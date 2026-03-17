@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Parse Utils - Modern Encoding & JSON Tool</title>
+    <title>Parse Utils - Modern Encoding & Formatting Tools</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 </head>
 <body class="theme-modern">
     <nav class="top-nav">
@@ -12,6 +13,7 @@
         <div class="nav-links">
             <a href="#" class="nav-link active" data-view="encoder-view">Encoder</a>
             <a href="#" class="nav-link" data-view="json-view">JSON Parser</a>
+            <a href="#" class="nav-link" data-view="html-view">HTML Formatter</a>
         </div>
     </nav>
 
@@ -24,6 +26,10 @@
             </header>
 
             <div class="input-section">
+                <div class="input-header">
+                    <label>Main Input</label>
+                    <button id="btn-encoder-clear" class="btn-small danger-btn">Clear</button>
+                </div>
                 <textarea id="main-input" placeholder="Type or paste your string here..."></textarea>
                 <div id="stats" class="stats-bar">
                     <span>Characters: <b id="stat-chars">0</b></span>
@@ -120,21 +126,25 @@
                 <p>Validate, prettify, and sort your JSON data.</p>
             </header>
 
-            <div class="json-container">
-                <div class="json-input-side">
-                    <label>Raw JSON Input</label>
+            <div class="parser-container">
+                <div class="parser-input-side">
+                    <div class="input-header">
+                        <label>Raw JSON Input</label>
+                        <button id="btn-json-clear" class="btn-small danger-btn">Clear</button>
+                    </div>
                     <textarea id="json-input" placeholder="Paste your raw JSON here..."></textarea>
                     <div id="json-status" class="json-status"></div>
                 </div>
-                <div class="json-controls">
+                <div class="parser-controls">
                     <button id="btn-json-prettify" class="primary-btn">Prettify (2-space)</button>
                     <button id="btn-json-sort" class="primary-btn">Sort Keys (Asc)</button>
                     <button id="btn-json-minify" class="secondary-btn">Minify</button>
                     <button id="btn-json-apply" class="secondary-btn">Apply to Input</button>
-                    <button id="btn-json-clear" class="danger-btn">Clear</button>
                 </div>
-                <div class="json-output-side">
-                    <label>Formatted Output</label>
+                <div class="parser-output-side">
+                    <div class="input-header">
+                        <label>Formatted Output</label>
+                    </div>
                     <div class="output-with-button large-output">
                         <textarea id="json-output" readonly placeholder="Formatted output will appear here..."></textarea>
                         <button class="copy-btn floating-copy" data-target="json-output">Copy Result</button>
@@ -142,10 +152,43 @@
                 </div>
             </div>
         </section>
+
+        <!-- HTML Formatter View -->
+        <section id="html-view" class="view">
+            <header class="view-header">
+                <h1>HTML Formatter</h1>
+                <p>Prettify or minify your HTML markup.</p>
+            </header>
+
+            <div class="parser-container">
+                <div class="parser-input-side">
+                    <div class="input-header">
+                        <label>Raw HTML Input</label>
+                        <button id="btn-html-clear" class="btn-small danger-btn">Clear</button>
+                    </div>
+                    <textarea id="html-input" placeholder="Paste your raw HTML here..."></textarea>
+                    <div id="html-status" class="json-status"></div>
+                </div>
+                <div class="parser-controls">
+                    <button id="btn-html-prettify" class="primary-btn">Prettify</button>
+                    <button id="btn-html-minify" class="secondary-btn">Minify</button>
+                    <button id="btn-html-apply" class="secondary-btn">Apply to Input</button>
+                </div>
+                <div class="parser-output-side">
+                    <div class="input-header">
+                        <label>Formatted Output</label>
+                    </div>
+                    <div class="output-with-button large-output">
+                        <textarea id="html-output" readonly placeholder="Formatted output will appear here..."></textarea>
+                        <button class="copy-btn floating-copy" data-target="html-output">Copy Result</button>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
 
     <footer class="site-footer">
-        <p>&copy; 2026 Parse Utils - Clean, Fast, Secure.</p>
+        <p>&copy; 2026 Parse Utils - Optimized for Developers.</p>
     </footer>
 
     <script src="main.js"></script>
