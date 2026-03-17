@@ -1,14 +1,150 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hello World</title>
-  <link href='/style.css' rel='stylesheet'>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>String Dencode Clone</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Hello, world!</h1>
-  <button onclick="console.log('hello');">Press me</button>
-  <script defer type="text/javascript" src="/main.js"></script>
+    <header>
+        <h1>String Dencode</h1>
+        <p>Real-time string encoding and decoding tool.</p>
+    </header>
+
+    <main class="container">
+        <section class="input-section">
+            <textarea id="main-input" placeholder="Type or paste your string here..."></textarea>
+        </section>
+
+        <section class="output-grid">
+            <!-- Web Encodings -->
+            <div class="output-group">
+                <h3>Web Encodings</h3>
+                <div class="field">
+                    <label>URL Encode</label>
+                    <div class="input-with-button">
+                        <input type="text" id="url-encode" readonly>
+                        <button class="copy-btn" data-target="url-encode">Copy</button>
+                    </div>
+                </div>
+                <div class="field">
+                    <label>URL Decode</label>
+                    <div class="input-with-button">
+                        <input type="text" id="url-decode" readonly>
+                        <button class="copy-btn" data-target="url-decode">Copy</button>
+                    </div>
+                </div>
+                <div class="field">
+                    <label>HTML Escape</label>
+                    <div class="input-with-button">
+                        <input type="text" id="html-escape" readonly>
+                        <button class="copy-btn" data-target="html-escape">Copy</button>
+                    </div>
+                </div>
+                <div class="field">
+                    <label>HTML Unescape</label>
+                    <div class="input-with-button">
+                        <input type="text" id="html-unescape" readonly>
+                        <button class="copy-btn" data-target="html-unescape">Copy</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Representations -->
+            <div class="output-group">
+                <h3>Data Representations</h3>
+                <div class="field">
+                    <label>Base64 Encode</label>
+                    <div class="input-with-button">
+                        <input type="text" id="base64-encode" readonly>
+                        <button class="copy-btn" data-target="base64-encode">Copy</button>
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Base64 Decode</label>
+                    <div class="input-with-button">
+                        <input type="text" id="base64-decode" readonly>
+                        <button class="copy-btn" data-target="base64-decode">Copy</button>
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Hexadecimal Encode</label>
+                    <div class="input-with-button">
+                        <input type="text" id="hex-encode" readonly>
+                        <button class="copy-btn" data-target="hex-encode">Copy</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Text Transformations -->
+            <div class="output-group">
+                <h3>Case Transformations</h3>
+                <div class="field">
+                    <label>UPPER CASE</label>
+                    <div class="input-with-button">
+                        <input type="text" id="upper-case" readonly>
+                        <button class="copy-btn" data-target="upper-case">Copy</button>
+                    </div>
+                </div>
+                <div class="field">
+                    <label>lower case</label>
+                    <div class="input-with-button">
+                        <input type="text" id="lower-case" readonly>
+                        <button class="copy-btn" data-target="lower-case">Copy</button>
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Title Case</label>
+                    <div class="input-with-button">
+                        <input type="text" id="title-case" readonly>
+                        <button class="copy-btn" data-target="title-case">Copy</button>
+                    </div>
+                </div>
+                <div class="field">
+                    <label>camelCase</label>
+                    <div class="input-with-button">
+                        <input type="text" id="camel-case" readonly>
+                        <button class="copy-btn" data-target="camel-case">Copy</button>
+                    </div>
+                </div>
+                <div class="field">
+                    <label>snake_case</label>
+                    <div class="input-with-button">
+                        <input type="text" id="snake-case" readonly>
+                        <button class="copy-btn" data-target="snake-case">Copy</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- JSON Tools -->
+            <div class="output-group">
+                <h3>JSON Tools</h3>
+                <div class="field">
+                    <label>Prettify (2-space)</label>
+                    <div class="input-with-button">
+                        <input type="text" id="json-prettify" readonly>
+                        <button class="copy-btn" data-target="json-prettify">Copy</button>
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Sort Keys (Ascending)</label>
+                    <div class="input-with-button">
+                        <input type="text" id="json-sort" readonly>
+                        <button class="copy-btn" data-target="json-sort">Copy</button>
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Minify</label>
+                    <div class="input-with-button">
+                        <input type="text" id="json-minify" readonly>
+                        <button class="copy-btn" data-target="json-minify">Copy</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="main.js"></script>
 </body>
 </html>
