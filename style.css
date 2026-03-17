@@ -154,6 +154,7 @@ body {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 0.5rem;
+    height: 32px; /* Fixed height for symmetry */
 }
 
 .input-header label {
@@ -315,8 +316,8 @@ body {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     gap: 1.5rem;
-    height: calc(100vh - 350px);
-    min-height: 700px;
+    height: 70vh;
+    min-height: 750px;
     align-items: stretch;
 }
 
@@ -346,11 +347,14 @@ body {
 }
 
 .json-status {
-    margin-top: 0.75rem;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-weight: 600;
-    padding: 0.5rem;
-    border-radius: 6px;
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .json-status.valid { color: #059669; background: #ecfdf5; }
