@@ -200,13 +200,62 @@ document.addEventListener('DOMContentLoaded', () => {
         htmlOutput.value = '';
     });
 
+    // --- Diff Checker Logic ---
+    const diffInputOriginal = document.getElementById('diff-input-original');
+    const diffInputModified = document.getElementById('diff-input-modified');
+    const diffOutput = document.getElementById('diff-output');
+    const diffOutputRaw = document.getElementById('diff-output-raw');
+
+    const computeDiff = () => {
+        const original = diffInputOriginal.value.split('\n');
+        const modified = diffInputModified.value.split('\n');
+        
+        if (!diffInputOriginal.value && !diffInputModified.value) {
+            diffOutput.innerHTML = '<p class="placeholder-text">Enter text in both boxes above to see the difference.</p>';
+            diffOutputRaw.value = '';
+            return;
+        }
+
+        let resultHTML = '';
+        let resultRaw = '';
+        const maxLines = Math.max(original.length, modified.length);
+
+        for (let i = 0; i < maxLines; i++) {
+            const lineOrig = original[i] || '';
+            const lineMod = modified[i] || '';
+
+            if (lineOrig === lineMod) {
+                resultHTML += `<div>${lineOrig || '&nbsp;'}</div>`;
+                resultRaw += lineOrig + '\n';
+            } else {
+                if (i < original.length) {
+                    resultHTML += `<div class="diff-removed">- ${lineOrig || '&nbsp;'}</div>`;
+                    resultRaw += `- ${lineOrig}\n`;
+                }
+                if (i < modified.length) {
+                    resultHTML += `<div class="diff-added">+ ${lineMod || '&nbsp;'}</div>`;
+                    resultRaw += `+ ${lineMod}\n`;
+                }
+            }
+        }
+
+        diffOutput.innerHTML = resultHTML;
+        diffOutputRaw.value = resultRaw;
+    };
+
+    diffInputOriginal.addEventListener('input', computeDiff);
+    diffInputModified.addEventListener('input', computeDiff);
+    document.getElementById('btn-diff-clear-original').addEventListener('click', () => { diffInputOriginal.value = ''; computeDiff(); });
+    document.getElementById('btn-diff-clear-modified').addEventListener('click', () => { diffInputModified.value = ''; computeDiff(); });
+
     // --- Copy to Clipboard ---
     document.querySelectorAll('.copy-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const targetId = btn.getAttribute('data-target');
             const input = document.getElementById(targetId);
-            if (input && input.value) {
-                navigator.clipboard.writeText(input.value).then(() => {
+            if (input && (input.value || input.innerText)) {
+                const textToCopy = input.value || input.innerText;
+                navigator.clipboard.writeText(textToCopy).then(() => {
                     const originalText = btn.textContent;
                     btn.textContent = 'Copied!';
                     btn.classList.add('copied');
