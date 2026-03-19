@@ -539,17 +539,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const startTime = Date.now();
-            const response = await fetch('/api/proxy', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    url, 
-                    method, 
-                    headers, 
-                    body,
+            
+            let response;
+            const proxyUrl = '/api/proxy';
+            
+            if (['GET', 'HEAD'].includes(method)) {
+                // Use GET for the proxy call if target method is GET/HEAD
+                const params = new URLSearchParams({
+                    url,
+                    method,
+                    headers: JSON.stringify(headers),
                     sslVerify: apiSSLVerify.checked
-                })
-            });
+                });
+                response = await fetch(`${proxyUrl}?${params.toString()}`);
+            } else {
+                // Use POST for other methods (POST, PUT, DELETE, etc.)
+                response = await fetch(proxyUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        url, 
+                        method, 
+                        headers, 
+                        body,
+                        sslVerify: apiSSLVerify.checked
+                    })
+                });
+            }
+            
             const data = await response.json();
             const endTime = Date.now();
 

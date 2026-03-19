@@ -2,15 +2,30 @@ const express = require('express');
 const path = require('path');
 const https = require('https');
 const nodeFetch = require('node-fetch');
+const cors = require('cors');
 const app = express();
 const PORT = process.argv[2] || 3000;
+
+// Enable CORS for all origins and methods
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '.')));
 
-// Proxy endpoint to bypass CORS
-app.post('/api/proxy', async (req, res) => {
-    const { url, method, headers, body, sslVerify = true } = req.body;
+// Common proxy handler logic
+const handleProxy = async (req, res) => {
+    // Merge params from body (for POST) or query (for GET)
+    const { 
+        url, 
+        method = 'GET', 
+        headers = {}, 
+        body, 
+        sslVerify = true 
+    } = { ...req.query, ...req.body };
 
     if (!url) {
         return res.status(400).json({ error: 'URL is required' });
@@ -22,21 +37,36 @@ app.post('/api/proxy', async (req, res) => {
         const startTime = Date.now();
         
         const agent = new https.Agent({
-            rejectUnauthorized: sslVerify
+            rejectUnauthorized: String(sslVerify) !== 'false'
         });
 
+        // Parse headers if they came as a string (common in GET query params)
+        let parsedHeaders = headers;
+        if (typeof headers === 'string') {
+            try {
+                parsedHeaders = JSON.parse(headers);
+            } catch (e) {
+                parsedHeaders = {};
+            }
+        }
+
         const fetchOptions = {
-            method: method || 'GET',
+            method: (method || 'GET').toUpperCase(),
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                ...headers
+                ...parsedHeaders
             },
             agent: url.startsWith('https') ? agent : undefined,
             timeout: 30000 // 30 seconds timeout
         };
 
-        if (method !== 'GET' && method !== 'HEAD' && body) {
+        // Handle body for non-GET methods
+        const upperMethod = fetchOptions.method;
+        if (upperMethod !== 'GET' && upperMethod !== 'HEAD' && body) {
             fetchOptions.body = typeof body === 'object' ? JSON.stringify(body) : body;
+            if (!fetchOptions.headers['Content-Type'] && typeof body === 'object') {
+                fetchOptions.headers['Content-Type'] = 'application/json';
+            }
         }
 
         const response = await nodeFetch(url, fetchOptions);
@@ -75,7 +105,10 @@ app.post('/api/proxy', async (req, res) => {
             message: error.message 
         });
     }
-});
+};
+
+// Support both GET and POST for proxy
+app.all('/api/proxy', handleProxy);
 
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running at http://0.0.0.0:${PORT}`);

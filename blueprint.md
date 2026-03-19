@@ -25,7 +25,13 @@ The REST API Tester provides a robust environment for testing web services direc
 *   **Response Monitoring:** Real-time display of status codes, execution time, response headers, and formatted body output.
 
 ### Proxy Architecture
-A Node.js/Express backend (`server.js`) handles the requests to bypass CORS limitations, ensuring that users can test any public API regardless of its cross-origin policies.
+A Node.js/Express backend (`server.js`) handles the requests to bypass CORS limitations. 
+
+**Key improvements:**
+*   **CORS Support:** The proxy server now includes `cors` middleware, allowing it to be called from any domain.
+*   **Multi-method Support:** The `/api/proxy` endpoint now supports both `GET` and `POST` methods.
+*   **Intuitive Request Routing:** The client (`main.js`) now uses `GET` for proxy calls when the target request is `GET` or `HEAD`, passing parameters via query string. For other methods (POST, PUT, etc.), it uses `POST` with a JSON body.
+*   **SSL Verification Toggle:** Users can now toggle SSL certificate verification for target requests.
 
 ## 4. Design Guidelines
 *   **Aesthetics:** Modern, clean, and interactive.
