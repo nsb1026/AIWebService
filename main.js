@@ -279,6 +279,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const apiResponseBody = document.getElementById('api-response-body');
     const apiResponseHeaders = document.getElementById('api-response-headers');
     const apiAuthType = document.getElementById('api-auth-type');
+    const apiParamsList = document.getElementById('api-params-list');
+    const btnAddParam = document.getElementById('btn-add-param');
+    const apiBodyType = document.getElementById('api-body-type');
+    const jsonBodyActions = document.getElementById('json-body-actions');
+    const bodyNoneMsg = document.getElementById('body-none-msg');
 
     // Tab Switching for API Tester
     document.querySelectorAll('.tab-link').forEach(button => {
@@ -303,6 +308,82 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Body Type Switching
+    apiBodyType.addEventListener('change', () => {
+        const type = apiBodyType.value;
+        if (type === 'none') {
+            apiBody.style.display = 'none';
+            bodyNoneMsg.style.display = 'block';
+            jsonBodyActions.style.display = 'none';
+        } else {
+            apiBody.style.display = 'block';
+            bodyNoneMsg.style.display = 'none';
+            jsonBodyActions.style.display = type === 'json' ? 'flex' : 'none';
+            apiBody.placeholder = type === 'json' ? '{"key": "value"}' : 'Plain text...';
+        }
+    });
+
+    // Body Formatting
+    document.getElementById('btn-api-body-prettify').addEventListener('click', () => {
+        try {
+            const obj = JSON.parse(apiBody.value);
+            apiBody.value = JSON.stringify(obj, null, 2);
+        } catch (e) { alert('Invalid JSON in body'); }
+    });
+
+    document.getElementById('btn-api-body-sort').addEventListener('click', () => {
+        try {
+            const obj = JSON.parse(apiBody.value);
+            apiBody.value = JSON.stringify(sortJSON(obj), null, 2);
+        } catch (e) { alert('Invalid JSON in body'); }
+    });
+
+    // Param Management
+    const createParamRow = (key = '', val = '') => {
+        const row = document.createElement('div');
+        row.className = 'param-row';
+        row.innerHTML = `
+            <input type="text" placeholder="Key" class="param-key" value="${key}">
+            <input type="text" placeholder="Value" class="param-value" value="${val}">
+            <button class="btn-remove-param" title="Remove">&times;</button>
+        `;
+        row.querySelectorAll('input').forEach(input => input.addEventListener('input', syncParamsToUrl));
+        row.querySelector('.btn-remove-param').addEventListener('click', () => {
+            row.remove();
+            syncParamsToUrl();
+        });
+        return row;
+    };
+
+    btnAddParam.addEventListener('click', () => {
+        apiParamsList.appendChild(createParamRow());
+    });
+
+    // Sync URL -> Params
+    apiUrl.addEventListener('input', () => {
+        const val = apiUrl.value;
+        if (val.includes('?')) {
+            const queryString = val.split('?')[1];
+            const urlParams = new URLSearchParams(queryString);
+            apiParamsList.innerHTML = '';
+            urlParams.forEach((v, k) => {
+                apiParamsList.appendChild(createParamRow(k, v));
+            });
+        }
+    });
+
+    function syncParamsToUrl() {
+        let base = apiUrl.value.split('?')[0];
+        const params = new URLSearchParams();
+        document.querySelectorAll('.param-row').forEach(row => {
+            const k = row.querySelector('.param-key').value.trim();
+            const v = row.querySelector('.param-value').value.trim();
+            if (k) params.append(k, v);
+        });
+        const qs = params.toString();
+        apiUrl.value = qs ? `${base}?${qs}` : base;
+    }
+
     // Header Management
     const createHeaderRow = () => {
         const row = document.createElement('div');
@@ -321,12 +402,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Initial Remove Header listeners
-    document.querySelectorAll('.btn-remove-header').forEach(btn => {
-        btn.addEventListener('click', (e) => e.target.closest('.header-row').remove());
+    document.querySelectorAll('.btn-remove-header, .btn-remove-param').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.target.closest('div').remove();
+            if (btn.classList.contains('btn-remove-param')) syncParamsToUrl();
+        });
     });
 
     const sendRequest = async () => {
-        const url = apiUrl.value.trim();
+        let url = apiUrl.value.trim();
         if (!url) {
             alert('Please enter a URL');
             return;
@@ -359,9 +443,21 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        let body = apiBody.value.trim();
-        if (body) {
-            try { body = JSON.parse(body); } catch (e) { /* Keep as string if not JSON */ }
+        // Body Handling
+        let body = null;
+        const bodyType = apiBodyType.value;
+        const hasBodyMethod = !['GET', 'HEAD'].includes(method);
+
+        if (hasBodyMethod && bodyType !== 'none') {
+            body = apiBody.value.trim();
+            if (bodyType === 'json') {
+                try { 
+                    body = JSON.parse(body);
+                    if (!headers['Content-Type']) headers['Content-Type'] = 'application/json';
+                } catch (e) { /* Send as raw if fail */ }
+            } else if (bodyType === 'text') {
+                if (!headers['Content-Type']) headers['Content-Type'] = 'text/plain';
+            }
         }
 
         btnSend.disabled = true;

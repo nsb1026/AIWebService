@@ -605,12 +605,12 @@ body {
     margin-bottom: 1rem;
 }
 
-.header-row {
+.header-row, .param-row {
     display: flex;
     gap: 0.5rem;
 }
 
-.header-key, .header-value {
+.header-key, .header-value, .param-key, .param-value {
     flex: 1;
     padding: 0.5rem 0.75rem;
     border: 1px solid var(--border-color);
@@ -618,7 +618,7 @@ body {
     font-size: 0.85rem;
 }
 
-.btn-remove-header {
+.btn-remove-header, .btn-remove-param {
     background: #fee2e2;
     color: #b91c1c;
     border: none;
@@ -633,8 +633,25 @@ body {
     transition: all 0.2s;
 }
 
-.btn-remove-header:hover {
+.btn-remove-header:hover, .btn-remove-param:hover {
     background: #fecaca;
+}
+
+.body-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px dashed var(--border-color);
+}
+
+.body-type-select {
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.85rem;
 }
 
 .response-header {
