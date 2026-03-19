@@ -268,6 +268,130 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // --- API Tester Logic ---
+    const apiMethod = document.getElementById('api-method');
+    const apiUrl = document.getElementById('api-url');
+    const apiHeadersList = document.getElementById('api-headers-list');
+    const btnAddHeader = document.getElementById('btn-add-header');
+    const apiBody = document.getElementById('api-body');
+    const btnSend = document.getElementById('btn-api-send');
+    const apiResponseStatus = document.getElementById('api-response-status');
+    const apiResponseBody = document.getElementById('api-response-body');
+    const apiResponseHeaders = document.getElementById('api-response-headers');
+
+    // Tab Switching for API Tester
+    document.querySelectorAll('.tab-link').forEach(button => {
+        button.addEventListener('click', () => {
+            const container = button.closest('.api-tabs');
+            const targetTab = button.getAttribute('data-tab');
+
+            container.querySelectorAll('.tab-link').forEach(btn => btn.classList.remove('active'));
+            container.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            button.classList.add('active');
+            document.getElementById(targetTab).classList.add('active');
+        });
+    });
+
+    // Header Management
+    const createHeaderRow = () => {
+        const row = document.createElement('div');
+        row.className = 'header-row';
+        row.innerHTML = `
+            <input type="text" placeholder="Key" class="header-key">
+            <input type="text" placeholder="Value" class="header-value">
+            <button class="btn-remove-header" title="Remove">&times;</button>
+        `;
+        row.querySelector('.btn-remove-header').addEventListener('click', () => row.remove());
+        return row;
+    };
+
+    btnAddHeader.addEventListener('click', () => {
+        apiHeadersList.appendChild(createHeaderRow());
+    });
+
+    // Initial Remove Header listeners
+    document.querySelectorAll('.btn-remove-header').forEach(btn => {
+        btn.addEventListener('click', (e) => e.target.closest('.header-row').remove());
+    });
+
+    const sendRequest = async () => {
+        const url = apiUrl.value.trim();
+        if (!url) {
+            alert('Please enter a URL');
+            return;
+        }
+
+        const method = apiMethod.value;
+        const headers = {};
+        document.querySelectorAll('.header-row').forEach(row => {
+            const key = row.querySelector('.header-key').value.trim();
+            const val = row.querySelector('.header-value').value.trim();
+            if (key) headers[key] = val;
+        });
+
+        let body = apiBody.value.trim();
+        if (body) {
+            try { body = JSON.parse(body); } catch (e) { /* Keep as string if not JSON */ }
+        }
+
+        btnSend.disabled = true;
+        apiResponseStatus.textContent = 'Sending...';
+        apiResponseStatus.className = 'response-status-badge status-loading';
+        apiResponseBody.value = '';
+        apiResponseHeaders.innerHTML = '<p class="placeholder-text">Loading...</p>';
+
+        try {
+            const startTime = Date.now();
+            const response = await fetch('/api/proxy', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url, method, headers, body })
+            });
+            const data = await response.json();
+            const endTime = Date.now();
+
+            if (data.error) throw new Error(data.message || data.error);
+
+            // Update Status Badge
+            const statusClass = data.status >= 200 && data.status < 300 ? 'status-success' : 'status-error';
+            apiResponseStatus.textContent = `${data.status} ${data.statusText || ''} (${data.time || (endTime - startTime)}ms)`;
+            apiResponseStatus.className = `response-status-badge ${statusClass}`;
+
+            // Update Body
+            if (typeof data.body === 'object') {
+                apiResponseBody.value = JSON.stringify(data.body, null, 2);
+            } else {
+                apiResponseBody.value = data.body;
+            }
+
+            // Update Headers
+            apiResponseHeaders.innerHTML = '';
+            Object.entries(data.headers).forEach(([key, val]) => {
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'header-name';
+                nameSpan.textContent = key + ':';
+                
+                const valSpan = document.createElement('span');
+                valSpan.className = 'header-val';
+                valSpan.textContent = val;
+
+                apiResponseHeaders.appendChild(nameSpan);
+                apiResponseHeaders.appendChild(valSpan);
+            });
+
+        } catch (error) {
+            apiResponseStatus.textContent = 'Error';
+            apiResponseStatus.className = 'response-status-badge status-error';
+            apiResponseBody.value = `Failed to execute request:\n${error.message}`;
+            apiResponseHeaders.innerHTML = '<p class="placeholder-text">No headers received.</p>';
+        } finally {
+            btnSend.disabled = false;
+        }
+    };
+
+    btnSend.addEventListener('click', sendRequest);
+
     // Initial runs
     updateEncoder();
 });

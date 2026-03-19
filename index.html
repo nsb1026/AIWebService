@@ -19,6 +19,7 @@
             <a href="#" class="nav-link" data-view="json-view">JSON Parser</a>
             <a href="#" class="nav-link" data-view="html-view">HTML Formatter</a>
             <a href="#" class="nav-link" data-view="diff-view">Diff Checker</a>
+            <a href="#" class="nav-link" data-view="api-view">REST Tester</a>
             <a href="#" class="nav-link" data-view="about-view">About</a>
             <a href="#" class="nav-link" data-view="privacy-view">Privacy</a>
             <a href="#" class="nav-link" data-view="contact-view">Contact</a>
@@ -235,6 +236,77 @@
                     <p class="placeholder-text">Enter text in both boxes above to see the difference.</p>
                 </div>
                 <textarea id="diff-output-raw" style="display:none;"></textarea>
+            </div>
+        </section>
+
+        <!-- API Tester View -->
+        <section id="api-view" class="view">
+            <header class="view-header">
+                <h1>REST API Tester</h1>
+                <p>Test your REST APIs with custom methods, headers, and body. Use our built-in proxy to bypass CORS restrictions.</p>
+                <div class="tool-description">
+                    <p>Configure your request parameters below and see real-time responses. All requests are proxied through our server for maximum compatibility with third-party APIs.</p>
+                </div>
+            </header>
+
+            <div class="api-container">
+                <div class="api-request-section">
+                    <div class="request-bar">
+                        <select id="api-method" class="method-select">
+                            <option value="GET">GET</option>
+                            <option value="POST">POST</option>
+                            <option value="PUT">PUT</option>
+                            <option value="PATCH">PATCH</option>
+                            <option value="DELETE">DELETE</option>
+                            <option value="OPTIONS">OPTIONS</option>
+                            <option value="HEAD">HEAD</option>
+                        </select>
+                        <input type="text" id="api-url" placeholder="https://api.example.com/endpoint" class="url-input">
+                        <button id="btn-api-send" class="primary-btn send-btn">Send Request</button>
+                    </div>
+
+                    <div class="api-tabs">
+                        <div class="tab-headers">
+                            <button class="tab-link active" data-tab="api-headers-tab">Headers</button>
+                            <button class="tab-link" data-tab="api-body-tab">Body</button>
+                        </div>
+                        <div id="api-headers-tab" class="tab-content active">
+                            <div class="headers-list" id="api-headers-list">
+                                <!-- Headers will be added here -->
+                                <div class="header-row">
+                                    <input type="text" placeholder="Key" class="header-key">
+                                    <input type="text" placeholder="Value" class="header-value">
+                                    <button class="btn-remove-header" title="Remove">&times;</button>
+                                </div>
+                            </div>
+                            <button id="btn-add-header" class="secondary-btn btn-small">+ Add Header</button>
+                        </div>
+                        <div id="api-body-tab" class="tab-content">
+                            <textarea id="api-body" placeholder='{"key": "value"}'></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="api-response-section">
+                    <div class="response-header">
+                        <label>Response</label>
+                        <div id="api-response-status" class="response-status-badge"></div>
+                    </div>
+                    <div class="api-tabs">
+                        <div class="tab-headers">
+                            <button class="tab-link active" data-tab="api-res-body-tab">Body</button>
+                            <button class="tab-link" data-tab="api-res-headers-tab">Headers</button>
+                        </div>
+                        <div id="api-res-body-tab" class="tab-content active">
+                            <textarea id="api-response-body" readonly placeholder="Response body will appear here..."></textarea>
+                        </div>
+                        <div id="api-res-headers-tab" class="tab-content">
+                            <div id="api-response-headers" class="response-headers-display">
+                                <p class="placeholder-text">No response headers to display.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 

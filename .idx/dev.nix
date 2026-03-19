@@ -30,8 +30,7 @@
     workspace = {
       # Runs when a workspace is first created
       onCreate = {
-        # Example: install JS dependencies from NPM
-        # npm-install = "npm install";
+        npm-install = "npm install";
         # Open editors for the following files by default, if they exist:
         default.openFiles = [ "style.css" "main.js" "index.html" ];
       };
@@ -42,4 +41,5 @@
       };
     };
   };
+  idx.previews.previews.web.command = ["node", "server.js", "$PORT"];
 }
