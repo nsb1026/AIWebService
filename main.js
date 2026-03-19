@@ -285,8 +285,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const jsonBodyActions = document.getElementById('json-body-actions');
     const bodyNoneMsg = document.getElementById('body-none-msg');
     const apiSSLVerify = document.getElementById('api-ssl-verify');
+    const apiDirectCall = document.getElementById('api-direct-call');
     const apiHistoryList = document.getElementById('api-history-list');
     const apiResponseSize = document.getElementById('api-response-size');
+    const apiProxyUrlInput = document.getElementById('api-proxy-url');
 
     // Tab Switching for API Tester
     document.querySelectorAll('.tab-link').forEach(button => {
@@ -367,8 +369,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 apiUrl.value = item.url;
                 apiMethod.value = item.method;
                 // Basic fill back - could be improved
-                const urlObj = new URL(item.url.startsWith('http') ? item.url : 'http://' + item.url);
-                syncUrlToParamsUI(urlObj.searchParams);
+                try {
+                    const urlObj = new URL(item.url.startsWith('http') ? item.url : 'http://' + item.url);
+                    syncUrlToParamsUI(urlObj.searchParams);
+                } catch(e) {}
                 
                 // Switch back to Params or Headers
                 document.querySelector('.tab-link[data-tab="api-params-tab"]').click();
@@ -522,7 +526,8 @@ document.addEventListener('DOMContentLoaded', () => {
             body = apiBody.value.trim();
             if (bodyType === 'json') {
                 try { 
-                    body = JSON.parse(body);
+                    const parsedJson = JSON.parse(body);
+                    body = JSON.stringify(parsedJson);
                     if (!headers['Content-Type']) headers['Content-Type'] = 'application/json';
                 } catch (e) { /* Send as raw if fail */ }
             } else if (bodyType === 'text') {
@@ -539,81 +544,104 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const startTime = Date.now();
-            
-            let response;
-            const proxyUrl = '/api/proxy';
-            
-            if (['GET', 'HEAD'].includes(method)) {
-                // Use GET for the proxy call if target method is GET/HEAD
-                const params = new URLSearchParams({
-                    url,
-                    method,
-                    headers: JSON.stringify(headers),
-                    sslVerify: apiSSLVerify.checked
+            let data;
+            let finalStatus, finalStatusText, finalHeaders, finalBody, finalTime, finalSize;
+
+            if (apiDirectCall.checked) {
+                // --- DIRECT CALL (NO PROXY) ---
+                console.log("Executing direct call to:", url);
+                const response = await fetch(url, {
+                    method: method,
+                    headers: headers,
+                    body: hasBodyMethod ? body : undefined
                 });
-                response = await fetch(`${proxyUrl}?${params.toString()}`);
+                
+                finalStatus = response.status;
+                finalStatusText = response.statusText;
+                finalHeaders = {};
+                response.headers.forEach((v, k) => finalHeaders[k] = v);
+                
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    finalBody = await response.json();
+                } else {
+                    finalBody = await response.text();
+                }
+                finalTime = Date.now() - startTime;
+                finalSize = finalBody ? (typeof finalBody === 'string' ? finalBody.length : JSON.stringify(finalBody).length) : 0;
             } else {
-                // Use POST for other methods (POST, PUT, DELETE, etc.)
-                response = await fetch(proxyUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        url, 
-                        method, 
-                        headers, 
-                        body,
+                // --- PROXY CALL ---
+                let proxyBase = apiProxyUrlInput.value.trim();
+                if (proxyBase && proxyBase.endsWith('/')) proxyBase = proxyBase.slice(0, -1);
+                const proxyUrl = proxyBase ? `${proxyBase}/api/proxy` : '/api/proxy';
+
+                if (window.location.protocol === 'https:' && proxyUrl.startsWith('http:')) {
+                    throw new Error('Mixed Content: Cannot call an HTTP proxy from an HTTPS site. Please use an HTTPS proxy URL.');
+                }
+
+                let response;
+                if (['GET', 'HEAD'].includes(method)) {
+                    const params = new URLSearchParams({
+                        url,
+                        method,
+                        headers: JSON.stringify(headers),
                         sslVerify: apiSSLVerify.checked
-                    })
-                });
+                    });
+                    response = await fetch(`${proxyUrl}?${params.toString()}`);
+                } else {
+                    response = await fetch(proxyUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url, method, headers, body, sslVerify: apiSSLVerify.checked })
+                    });
+                }
+
+                if (response.status === 405) {
+                    throw new Error('405 Method Not Allowed: The proxy server rejected this request method. If using Cloudflare Pages, please specify an external Proxy Server URL in Settings.');
+                }
+
+                data = await response.json();
+                if (data.error) throw new Error(data.message || data.error);
+
+                finalStatus = data.status;
+                finalStatusText = data.statusText;
+                finalHeaders = data.headers;
+                finalBody = data.body;
+                finalTime = data.time || (Date.now() - startTime);
+                finalSize = data.size || 0;
             }
-            
-            const data = await response.json();
-            const endTime = Date.now();
 
-            if (data.error) throw new Error(data.message || data.error);
-
-            // Update Status Badge
-            const statusClass = data.status >= 200 && data.status < 300 ? 'status-success' : 'status-error';
-            apiResponseStatus.textContent = `${data.status} ${data.statusText || ''} (${data.time || (endTime - startTime)}ms)`;
+            // --- UPDATE UI WITH RESULTS ---
+            const statusClass = finalStatus >= 200 && finalStatus < 300 ? 'status-success' : 'status-error';
+            apiResponseStatus.textContent = `${finalStatus} ${finalStatusText || ''} (${finalTime}ms)`;
             apiResponseStatus.className = `response-status-badge ${statusClass}`;
-            apiResponseSize.textContent = formatSize(data.size || 0);
+            apiResponseSize.textContent = formatSize(finalSize);
 
-            // Update Body
-            if (typeof data.body === 'object') {
-                apiResponseBody.value = JSON.stringify(data.body, null, 2);
+            if (typeof finalBody === 'object') {
+                apiResponseBody.value = JSON.stringify(finalBody, null, 2);
             } else {
-                apiResponseBody.value = data.body;
+                apiResponseBody.value = finalBody;
             }
 
-            // Update Headers
             apiResponseHeaders.innerHTML = '';
-            Object.entries(data.headers).forEach(([key, val]) => {
+            Object.entries(finalHeaders).forEach(([key, val]) => {
                 const nameSpan = document.createElement('span');
                 nameSpan.className = 'header-name';
                 nameSpan.textContent = key + ':';
-                
                 const valSpan = document.createElement('span');
                 valSpan.className = 'header-val';
                 valSpan.textContent = val;
-
                 apiResponseHeaders.appendChild(nameSpan);
                 apiResponseHeaders.appendChild(valSpan);
             });
 
-            // Add to History
-            addToHistory({
-                url,
-                method,
-                status: data.status,
-                statusText: data.statusText,
-                time: data.time || (endTime - startTime),
-                timestamp: Date.now()
-            });
+            addToHistory({ url, method, status: finalStatus, statusText: finalStatusText, time: finalTime, timestamp: Date.now() });
 
         } catch (error) {
+            console.error("Request Error:", error);
             apiResponseStatus.textContent = 'Error';
             apiResponseStatus.className = 'response-status-badge status-error';
-            apiResponseBody.value = `Failed to execute request:\n${error.message}`;
+            apiResponseBody.value = `Failed to execute request:\n${error.message}\n\nPossible reasons:\n1. CORS restrictions on the target API (Try using a Proxy).\n2. Proxy server is not reachable or doesn't support the method.\n3. Mixed Content (HTTPS calling HTTP).`;
             apiResponseHeaders.innerHTML = '<p class="placeholder-text">No headers received.</p>';
         } finally {
             btnSend.disabled = false;

@@ -356,10 +356,18 @@
                         <div id="api-settings-tab" class="tab-content">
                             <div class="settings-config">
                                 <div class="field-row">
+                                    <input type="checkbox" id="api-direct-call">
+                                    <label for="api-direct-call">Direct Call (Bypass Proxy - Target API must support CORS)</label>
+                                </div>
+                                <div class="field-row">
                                     <input type="checkbox" id="api-ssl-verify" checked>
                                     <label for="api-ssl-verify">SSL Certificate Verification (Disable for local/self-signed)</label>
                                 </div>
-                                <p class="info-text">Note: Disabling SSL verification allows requests to servers with untrusted certificates.</p>
+                                <div class="field-col" style="margin-top: 15px;">
+                                    <label for="api-proxy-url">Proxy Server URL</label>
+                                    <input type="text" id="api-proxy-url" placeholder="e.g., https://your-backend.com" class="form-input">
+                                    <p class="info-text">Specify your backend proxy. Leave blank to use the local server (/api/proxy).</p>
+                                </div>
                             </div>
                         </div>
                         <div id="api-history-tab" class="tab-content">
