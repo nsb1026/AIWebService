@@ -6,29 +6,49 @@ const cors = require('cors');
 const app = express();
 const PORT = process.argv[2] || 3000;
 
+// Enable CORS for all routes
 app.use(cors({ origin: '*', methods: '*', allowedHeaders: '*' }));
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.static(path.join(__dirname, '.')));
 
 const handleProxy = async (req, res) => {
-    // GET은 query에서, POST는 body에서 파라미터를 가져옴
-    const params = req.method === 'GET' ? req.query : req.body;
+    // Cloudflare compatibility: Always prefer body for proxy instructions to avoid URL length limits
+    const params = req.method === 'POST' ? req.body : req.query;
     const { url, method = 'GET', headers = {}, body, sslVerify = true } = params;
 
-    if (!url) return res.status(400).json({ error: 'URL is required' });
+    if (!url) {
+        return res.status(400).json({ error: 'URL is required' });
+    }
 
     try {
-        console.log(`[Proxy] ${req.method} -> ${method} ${url}`);
+        console.log(`[Proxy] ${new Date().toISOString()} | ${method} ${url}`);
         
-        const agent = new https.Agent({ rejectUnauthorized: String(sslVerify) !== 'false' });
+        const agent = new https.Agent({ 
+            rejectUnauthorized: String(sslVerify) !== 'false',
+            keepAlive: true
+        });
+
         let parsedHeaders = typeof headers === 'string' ? JSON.parse(headers) : headers;
+
+        // Remove dangerous or restricted headers from the incoming request headers
+        const forbiddenHeaders = ['host', 'connection', 'content-length', 'expect', 'upgrade'];
+        const cleanHeaders = {};
+        Object.entries(parsedHeaders).forEach(([k, v]) => {
+            if (!forbiddenHeaders.includes(k.toLowerCase())) {
+                cleanHeaders[k] = v;
+            }
+        });
 
         const fetchOptions = {
             method: method.toUpperCase(),
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
                 'Accept': '*/*',
-                ...parsedHeaders
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache',
+                ...cleanHeaders
             },
             agent: url.startsWith('https') ? agent : undefined,
             timeout: 30000,
@@ -37,18 +57,32 @@ const handleProxy = async (req, res) => {
 
         if (!['GET', 'HEAD'].includes(fetchOptions.method) && body) {
             fetchOptions.body = typeof body === 'object' ? JSON.stringify(body) : body;
+            if (!fetchOptions.headers['Content-Type'] && typeof body === 'object') {
+                fetchOptions.headers['Content-Type'] = 'application/json';
+            }
         }
 
         const response = await nodeFetch(url, fetchOptions);
         
-        // 보안 헤더 및 불필요한 헤더 제거
+        // Header filtering for response
         const resHeaders = {};
-        const skipHeaders = ['x-frame-options', 'content-security-policy', 'set-cookie', 'content-encoding', 'transfer-encoding'];
+        const skipHeaders = [
+            'x-frame-options', 
+            'content-security-policy', 
+            'set-cookie', 
+            'content-encoding', 
+            'transfer-encoding',
+            'access-control-allow-origin',
+            'access-control-allow-methods',
+            'access-control-allow-headers'
+        ];
+        
         response.headers.forEach((v, k) => {
-            if (!skipHeaders.includes(k.toLowerCase())) resHeaders[k] = v;
+            if (!skipHeaders.includes(k.toLowerCase())) {
+                resHeaders[k] = v;
+            }
         });
 
-        // 응답 본문 처리 (텍스트 위주로 안전하게)
         const responseText = await response.text();
 
         res.json({
@@ -61,9 +95,25 @@ const handleProxy = async (req, res) => {
         });
     } catch (error) {
         console.error('[Proxy Error]', error.message);
-        res.status(500).json({ error: 'Proxy Error', message: error.message });
+        res.status(500).json({ 
+            error: 'Proxy Error', 
+            message: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
     }
 };
 
-app.all('/api/proxy', handleProxy);
-app.listen(PORT, '0.0.0.0', () => console.log(`Server running at http://0.0.0.0:${PORT}`));
+app.post('/api/proxy', handleProxy);
+// Keep GET for backward compatibility or simple tests, but warn in logs
+app.get('/api/proxy', (req, res) => {
+    console.warn('[Proxy Warning] GET used for proxy. Switching to POST is recommended for stability.');
+    handleProxy(req, res);
+});
+
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`========================================`);
+    console.log(`Parse Utils Proxy Server`);
+    console.log(`Running at http://0.0.0.0:${PORT}`);
+    console.log(`Mode: ${process.env.NODE_ENV || 'production'}`);
+    console.log(`========================================`);
+});
