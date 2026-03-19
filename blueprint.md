@@ -17,21 +17,31 @@ The REST API Tester provides a robust environment for testing web services direc
 
 ### UI/UX Features
 *   **Method Selection:** Support for GET, POST, PUT, PATCH, DELETE, OPTIONS, and HEAD.
-*   **URL & Params Sync:** Dedicated **Params** tab to manage query parameters. Changes in the URL sync with the params table and vice-versa.
-*   **Authorization Type:** Support for No Auth, API Key, Bearer Token, and Basic Auth with dedicated configuration fields.
-*   **Flexible Body:** Support for **None**, **Raw (JSON)**, and **Raw (Text)** body types.
+*   **URL Normalization:** Automatically prepends `https://` if the protocol is missing, ensuring valid requests even for simple domains like `google.com`.
+*   **URL & Params Sync:** Bi-directional sync between the URL query string and the **Params** tab. Robust logic prevents premature clearing of the params list while typing.
+*   **Authorization Type:** Support for No Auth, API Key, Bearer Token, and Basic Auth with dynamic UI toggles for configuration fields.
+*   **Flexible Body:** Support for **None**, **Raw (JSON)**, and **Raw (Text)** body types with automatic `Content-Type` header management.
 *   **JSON Tools:** Built-in **Prettify** and **Sort** for JSON request bodies.
-*   **Header Management:** Dynamic addition and removal of request headers.
-*   **Response Monitoring:** Real-time display of status codes, execution time, response headers, and formatted body output.
+*   **Header Management:** Dynamic addition and removal of request headers, with proper initialization for default rows.
+*   **Response Monitoring:** Real-time display of status codes, execution time, response size, and headers.
+*   **Response Views:** Multiple views for response data: **Pretty** (formatted JSON/Text), **Raw** (original response), **Preview** (HTML rendering in sandbox with `<base>` tag injection to fix relative links), and **Headers**.
+*   **History:** Automatic persistence of the last 50 requests in local storage, allowing quick reloading of previous test configurations.
+*   **Improved Interactivity:** Ensured all buttons have proper event listeners and are not blocked by layout overlaps using global `box-sizing: border-box`.
 
-### Proxy Architecture
-A Node.js/Express backend (`server.js`) handles the requests to bypass CORS limitations. 
+### Proxy Architecture & Cloudflare Compatibility
+A Node.js/Express backend (`server.js`) handles the requests to bypass CORS limitations.
 
-**Key improvements:**
-*   **CORS Support:** The proxy server now includes `cors` middleware, allowing it to be called from any domain.
-*   **Multi-method Support:** The `/api/proxy` endpoint now supports both `GET` and `POST` methods.
-*   **Intuitive Request Routing:** The client (`main.js`) now uses `GET` for proxy calls when the target request is `GET` or `HEAD`, passing parameters via query string. For other methods (POST, PUT, etc.), it uses `POST` with a JSON body.
-*   **SSL Verification Toggle:** Users can now toggle SSL certificate verification for target requests.
+**Key improvements for Stability:**
+*   **Always-POST Communication:** To avoid Cloudflare's URL length limits (414 Request-URI Too Large) and WAF triggers, the client always communicates with the proxy using a `POST` request with a JSON body, regardless of the target API's method.
+*   **Browser-Mimicking Headers:** The proxy server now sends a modern Chrome `User-Agent` and other standard browser headers to avoid being blocked by target servers or WAFs.
+*   **Header Filtering:** Sophisticated filtering of both request and response headers to remove restricted headers (like `Host`, `Connection`) and security headers (like `CSP`, `X-Frame-Options`) that might interfere with the browser's ability to display the results.
+*   **SSL Verification Toggle:** Users can disable SSL certificate verification for testing local or self-signed services.
+
+## 4. Tools Implementation
+*   **Encoder/Decoder:** Fully implemented with real-time updates for URL, HTML, Unicode, Base64, Hex, Binary, ROT13, Atbash, and Case transforms.
+*   **JSON Parser:** Support for prettifying, sorting, and minifying JSON with live validation.
+*   **HTML Formatter:** Intelligent indentation logic for prettifying messy HTML code.
+*   **Diff Checker:** Line-by-line comparison with visual highlighting of additions and removals.
 
 ## 4. Design Guidelines
 *   **Aesthetics:** Modern, clean, and interactive.
