@@ -617,12 +617,41 @@ document.addEventListener('DOMContentLoaded', () => {
             apiResponseStatus.className = `response-status-badge ${statusClass}`;
             apiResponseSize.textContent = formatSize(finalSize);
 
-            if (typeof finalBody === 'object') {
-                apiResponseBody.value = JSON.stringify(finalBody, null, 2);
+            // 1. Raw Response (Always the original text or stringified object)
+            const rawBodyText = typeof finalBody === 'object' ? JSON.stringify(finalBody, null, 2) : finalBody;
+            document.getElementById('api-response-raw').value = rawBodyText;
+
+            // 2. Pretty Response
+            const prettyArea = document.getElementById('api-response-pretty');
+            const contentType = (finalHeaders['content-type'] || '').toLowerCase();
+            
+            if (contentType.includes('application/json')) {
+                try {
+                    const jsonObj = typeof finalBody === 'string' ? JSON.parse(finalBody) : finalBody;
+                    prettyArea.value = JSON.stringify(jsonObj, null, 2);
+                } catch (e) {
+                    prettyArea.value = rawBodyText;
+                }
+            } else if (contentType.includes('text/html')) {
+                // Basic HTML prettify (could use a library, but keeping it simple)
+                prettyArea.value = rawBodyText;
             } else {
-                apiResponseBody.value = finalBody;
+                prettyArea.value = rawBodyText;
             }
 
+            // 3. Preview Response (iframe for HTML)
+            const previewIframe = document.getElementById('api-response-preview');
+            if (contentType.includes('text/html')) {
+                const blob = new Blob([rawBodyText], { type: 'text/html' });
+                previewIframe.src = URL.createObjectURL(blob);
+            } else {
+                previewIframe.srcdoc = `<html><body style="font-family:sans-serif; padding:20px; color:#666;">
+                    <h3>No Preview Available</h3>
+                    <p>Preview is only available for HTML content types. Current type: ${contentType || 'unknown'}</p>
+                </body></html>`;
+            }
+
+            // Update Headers Tab
             apiResponseHeaders.innerHTML = '';
             Object.entries(finalHeaders).forEach(([key, val]) => {
                 const nameSpan = document.createElement('span');
@@ -634,6 +663,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 apiResponseHeaders.appendChild(nameSpan);
                 apiResponseHeaders.appendChild(valSpan);
             });
+
+            // Automatically switch to Preview tab if it's HTML, otherwise Pretty
+            if (contentType.includes('text/html')) {
+                document.querySelector('.tab-link[data-tab="api-res-preview-tab"]').click();
+            } else {
+                document.querySelector('.tab-link[data-tab="api-res-pretty-tab"]').click();
+            }
 
             addToHistory({ url, method, status: finalStatus, statusText: finalStatusText, time: finalTime, timestamp: Date.now() });
 

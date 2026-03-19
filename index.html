@@ -389,13 +389,23 @@
                             <div id="api-response-status" class="response-status-badge"></div>
                         </div>
                     </div>
-                    <div class="api-tabs">
+                    <div class="api-tabs response-tabs">
                         <div class="tab-headers">
-                            <button class="tab-link active" data-tab="api-res-body-tab">Body</button>
+                            <button class="tab-link active" data-tab="api-res-pretty-tab">Pretty</button>
+                            <button class="tab-link" data-tab="api-res-raw-tab">Raw</button>
+                            <button class="tab-link" data-tab="api-res-preview-tab">Preview</button>
                             <button class="tab-link" data-tab="api-res-headers-tab">Headers</button>
                         </div>
-                        <div id="api-res-body-tab" class="tab-content active">
-                            <textarea id="api-response-body" readonly placeholder="Response body will appear here..."></textarea>
+                        <div id="api-res-pretty-tab" class="tab-content active">
+                            <textarea id="api-response-pretty" readonly placeholder="Formatted response..."></textarea>
+                        </div>
+                        <div id="api-res-raw-tab" class="tab-content">
+                            <textarea id="api-response-raw" readonly placeholder="Raw response text..."></textarea>
+                        </div>
+                        <div id="api-res-preview-tab" class="tab-content">
+                            <div class="preview-container">
+                                <iframe id="api-response-preview" sandbox="allow-scripts"></iframe>
+                            </div>
                         </div>
                         <div id="api-res-headers-tab" class="tab-content">
                             <div id="api-response-headers" class="response-headers-display">
