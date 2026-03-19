@@ -10,21 +10,19 @@ const PORT = process.argv[2] || 3000;
 const corsOptions = {
     origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-    exposedHeaders: ['Content-Range', 'X-Content-Range'],
+    allowedHeaders: '*',
     credentials: true,
-    optionsSuccessStatus: 204 // Some legacy browsers (IE11, various SmartTVs) choke on 204
+    optionsSuccessStatus: 204
 };
 
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // Enable pre-flight for all routes
+app.options('*', cors(corsOptions));
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '.')));
 
 // Common proxy handler logic
 const handleProxy = async (req, res) => {
-    // ... rest of the code remains the same
     const { 
         url, 
         method = 'GET', 
@@ -38,37 +36,32 @@ const handleProxy = async (req, res) => {
     }
 
     try {
-        console.log(`Proxying ${method} request to: ${url} (SSL Verify: ${sslVerify})`);
+        console.log(`Proxying ${method} request to: ${url}`);
         
         const startTime = Date.now();
-        
         const agent = new https.Agent({
             rejectUnauthorized: String(sslVerify) !== 'false'
         });
 
-        // Parse headers if they came as a string (common in GET query params)
         let parsedHeaders = headers;
         if (typeof headers === 'string') {
-            try {
-                parsedHeaders = JSON.parse(headers);
-            } catch (e) {
-                parsedHeaders = {};
-            }
+            try { parsedHeaders = JSON.parse(headers); } catch (e) { parsedHeaders = {}; }
         }
 
         const fetchOptions = {
             method: (method || 'GET').toUpperCase(),
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.9,ko;q=0.8',
                 ...parsedHeaders
             },
             agent: url.startsWith('https') ? agent : undefined,
-            timeout: 30000 // 30 seconds timeout
+            timeout: 30000,
+            redirect: 'follow' // Automatically follow redirects like google.com -> www.google.com
         };
 
-        // Handle body for non-GET methods
-        const upperMethod = fetchOptions.method;
-        if (upperMethod !== 'GET' && upperMethod !== 'HEAD' && body) {
+        if (fetchOptions.method !== 'GET' && fetchOptions.method !== 'HEAD' && body) {
             fetchOptions.body = typeof body === 'object' ? JSON.stringify(body) : body;
             if (!fetchOptions.headers['Content-Type'] && typeof body === 'object') {
                 fetchOptions.headers['Content-Type'] = 'application/json';
@@ -78,21 +71,30 @@ const handleProxy = async (req, res) => {
         const response = await nodeFetch(url, fetchOptions);
         const endTime = Date.now();
 
+        // ---------------------------------------------------------
+        // IMPORTANT: Strip security headers that block iframes (Preview mode)
+        // ---------------------------------------------------------
         const responseHeaders = {};
+        const forbiddenHeaders = [
+            'x-frame-options', 
+            'content-security-policy', 
+            'set-cookie', 
+            'strict-transport-security',
+            'x-content-type-options'
+        ];
+
         response.headers.forEach((value, key) => {
-            responseHeaders[key] = value;
+            if (!forbiddenHeaders.includes(key.toLowerCase())) {
+                responseHeaders[key] = value;
+            }
         });
 
-        const contentType = response.headers.get('content-type');
+        const contentType = response.headers.get('content-type') || '';
         let responseData;
         
-        try {
-            if (contentType && contentType.includes('application/json')) {
-                responseData = await response.json();
-            } else {
-                responseData = await response.text();
-            }
-        } catch (e) {
+        if (contentType.includes('application/json')) {
+            try { responseData = await response.json(); } catch (e) { responseData = await response.text(); }
+        } else {
             responseData = await response.text();
         }
 
@@ -113,7 +115,6 @@ const handleProxy = async (req, res) => {
     }
 };
 
-// Support both GET and POST for proxy
 app.all('/api/proxy', handleProxy);
 
 app.listen(PORT, '0.0.0.0', () => {
