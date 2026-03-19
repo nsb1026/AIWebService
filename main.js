@@ -284,6 +284,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const apiBodyType = document.getElementById('api-body-type');
     const jsonBodyActions = document.getElementById('json-body-actions');
     const bodyNoneMsg = document.getElementById('body-none-msg');
+    const apiSSLVerify = document.getElementById('api-ssl-verify');
+    const apiHistoryList = document.getElementById('api-history-list');
+    const apiResponseSize = document.getElementById('api-response-size');
 
     // Tab Switching for API Tester
     document.querySelectorAll('.tab-link').forEach(button => {
@@ -338,6 +341,55 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) { alert('Invalid JSON in body'); }
     });
 
+    // History Logic
+    let requestHistory = JSON.parse(localStorage.getItem('api_history') || '[]');
+
+    const updateHistoryUI = () => {
+        if (requestHistory.length === 0) {
+            apiHistoryList.innerHTML = '<p class="placeholder-text">No request history yet.</p>';
+            return;
+        }
+        apiHistoryList.innerHTML = '';
+        requestHistory.slice().reverse().forEach((item, index) => {
+            const el = document.createElement('div');
+            el.className = 'history-item';
+            el.innerHTML = `
+                <div class="history-main">
+                    <span class="history-method">${item.method}</span>
+                    <span class="history-url">${item.url}</span>
+                    <div class="history-meta">
+                        <span>${item.status} ${item.statusText}</span>
+                        <span>${item.time}ms</span>
+                    </div>
+                </div>
+            `;
+            el.addEventListener('click', () => {
+                apiUrl.value = item.url;
+                apiMethod.value = item.method;
+                // Basic fill back - could be improved
+                const urlObj = new URL(item.url.startsWith('http') ? item.url : 'http://' + item.url);
+                syncUrlToParamsUI(urlObj.searchParams);
+                
+                // Switch back to Params or Headers
+                document.querySelector('.tab-link[data-tab="api-params-tab"]').click();
+            });
+            apiHistoryList.appendChild(el);
+        });
+    };
+
+    const addToHistory = (item) => {
+        requestHistory.push(item);
+        if (requestHistory.length > 50) requestHistory.shift();
+        localStorage.setItem('api_history', JSON.stringify(requestHistory));
+        updateHistoryUI();
+    };
+
+    document.getElementById('btn-clear-history').addEventListener('click', () => {
+        requestHistory = [];
+        localStorage.removeItem('api_history');
+        updateHistoryUI();
+    });
+
     // Param Management
     const createParamRow = (key = '', val = '') => {
         const row = document.createElement('div');
@@ -359,16 +411,25 @@ document.addEventListener('DOMContentLoaded', () => {
         apiParamsList.appendChild(createParamRow());
     });
 
+    const syncUrlToParamsUI = (urlParams) => {
+        // Keep the add button if it was inside, but better to clear only rows
+        apiParamsList.innerHTML = '';
+        urlParams.forEach((v, k) => {
+            apiParamsList.appendChild(createParamRow(k, v));
+        });
+        if (urlParams.size === 0) {
+            apiParamsList.appendChild(createParamRow());
+        }
+    };
+
     // Sync URL -> Params
     apiUrl.addEventListener('input', () => {
         const val = apiUrl.value;
         if (val.includes('?')) {
-            const queryString = val.split('?')[1];
-            const urlParams = new URLSearchParams(queryString);
-            apiParamsList.innerHTML = '';
-            urlParams.forEach((v, k) => {
-                apiParamsList.appendChild(createParamRow(k, v));
-            });
+            try {
+                const urlObj = new URL(val.startsWith('http') ? val : 'http://' + val);
+                syncUrlToParamsUI(urlObj.searchParams);
+            } catch (e) {}
         }
     });
 
@@ -404,10 +465,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initial Remove Header listeners
     document.querySelectorAll('.btn-remove-header, .btn-remove-param').forEach(btn => {
         btn.addEventListener('click', (e) => {
-            e.target.closest('div').remove();
+            const row = e.target.closest('div');
+            if (row) row.remove();
             if (btn.classList.contains('btn-remove-param')) syncParamsToUrl();
         });
     });
+
+    const formatSize = (bytes) => {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    };
 
     const sendRequest = async () => {
         let url = apiUrl.value.trim();
@@ -464,6 +534,7 @@ document.addEventListener('DOMContentLoaded', () => {
         apiResponseStatus.textContent = 'Sending...';
         apiResponseStatus.className = 'response-status-badge status-loading';
         apiResponseBody.value = '';
+        apiResponseSize.textContent = '';
         apiResponseHeaders.innerHTML = '<p class="placeholder-text">Loading...</p>';
 
         try {
@@ -471,7 +542,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('/api/proxy', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url, method, headers, body })
+                body: JSON.stringify({ 
+                    url, 
+                    method, 
+                    headers, 
+                    body,
+                    sslVerify: apiSSLVerify.checked
+                })
             });
             const data = await response.json();
             const endTime = Date.now();
@@ -482,6 +559,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const statusClass = data.status >= 200 && data.status < 300 ? 'status-success' : 'status-error';
             apiResponseStatus.textContent = `${data.status} ${data.statusText || ''} (${data.time || (endTime - startTime)}ms)`;
             apiResponseStatus.className = `response-status-badge ${statusClass}`;
+            apiResponseSize.textContent = formatSize(data.size || 0);
 
             // Update Body
             if (typeof data.body === 'object') {
@@ -505,6 +583,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 apiResponseHeaders.appendChild(valSpan);
             });
 
+            // Add to History
+            addToHistory({
+                url,
+                method,
+                status: data.status,
+                statusText: data.statusText,
+                time: data.time || (endTime - startTime),
+                timestamp: Date.now()
+            });
+
         } catch (error) {
             apiResponseStatus.textContent = 'Error';
             apiResponseStatus.className = 'response-status-badge status-error';
@@ -516,6 +604,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     btnSend.addEventListener('click', sendRequest);
+    updateHistoryUI();
 
     // Initial runs
     updateEncoder();

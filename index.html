@@ -271,6 +271,8 @@
                             <button class="tab-link" data-tab="api-headers-tab">Headers</button>
                             <button class="tab-link" data-tab="api-auth-tab">Authorization</button>
                             <button class="tab-link" data-tab="api-body-tab">Body</button>
+                            <button class="tab-link" data-tab="api-settings-tab">Settings</button>
+                            <button class="tab-link" data-tab="api-history-tab">History</button>
                         </div>
                         <div id="api-params-tab" class="tab-content active">
                             <div class="headers-list" id="api-params-list">
@@ -351,13 +353,33 @@
                             <textarea id="api-body" placeholder='{"key": "value"}' style="display:none;"></textarea>
                             <div id="body-none-msg" class="placeholder-text">This request does not have a body.</div>
                         </div>
+                        <div id="api-settings-tab" class="tab-content">
+                            <div class="settings-config">
+                                <div class="field-row">
+                                    <input type="checkbox" id="api-ssl-verify" checked>
+                                    <label for="api-ssl-verify">SSL Certificate Verification (Disable for local/self-signed)</label>
+                                </div>
+                                <p class="info-text">Note: Disabling SSL verification allows requests to servers with untrusted certificates.</p>
+                            </div>
+                        </div>
+                        <div id="api-history-tab" class="tab-content">
+                            <div class="history-controls">
+                                <button id="btn-clear-history" class="btn-small danger-btn">Clear History</button>
+                            </div>
+                            <div id="api-history-list" class="history-list">
+                                <p class="placeholder-text">No request history yet.</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <div class="api-response-section">
                     <div class="response-header">
                         <label>Response</label>
-                        <div id="api-response-status" class="response-status-badge"></div>
+                        <div class="response-info">
+                            <span id="api-response-size" class="info-badge" title="Response Size"></span>
+                            <div id="api-response-status" class="response-status-badge"></div>
+                        </div>
                     </div>
                     <div class="api-tabs">
                         <div class="tab-headers">
