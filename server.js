@@ -6,117 +6,64 @@ const cors = require('cors');
 const app = express();
 const PORT = process.argv[2] || 3000;
 
-// Detailed CORS configuration
-const corsOptions = {
-    origin: '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: '*',
-    credentials: true,
-    optionsSuccessStatus: 204
-};
-
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
-
+app.use(cors({ origin: '*', methods: '*', allowedHeaders: '*' }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '.')));
 
-// Common proxy handler logic
 const handleProxy = async (req, res) => {
-    const { 
-        url, 
-        method = 'GET', 
-        headers = {}, 
-        body, 
-        sslVerify = true 
-    } = { ...req.query, ...req.body };
+    // GET은 query에서, POST는 body에서 파라미터를 가져옴
+    const params = req.method === 'GET' ? req.query : req.body;
+    const { url, method = 'GET', headers = {}, body, sslVerify = true } = params;
 
-    if (!url) {
-        return res.status(400).json({ error: 'URL is required' });
-    }
+    if (!url) return res.status(400).json({ error: 'URL is required' });
 
     try {
-        console.log(`Proxying ${method} request to: ${url}`);
+        console.log(`[Proxy] ${req.method} -> ${method} ${url}`);
         
-        const startTime = Date.now();
-        const agent = new https.Agent({
-            rejectUnauthorized: String(sslVerify) !== 'false'
-        });
-
-        let parsedHeaders = headers;
-        if (typeof headers === 'string') {
-            try { parsedHeaders = JSON.parse(headers); } catch (e) { parsedHeaders = {}; }
-        }
+        const agent = new https.Agent({ rejectUnauthorized: String(sslVerify) !== 'false' });
+        let parsedHeaders = typeof headers === 'string' ? JSON.parse(headers) : headers;
 
         const fetchOptions = {
-            method: (method || 'GET').toUpperCase(),
+            method: method.toUpperCase(),
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-                'Accept-Language': 'en-US,en;q=0.9,ko;q=0.8',
+                'Accept': '*/*',
                 ...parsedHeaders
             },
             agent: url.startsWith('https') ? agent : undefined,
             timeout: 30000,
-            redirect: 'follow' // Automatically follow redirects like google.com -> www.google.com
+            redirect: 'follow'
         };
 
-        if (fetchOptions.method !== 'GET' && fetchOptions.method !== 'HEAD' && body) {
+        if (!['GET', 'HEAD'].includes(fetchOptions.method) && body) {
             fetchOptions.body = typeof body === 'object' ? JSON.stringify(body) : body;
-            if (!fetchOptions.headers['Content-Type'] && typeof body === 'object') {
-                fetchOptions.headers['Content-Type'] = 'application/json';
-            }
         }
 
         const response = await nodeFetch(url, fetchOptions);
-        const endTime = Date.now();
-
-        // ---------------------------------------------------------
-        // IMPORTANT: Strip security headers that block iframes (Preview mode)
-        // ---------------------------------------------------------
-        const responseHeaders = {};
-        const forbiddenHeaders = [
-            'x-frame-options', 
-            'content-security-policy', 
-            'set-cookie', 
-            'strict-transport-security',
-            'x-content-type-options'
-        ];
-
-        response.headers.forEach((value, key) => {
-            if (!forbiddenHeaders.includes(key.toLowerCase())) {
-                responseHeaders[key] = value;
-            }
+        
+        // 보안 헤더 및 불필요한 헤더 제거
+        const resHeaders = {};
+        const skipHeaders = ['x-frame-options', 'content-security-policy', 'set-cookie', 'content-encoding', 'transfer-encoding'];
+        response.headers.forEach((v, k) => {
+            if (!skipHeaders.includes(k.toLowerCase())) resHeaders[k] = v;
         });
 
-        const contentType = response.headers.get('content-type') || '';
-        let responseData;
-        
-        if (contentType.includes('application/json')) {
-            try { responseData = await response.json(); } catch (e) { responseData = await response.text(); }
-        } else {
-            responseData = await response.text();
-        }
+        // 응답 본문 처리 (텍스트 위주로 안전하게)
+        const responseText = await response.text();
 
         res.json({
             status: response.status,
             statusText: response.statusText,
-            headers: responseHeaders,
-            body: responseData,
-            time: endTime - startTime,
-            size: responseData ? (typeof responseData === 'string' ? responseData.length : JSON.stringify(responseData).length) : 0
+            headers: resHeaders,
+            body: responseText,
+            size: responseText.length,
+            contentType: response.headers.get('content-type')
         });
     } catch (error) {
-        console.error('Proxy error:', error);
-        res.status(500).json({ 
-            error: 'Failed to fetch from the target URL',
-            message: error.message 
-        });
+        console.error('[Proxy Error]', error.message);
+        res.status(500).json({ error: 'Proxy Error', message: error.message });
     }
 };
 
 app.all('/api/proxy', handleProxy);
-
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running at http://0.0.0.0:${PORT}`);
-});
+app.listen(PORT, '0.0.0.0', () => console.log(`Server running at http://0.0.0.0:${PORT}`));
