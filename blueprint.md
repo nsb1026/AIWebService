@@ -18,6 +18,7 @@ The REST API Tester provides a robust environment for testing web services direc
 ### UI/UX Features
 *   **Method Selection:** Support for GET, POST, PUT, PATCH, DELETE, OPTIONS, and HEAD.
 *   **URL Input:** Easy entry of target endpoints.
+*   **Authorization Type:** Support for No Auth, API Key, Bearer Token, and Basic Auth with dedicated configuration fields.
 *   **Header Management:** Dynamic addition and removal of request headers.
 *   **Body Input:** Support for JSON and raw text request bodies.
 *   **Response Monitoring:** Real-time display of status codes, execution time, response headers, and formatted body output.

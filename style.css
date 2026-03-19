@@ -525,6 +525,35 @@ body {
     overflow: hidden;
 }
 
+.auth-config {
+    max-width: 600px;
+}
+
+.auth-type-select {
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: #f1f5f9;
+    font-weight: 600;
+    width: 100%;
+}
+
+.form-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    box-sizing: border-box;
+}
+
+.auth-fields {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px dashed var(--border-color);
+    animation: fadeIn 0.3s ease-in-out;
+}
+
 .tab-headers {
     display: flex;
     background: #f1f5f9;

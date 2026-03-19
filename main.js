@@ -278,6 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const apiResponseStatus = document.getElementById('api-response-status');
     const apiResponseBody = document.getElementById('api-response-body');
     const apiResponseHeaders = document.getElementById('api-response-headers');
+    const apiAuthType = document.getElementById('api-auth-type');
 
     // Tab Switching for API Tester
     document.querySelectorAll('.tab-link').forEach(button => {
@@ -291,6 +292,15 @@ document.addEventListener('DOMContentLoaded', () => {
             button.classList.add('active');
             document.getElementById(targetTab).classList.add('active');
         });
+    });
+
+    // Auth Type Switching
+    apiAuthType.addEventListener('change', () => {
+        document.querySelectorAll('.auth-fields').forEach(f => f.style.display = 'none');
+        const selected = apiAuthType.value;
+        if (selected !== 'none') {
+            document.getElementById(`auth-${selected}-fields`).style.display = 'block';
+        }
     });
 
     // Header Management
@@ -324,11 +334,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const method = apiMethod.value;
         const headers = {};
+        
+        // Manual Headers
         document.querySelectorAll('.header-row').forEach(row => {
             const key = row.querySelector('.header-key').value.trim();
             const val = row.querySelector('.header-value').value.trim();
             if (key) headers[key] = val;
         });
+
+        // Authorization Headers
+        const authType = apiAuthType.value;
+        if (authType === 'apikey') {
+            const key = document.getElementById('api-key-name').value.trim();
+            const val = document.getElementById('api-key-value').value.trim();
+            if (key && val) headers[key] = val;
+        } else if (authType === 'bearer') {
+            const token = document.getElementById('api-bearer-token').value.trim();
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+        } else if (authType === 'basic') {
+            const user = document.getElementById('api-basic-user').value.trim();
+            const pass = document.getElementById('api-basic-pass').value.trim();
+            if (user || pass) {
+                headers['Authorization'] = 'Basic ' + btoa(unescape(encodeURIComponent(user + ':' + pass)));
+            }
+        }
 
         let body = apiBody.value.trim();
         if (body) {
