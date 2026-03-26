@@ -9,6 +9,7 @@ Parse Utils is a comprehensive developer utility platform providing fast, secure
 *   **HTML Formatter:** Prettify or minify HTML markup with intelligent tag nesting.
 *   **Diff Checker:** Side-by-side text comparison with highlighted differences.
 *   **REST API Tester:** Modern, full-featured tool for testing REST APIs with custom methods, headers, and body. Includes a proxy backend to bypass CORS restrictions.
+*   **Real-time Chat:** A collaborative space for developers to communicate in real-time using WebSockets.
 *   **About/Privacy:** Information about the platform's mission and data handling.
 *   **Contact/Community:** Integration with Disqus for comments and Formspree for private inquiries.
 
@@ -42,6 +43,7 @@ A Node.js/Express backend (`server.js`) handles the requests to bypass CORS limi
 *   **JSON Parser:** Support for prettifying, sorting, and minifying JSON with live validation.
 *   **HTML Formatter:** Intelligent indentation logic for prettifying messy HTML code.
 *   **Diff Checker:** Line-by-line comparison with visual highlighting of additions and removals.
+*   **Real-time Chat:** Powered by Socket.io, allowing users to exchange messages instantly. It maintains a history of the last 30 messages for context upon joining.
 
 ## 4. Design Guidelines
 *   **Aesthetics:** Modern, clean, and interactive.

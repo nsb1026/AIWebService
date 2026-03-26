@@ -1,10 +1,54 @@
 const express = require('express');
 const path = require('path');
 const https = require('https');
+const http = require('http');
 const nodeFetch = require('node-fetch');
 const cors = require('cors');
+const socketIo = require('socket.io');
+
 const app = express();
+const server = http.createServer(app);
+const io = socketIo(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
+});
+
 const PORT = process.argv[2] || 3000;
+
+// In-memory message storage (last 30 messages)
+let messages = [];
+
+// Socket.io Connection
+io.on('connection', (socket) => {
+    console.log(`[Socket] New connection: ${socket.id}`);
+    
+    // Send message history to the new client
+    socket.emit('message history', messages);
+
+    // Handle new chat message
+    socket.on('chat message', (msg) => {
+        const messageData = {
+            id: Date.now(),
+            user: msg.user || 'Anonymous',
+            text: msg.text,
+            timestamp: new Date().toISOString()
+        };
+
+        messages.push(messageData);
+        if (messages.length > 30) {
+            messages = messages.slice(-30);
+        }
+
+        // Broadcast to everyone including sender
+        io.emit('chat message', messageData);
+    });
+
+    socket.on('disconnect', () => {
+        console.log(`[Socket] Disconnected: ${socket.id}`);
+    });
+});
 
 // Enable CORS for all routes
 app.use(cors({ origin: '*', methods: '*', allowedHeaders: '*' }));
@@ -110,9 +154,9 @@ app.get('/api/proxy', (req, res) => {
     handleProxy(req, res);
 });
 
-app.listen(PORT, '0.0.0.0', () => {
+server.listen(PORT, '0.0.0.0', () => {
     console.log(`========================================`);
-    console.log(`Parse Utils Proxy Server`);
+    console.log(`Parse Utils Server with WebSocket`);
     console.log(`Running at http://0.0.0.0:${PORT}`);
     console.log(`Mode: ${process.env.NODE_ENV || 'production'}`);
     console.log(`========================================`);

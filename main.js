@@ -2,6 +2,7 @@
 import { switchView, setupTabs } from './js/utils.js';
 import { setupEncoder } from './js/encoder.js';
 import { setupParsers } from './js/parser.js';
+import { setupChat } from './js/chat.js';
 // import { setupApiTester } from './js/api-tester.js'; // 제외 처리
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -26,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3. Module Initializations
     setupEncoder();
     setupParsers();
+    setupChat();
     // setupApiTester(); // 제외 처리
 
     console.log('Parse Utils initialized (REST Tester disabled).');

@@ -19,6 +19,7 @@
             <a href="#" class="nav-link" data-view="json-view">JSON Parser</a>
             <a href="#" class="nav-link" data-view="html-view">HTML Formatter</a>
             <a href="#" class="nav-link" data-view="diff-view">Diff Checker</a>
+            <a href="#" class="nav-link" data-view="chat-view">Chat</a>
             <!-- <a href="#" class="nav-link" data-view="api-view">REST Tester</a> -->
             <a href="#" class="nav-link" data-view="about-view">About</a>
             <a href="#" class="nav-link" data-view="privacy-view">Privacy</a>
@@ -236,6 +237,39 @@
                     <p class="placeholder-text">Enter text in both boxes above to see the difference.</p>
                 </div>
                 <textarea id="diff-output-raw" style="display:none;"></textarea>
+            </div>
+        </section>
+
+        <!-- Chat View -->
+        <section id="chat-view" class="view">
+            <header class="view-header">
+                <h1>Real-time Chat</h1>
+                <p>Connect and communicate with other developers in real-time. Share insights, ask for help, or just say hello.</p>
+                <div class="tool-description">
+                    <p>Powered by WebSockets. The last 30 messages are kept for context. All conversations are temporary and cleared when the server restarts.</p>
+                </div>
+            </header>
+
+            <div class="chat-container">
+                <div class="chat-header">
+                    <div class="user-config">
+                        <label for="chat-username">Your Name:</label>
+                        <input type="text" id="chat-username" placeholder="Anonymous" maxlength="20">
+                    </div>
+                    <div id="connection-status" class="status-indicator">
+                        <span class="dot"></span> <span class="status-text">Connecting...</span>
+                    </div>
+                </div>
+
+                <div id="chat-messages" class="chat-messages">
+                    <!-- Messages will be injected here -->
+                    <div class="placeholder-text">Welcome to the developer chat!</div>
+                </div>
+
+                <div class="chat-input-area">
+                    <textarea id="chat-input" placeholder="Type your message here... (Enter to send)"></textarea>
+                    <button id="btn-chat-send" class="primary-btn">Send</button>
+                </div>
             </div>
         </section>
 
@@ -516,5 +550,6 @@
     </footer>
 
     <script type="module" src="main.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
 </body>
 </html>
