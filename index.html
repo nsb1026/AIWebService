@@ -19,6 +19,7 @@
             <a href="#" class="nav-link" data-view="json-view">JSON Parser</a>
             <a href="#" class="nav-link" data-view="html-view">HTML Formatter</a>
             <a href="#" class="nav-link" data-view="diff-view">Diff Checker</a>
+            <a href="#" class="nav-link" data-view="ai-view">AI Assistant</a>
             <a href="#" class="nav-link" data-view="guides-view">Guides</a>
             <a href="#" class="nav-link" data-view="resources-view">Resources</a>
             <a href="#" class="nav-link" data-view="about-view">About</a>
@@ -32,6 +33,60 @@
     </nav>
 
     <main class="container">
+        <!-- AI Assistant View -->
+        <section id="ai-view" class="view">
+            <header class="view-header">
+                <h1>Gemini AI Smart Assistant</h1>
+                <p>Leverage the power of Gemini 1.5 Pro to transform, analyze, and fix your code or data instantly.</p>
+                <div class="tool-description">
+                    <p>Enter your Gemini API Key in the settings below to enable AI features. Your key is stored locally in your browser and never sent to our servers.</p>
+                </div>
+            </header>
+
+            <div class="api-config-card">
+                <div class="field">
+                    <label>Gemini API Key</label>
+                    <div class="input-with-button">
+                        <input type="password" id="gemini-api-key" placeholder="Enter your API Key here...">
+                        <button id="btn-save-key" class="primary-btn">Save Key</button>
+                    </div>
+                    <p class="info-text">Get your key from <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a>.</p>
+                </div>
+                <div class="field">
+                    <label>Model Version</label>
+                    <select id="gemini-model" class="form-input">
+                        <option value="gemini-1.5-pro">Gemini 1.5 Pro (Best for complex tasks)</option>
+                        <option value="gemini-1.5-flash">Gemini 1.5 Flash (Fastest)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="ai-container">
+                <div class="input-section">
+                    <div class="input-header">
+                        <label>AI Prompt & Data</label>
+                        <select id="ai-preset" class="btn-small">
+                            <option value="">Choose a preset...</option>
+                            <option value="extract-json">Extract JSON from text</option>
+                            <option value="fix-html">Fix HTML structure</option>
+                            <option value="explain-code">Explain this code</option>
+                            <option value="convert-format">Convert data format (e.g. CSV to JSON)</option>
+                        </select>
+                    </div>
+                    <textarea id="ai-input" placeholder="Type your instruction or paste data here..."></textarea>
+                    <button id="btn-ai-submit" class="primary-btn full-width" style="margin-top: 1rem;">Ask Gemini AI</button>
+                </div>
+
+                <div class="output-group">
+                    <div class="input-header">
+                        <label>AI Response</label>
+                        <button class="copy-btn btn-small" data-target="ai-output">Copy Result</button>
+                    </div>
+                    <div id="ai-loader" class="loader" style="display:none;">Thinking...</div>
+                    <textarea id="ai-output" readonly placeholder="AI response will appear here..." style="min-height: 300px;"></textarea>
+                </div>
+            </div>
+        </section>
         <!-- Encoder View -->
         <section id="encoder-view" class="view active">
             <header class="view-header">
