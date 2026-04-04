@@ -464,6 +464,135 @@ button:disabled { cursor: not-allowed; opacity: 0.6; }
     display: block;
 }
 
+/* About View Grid */
+.grid-about {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    background: white;
+    padding: 2.5rem;
+}
+
+.about-section h3 {
+    color: var(--accent-color);
+    margin-top: 0;
+    font-size: 1.25rem;
+    border-bottom: 2px solid var(--primary-bg);
+    padding-bottom: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.about-section p {
+    line-height: 1.7;
+    color: var(--text-main);
+}
+
+/* Privacy Page */
+.privacy-content h2 {
+    font-size: 1.25rem;
+    margin-top: 2rem;
+    color: var(--text-main);
+}
+
+.privacy-content ul {
+    padding-left: 1.5rem;
+    line-height: 1.7;
+}
+
+/* Guides Grid */
+.guides-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2rem;
+}
+
+.guide-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.guide-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.guide-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: #eef2ff;
+    color: var(--accent-color);
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+}
+
+.guide-card h2 {
+    font-size: 1.25rem;
+    margin: 0 0 1rem 0;
+}
+
+.guide-card p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.guide-content-preview {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+    font-style: italic;
+    font-size: 0.9rem;
+}
+
+/* Tech Details Section */
+.tech-details-section {
+    margin-top: 4rem;
+    padding-top: 3rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.tech-details-section h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.details-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
+}
+
+.details-card h4 {
+    color: var(--accent-color);
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.details-card p {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--text-muted);
+    margin: 0;
+}
+
 /* Footer */
 .site-footer {
     padding: 4rem 2rem 2.5rem;

@@ -19,8 +19,9 @@
             <a href="#" class="nav-link" data-view="json-view">JSON Parser</a>
             <a href="#" class="nav-link" data-view="html-view">HTML Formatter</a>
             <a href="#" class="nav-link" data-view="diff-view">Diff Checker</a>
-            <a href="#" class="nav-link" data-view="chat-view">Chat</a>
-            <!-- <a href="#" class="nav-link" data-view="api-view">REST Tester</a> -->
+            <a href="#" class="nav-link" data-view="api-view">REST Tester</a>
+            <!-- <a href="#" class="nav-link" data-view="chat-view">Chat</a> -->
+            <a href="#" class="nav-link" data-view="guides-view">Guides</a>
             <a href="#" class="nav-link" data-view="about-view">About</a>
             <a href="#" class="nav-link" data-view="privacy-view">Privacy</a>
             <a href="#" class="nav-link" data-view="contact-view">Contact</a>
@@ -130,6 +131,24 @@
                     </div>
                 </div>
             </div>
+
+            <div class="tech-details-section">
+                <h3>Encoding Pro Tips</h3>
+                <div class="details-grid">
+                    <div class="details-card">
+                        <h4>URL Encoding</h4>
+                        <p>Essential for passing parameters in URLs. Our encoder follows RFC 3986, ensuring that reserved characters like ?, &, and # are correctly escaped for reliable data transmission.</p>
+                    </div>
+                    <div class="details-card">
+                        <h4>Base64 Representation</h4>
+                        <p>Ideal for sending binary data over text-based protocols. Use this for data URIs or Basic Auth headers. Remember: Base64 is encoding, not encryption!</p>
+                    </div>
+                    <div class="details-card">
+                        <h4>XSS Protection</h4>
+                        <p>Always use <strong>HTML Escape</strong> when rendering user-provided text in your web apps. This converts symbols like < into &lt;, preventing malicious script injection.</p>
+                    </div>
+                </div>
+            </div>
         </section>
 
         <!-- JSON Parser View -->
@@ -163,6 +182,24 @@
                         <button class="copy-btn btn-small" data-target="json-output">Copy Result</button>
                     </div>
                     <textarea id="json-output" readonly placeholder="Formatted output will appear here..."></textarea>
+                </div>
+            </div>
+
+            <div class="tech-details-section">
+                <h3>JSON Best Practices</h3>
+                <div class="details-grid">
+                    <div class="details-card">
+                        <h4>Why Prettify?</h4>
+                        <p>Raw JSON from APIs is often minified to save bandwidth. Prettifying with 2-space indentation makes it readable for humans, helping you spot structural errors or missing values.</p>
+                    </div>
+                    <div class="details-card">
+                        <h4>Sorting Keys</h4>
+                        <p>Sorting JSON keys alphabetically is extremely useful when comparing two different API responses using our <strong>Diff Checker</strong>. It ensures a consistent baseline for comparison.</p>
+                    </div>
+                    <div class="details-card">
+                        <h4>Strict Validation</h4>
+                        <p>Our parser uses native <code>JSON.parse()</code>, which follows strict JSON standards. If your input is invalid, check for trailing commas or single quotes, which are common JSON syntax errors.</p>
+                    </div>
                 </div>
             </div>
         </section>
@@ -455,17 +492,28 @@
         <section id="about-view" class="view">
             <header class="view-header">
                 <h1>About Parse Utils</h1>
-                <p>A comprehensive developer utility platform.</p>
+                <p>Professional Developer Utilities for the Modern Web.</p>
             </header>
-            <div class="content-card">
-                <h3>Our Mission</h3>
-                <p>Parse Utils was created to provide developers with a fast, secure, and reliable way to handle common data transformations. We believe in high-quality tools that run entirely in the browser, ensuring that your sensitive data never leaves your machine.</p>
-                <h3>Why use Parse Utils?</h3>
-                <ul>
-                    <li><strong>Privacy First:</strong> No data is sent to any server. All transformations happen locally.</li>
-                    <li><strong>Real-time Feedback:</strong> See results as you type.</li>
-                    <li><strong>Developer Focused:</strong> Optimized for the most common tasks like JSON parsing and Base64 encoding.</li>
-                </ul>
+            <div class="content-card grid-about">
+                <div class="about-section">
+                    <h3>Our Mission</h3>
+                    <p>Parse Utils was established in 2026 with a singular goal: to provide developers with a robust, high-performance, and privacy-centric suite of tools for daily data transformation tasks. We recognized that many existing tools are either cluttered with ads, require server-side processing, or lack the modern interface that today's engineers expect.</p>
+                </div>
+                
+                <div class="about-section">
+                    <h3>The Client-Side Philosophy</h3>
+                    <p>Unlike many online converters, Parse Utils operates on a "Client-Side Only" model. Every byte of data you input is processed right here in your browser's memory. This means your API keys, sensitive JSON payloads, and private notes never cross the network. We leverage modern Web APIs to ensure that speed and security go hand-in-hand.</p>
+                </div>
+
+                <div class="about-section">
+                    <h3>Technical Stack</h3>
+                    <p>Built with vanilla JavaScript (ES Modules), HTML5, and CSS3, Parse Utils adheres to the <strong>Baseline</strong> web standards. We avoid heavy frameworks to ensure the fastest possible load times and maximum compatibility across all modern browsers. For our REST API Tester, we utilize a lightweight Node.js proxy to handle CORS-restricted requests while maintaining header integrity.</p>
+                </div>
+
+                <div class="about-section">
+                    <h3>Community & Openness</h3>
+                    <p>We believe in a better developer experience. Our platform is continuously evolving based on user feedback. Through our integrated Disqus community and direct contact channels, we listen to the features you need most.</p>
+                </div>
             </div>
         </section>
 
@@ -473,15 +521,75 @@
         <section id="privacy-view" class="view">
             <header class="view-header">
                 <h1>Privacy Policy</h1>
-                <p>How we handle your data.</p>
+                <p>Last Updated: April 2026</p>
             </header>
-            <div class="content-card">
-                <h3>Data Collection</h3>
-                <p>Parse Utils does not collect, store, or share any of the text or data you input into our tools. All processing is performed within your browser using JavaScript.</p>
-                <h3>Third-Party Services</h3>
-                <p>We use Google AdSense to display advertisements, which helps keep our tools free to use. AdSense may use cookies to serve personalized ads based on your visit to this site and other sites on the internet.</p>
-                <h3>Analytics</h3>
-                <p>We may use basic analytics to understand site traffic and improve our user experience, but we never track the content you process.</p>
+            <div class="content-card privacy-content">
+                <h2>1. Commitment to Privacy</h2>
+                <p>At Parse Utils, privacy isn't just a feature—it's our foundation. We do not collect, store, or transmit the data you process through our encoding, formatting, or comparison tools.</p>
+
+                <h2>2. Data Handling</h2>
+                <p><strong>Input Data:</strong> All text, code, or JSON entered into our tools stays within your browser's local environment. It is processed in volatile memory and is lost when you close the tab or refresh the page, unless specifically noted (such as the API History feature which uses browser <code>localStorage</code>).</p>
+                <p><strong>Local Storage:</strong> We use browser <code>localStorage</code> to save your preferences and API request history locally. You can clear this data at any time using the "Clear History" buttons within the respective tools.</p>
+
+                <h2>3. Third-Party Services</h2>
+                <p>To keep our services free, we partner with industry-standard providers:</p>
+                <ul>
+                    <li><strong>Google AdSense:</strong> We use AdSense to serve advertisements. Google may use cookies or web beacons to collect non-personal information (like your browser type or IP address) to serve ads based on your interests. You can opt-out of personalized advertising in your Google account settings.</li>
+                    <li><strong>Disqus:</strong> Our community section is powered by Disqus. When you comment, your data is handled according to the Disqus Privacy Policy.</li>
+                    <li><strong>Formspree:</strong> Contact form submissions are securely transmitted via Formspree.</li>
+                </ul>
+
+                <h2>4. Cookies</h2>
+                <p>Parse Utils itself does not use tracking cookies. However, our third-party partners (listed above) may set cookies to provide their services effectively.</p>
+
+                <h2>5. Contact Us</h2>
+                <p>If you have any questions regarding this policy, please reach out via our <a href="#" data-view="contact-view">Contact Page</a>.</p>
+            </div>
+        </section>
+
+        <!-- Guides View -->
+        <section id="guides-view" class="view">
+            <header class="view-header">
+                <h1>Developer Guides & Resources</h1>
+                <p>In-depth articles to help you master web development and data processing.</p>
+            </header>
+
+            <div class="guides-grid">
+                <article class="guide-card">
+                    <div class="guide-badge">Encoding</div>
+                    <h2>Understanding Base64 Encoding</h2>
+                    <p>Base64 is not encryption. It's a way to represent binary data in an ASCII string format. Learn why we use it for images, data URIs, and basic authentication...</p>
+                    <div class="guide-content-preview">
+                        <p>In web development, you'll often see Base64 used for embedding small images directly into CSS or HTML. While it increases the file size by about 33%, it reduces HTTP requests, which can be a significant performance win for small assets.</p>
+                    </div>
+                </article>
+
+                <article class="guide-card">
+                    <div class="guide-badge">APIs</div>
+                    <h2>REST API Debugging Best Practices</h2>
+                    <p>Master the art of testing and debugging APIs. Learn about status codes, headers, and how to handle CORS issues effectively...</p>
+                    <div class="guide-content-preview">
+                        <p>When an API request fails, the first place to look is the Status Code. A 4xx error usually means something is wrong with your request (like missing auth), while a 5xx error indicates a server-side problem. Using a tool like our REST Tester helps you isolate these variables.</p>
+                    </div>
+                </article>
+
+                <article class="guide-card">
+                    <div class="guide-badge">Data</div>
+                    <h2>JSON: The Backbone of the Modern Web</h2>
+                    <p>From validation to minification, learn how to handle JSON like a pro. Why is JSON better than XML for modern web applications?</p>
+                    <div class="guide-content-preview">
+                        <p>JSON (JavaScript Object Notation) is lightweight and easy for both humans and machines to read. Our formatter helps you visualize complex nested structures that would otherwise be impossible to read in a single line of raw data.</p>
+                    </div>
+                </article>
+
+                <article class="guide-card">
+                    <div class="guide-badge">Security</div>
+                    <h2>HTML Escaping & XSS Prevention</h2>
+                    <p>Why you should always escape user input before rendering it. Learn how HTML escaping protects your site from Cross-Site Scripting attacks.</p>
+                    <div class="guide-content-preview">
+                        <p>Escaping characters like <code>&lt;</code>, <code>&gt;</code>, and <code>&amp;</code> prevents the browser from interpreting them as HTML tags. This is the first line of defense against malicious scripts being injected into your pages.</p>
+                    </div>
+                </article>
             </div>
         </section>
 
