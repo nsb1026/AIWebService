@@ -611,45 +611,6 @@ button:disabled { cursor: not-allowed; opacity: 0.6; }
     margin: 0;
 }
 
-/* AI Assistant Specifics */
-.api-config-card {
-    background: var(--card-bg);
-    padding: 1.5rem;
-    border-radius: 12px;
-    border: 1px solid var(--border-color);
-    margin-bottom: 2rem;
-    display: grid;
-    grid-template-columns: 1fr 300px;
-    gap: 2rem;
-}
-
-.ai-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-}
-
-.info-text {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    margin-top: 0.5rem;
-}
-
-.info-text a {
-    color: var(--accent-color);
-    text-decoration: none;
-}
-
-.loader {
-    padding: 1rem;
-    text-align: center;
-    color: var(--accent-color);
-    font-weight: 600;
-    font-style: italic;
-}
-
-.full-width { width: 100%; }
-
 /* Footer */
 .site-footer {
     padding: 4rem 2rem 2.5rem;
@@ -757,12 +718,6 @@ button:disabled { cursor: not-allowed; opacity: 0.6; }
         grid-template-columns: 1fr;
     }
     .resources-grid {
-        grid-template-columns: 1fr;
-    }
-    .api-config-card {
-        grid-template-columns: 1fr;
-    }
-    .ai-container {
         grid-template-columns: 1fr;
     }
 }

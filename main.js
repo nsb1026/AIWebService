@@ -2,7 +2,6 @@
 import { switchView } from './js/utils.js';
 import { setupEncoder } from './js/encoder.js';
 import { setupParsers } from './js/parser.js';
-import { setupAiAssistant } from './js/ai-assistant.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Navigation & Global View Logic
@@ -37,7 +36,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3. Module Initializations
     setupEncoder();
     setupParsers();
-    setupAiAssistant();
 
-    console.log('Parse Utils initialized with Gemini AI Assistant.');
+    console.log('Parse Utils initialized.');
 });
