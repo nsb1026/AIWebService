@@ -1,9 +1,7 @@
 // --- Main Entry Point ---
-import { switchView, setupTabs } from './js/utils.js';
+import { switchView } from './js/utils.js';
 import { setupEncoder } from './js/encoder.js';
 import { setupParsers } from './js/parser.js';
-import { setupChat } from './js/chat.js';
-import { setupApiTester } from './js/api-tester.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Navigation & Global View Logic
@@ -20,15 +18,24 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // 2. Global Tab Initializations
-    setupTabs('.api-request-section');
-    setupTabs('.api-response-section');
+    // 2. Theme Toggle Logic
+    const themeToggle = document.getElementById('theme-toggle');
+    const currentTheme = localStorage.getItem('theme') || 'light';
+
+    // Set initial theme
+    document.body.setAttribute('data-theme', currentTheme);
+
+    themeToggle.addEventListener('click', () => {
+        const isDark = document.body.getAttribute('data-theme') === 'dark';
+        const newTheme = isDark ? 'light' : 'dark';
+        
+        document.body.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+    });
 
     // 3. Module Initializations
     setupEncoder();
     setupParsers();
-    setupChat();
-    setupApiTester();
 
-    console.log('Parse Utils initialized.');
+    console.log('Parse Utils initialized with Theme Switcher.');
 });
