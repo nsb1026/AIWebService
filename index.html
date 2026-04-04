@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Parse Utils - Modern Encoding & Formatting Tools</title>
+    <title>Parse Utils - Professional Developer Utilities & Learning Hub</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <!-- Google AdSense -->
@@ -20,6 +20,7 @@
             <a href="#" class="nav-link" data-view="html-view">HTML Formatter</a>
             <a href="#" class="nav-link" data-view="diff-view">Diff Checker</a>
             <a href="#" class="nav-link" data-view="guides-view">Guides</a>
+            <a href="#" class="nav-link" data-view="resources-view">Resources</a>
             <a href="#" class="nav-link" data-view="about-view">About</a>
             <a href="#" class="nav-link" data-view="privacy-view">Privacy</a>
             <a href="#" class="nav-link" data-view="contact-view">Contact</a>
@@ -279,6 +280,60 @@
             </div>
         </section>
 
+        <!-- Resources View (Glossary & FAQ) -->
+        <section id="resources-view" class="view">
+            <header class="view-header">
+                <h1>Developer Resources & FAQ</h1>
+                <p>Expand your knowledge with our technical glossary and find answers to common questions.</p>
+            </header>
+
+            <div class="resources-grid">
+                <div class="resource-col">
+                    <div class="content-card">
+                        <h3>Technical Glossary</h3>
+                        <dl class="glossary-list">
+                            <dt>JSON (JavaScript Object Notation)</dt>
+                            <dd>A lightweight data-interchange format that is easy for humans to read and write and easy for machines to parse and generate.</dd>
+                            
+                            <dt>Base64</dt>
+                            <dd>A group of binary-to-text encoding schemes that represent binary data in an ASCII string format by translating it into a radix-64 representation.</dd>
+                            
+                            <dt>URL Encoding (Percent-encoding)</dt>
+                            <dd>A mechanism for encoding information in a Uniform Resource Identifier (URI). Characters not allowed in a URL are replaced by a % followed by their hexadecimal ASCII value.</dd>
+                            
+                            <dt>XSS (Cross-Site Scripting)</dt>
+                            <dd>A type of security vulnerability typically found in web applications. XSS enables attackers to inject client-side scripts into web pages viewed by other users.</dd>
+                            
+                            <dt>CORS (Cross-Origin Resource Sharing)</dt>
+                            <dd>A mechanism that uses additional HTTP headers to tell browsers to give a web application running at one origin, access to selected resources from a different origin.</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <div class="resource-col">
+                    <div class="content-card">
+                        <h3>Frequently Asked Questions</h3>
+                        <div class="faq-item">
+                            <h4>Is my data stored on your servers?</h4>
+                            <p>No. All processing happens locally in your browser using JavaScript. We never see, store, or transmit your input data.</p>
+                        </div>
+                        <div class="faq-item">
+                            <h4>Why does the JSON Parser show an error?</h4>
+                            <p>Most common JSON errors are trailing commas, using single quotes instead of double quotes, or missing brackets. Check our "JSON Best Practices" guide for more details.</p>
+                        </div>
+                        <div class="faq-item">
+                            <h4>Can I use these tools offline?</h4>
+                            <p>Once the page is loaded, most functions will work offline as they are client-side. However, we recommend an active connection for the latest updates.</p>
+                        </div>
+                        <div class="faq-item">
+                            <h4>Is Base64 secure for passwords?</h4>
+                            <p>Absolutely not. Base64 is an encoding, not encryption. It can be reversed instantly and should never be used to secure sensitive information like passwords.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- About View -->
         <section id="about-view" class="view">
             <header class="view-header">
@@ -379,6 +434,24 @@
                     <p>Why you should always escape user input before rendering it. Learn how HTML escaping protects your site from Cross-Site Scripting attacks.</p>
                     <div class="guide-content-preview">
                         <p>Escaping characters like <code>&lt;</code>, <code>&gt;</code>, and <code>&amp;</code> prevents the browser from interpreting them as HTML tags. This is the first line of defense against malicious scripts being injected into your pages.</p>
+                    </div>
+                </article>
+
+                <article class="guide-card">
+                    <div class="guide-badge">Best Practices</div>
+                    <h2>Web Security Checklist for 2026</h2>
+                    <p>Essential security steps for every web developer. From CSP headers to secure cookie attributes...</p>
+                    <div class="guide-content-preview">
+                        <p>Security is a moving target. In 2026, implementing a strong Content Security Policy (CSP) and ensuring all data is escaped on the client side are non-negotiable requirements for modern web applications.</p>
+                    </div>
+                </article>
+
+                <article class="guide-card">
+                    <div class="guide-badge">Optimization</div>
+                    <h2>Minification vs. Compression</h2>
+                    <p>Learn the difference between minifying your code and compressing it. Why you need both for a high-performance website.</p>
+                    <div class="guide-content-preview">
+                        <p>Minification removes unnecessary characters from your source code without changing its functionality. Compression (like Gzip or Brotli), on the other hand, happens at the server level to reduce the amount of data sent over the network.</p>
                     </div>
                 </article>
             </div>
