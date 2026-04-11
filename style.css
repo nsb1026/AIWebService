@@ -80,6 +80,7 @@ body {
     align-items: center;
     overflow-x: auto;
     scrollbar-width: none;
+    flex-wrap: wrap; /* Added to allow wrapping on mobile if needed */
 }
 
 .nav-links::-webkit-scrollbar { display: none; }
@@ -731,4 +732,53 @@ button:disabled { cursor: not-allowed; opacity: 0.6; }
         gap: 1rem;
         padding: 1rem;
     }
+}
+
+/* --- Converter Tool --- */
+.converter-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+    .converter-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+.image-preview-box {
+    background: var(--input-bg);
+    border: 2px dashed var(--border-color);
+    border-radius: 12px;
+    min-height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    overflow: hidden;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.preview-image {
+    max-width: 100%;
+    max-height: 500px;
+    object-fit: contain;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.preview-controls {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: center;
+}
+
+.json-status.success { color: #059669; background: #ecfdf5; }
+.json-status.error { color: #dc2626; background: #fef2f2; }
+
+.error-text {
+    color: #dc2626;
 }

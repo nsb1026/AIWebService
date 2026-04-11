@@ -2,6 +2,7 @@
 import { switchView } from './js/utils.js';
 import { setupEncoder } from './js/encoder.js';
 import { setupParsers } from './js/parser.js';
+import { setupBase64ImageTool } from './js/base64-image.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Navigation & Global View Logic
@@ -36,6 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3. Module Initializations
     setupEncoder();
     setupParsers();
+    setupBase64ImageTool();
 
     console.log('Parse Utils initialized.');
 });

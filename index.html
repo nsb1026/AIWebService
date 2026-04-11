@@ -17,6 +17,7 @@
         <div class="nav-links">
             <a href="#" class="nav-link active" data-view="encoder-view">Encoder</a>
             <a href="#" class="nav-link" data-view="json-view">JSON Parser</a>
+            <a href="#" class="nav-link" data-view="base64-image-view">Base64 to Image</a>
             <a href="#" class="nav-link" data-view="html-view">HTML Formatter</a>
             <a href="#" class="nav-link" data-view="diff-view">Diff Checker</a>
             <a href="#" class="nav-link" data-view="guides-view">Guides</a>
@@ -202,6 +203,58 @@
                     <div class="details-card">
                         <h4>Strict Validation</h4>
                         <p>Our parser uses native <code>JSON.parse()</code>, which follows strict JSON standards. If your input is invalid, check for trailing commas or single quotes, which are common JSON syntax errors.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Base64 to Image View -->
+        <section id="base64-image-view" class="view">
+            <header class="view-header">
+                <h1>Base64 to Image Converter</h1>
+                <p>Convert Base64 strings into viewable and downloadable images. Purely client-side processing.</p>
+                <div class="tool-description">
+                    <p>Paste your Base64 encoded image string (with or without the <code>data:image/...;base64,</code> prefix) to see an instant preview and download the file.</p>
+                </div>
+            </header>
+
+            <div class="converter-container">
+                <div class="input-section">
+                    <div class="input-header">
+                        <label>Base64 String Input</label>
+                        <button id="btn-b64-clear" class="btn-small danger-btn">Clear</button>
+                    </div>
+                    <textarea id="b64-input" placeholder="Paste your Base64 string here..."></textarea>
+                </div>
+
+                <div class="preview-section">
+                    <div class="input-header">
+                        <label>Image Preview</label>
+                        <div id="b64-status" class="json-status"></div>
+                    </div>
+                    <div id="b64-preview-container" class="image-preview-box">
+                        <p class="placeholder-text">Image preview will appear here.</p>
+                    </div>
+                    <div class="preview-controls">
+                        <button id="btn-b64-download" class="primary-btn" disabled>Download Image</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tech-details-section">
+                <h3>About Base64 Images</h3>
+                <div class="details-grid">
+                    <div class="details-card">
+                        <h4>Data URIs</h4>
+                        <p>Base64 images are typically used as Data URIs. They start with <code>data:image/[type];base64,</code> followed by the encoded data. This allows you to embed images directly in HTML or CSS.</p>
+                    </div>
+                    <div class="details-card">
+                        <h4>Use Cases</h4>
+                        <p>Best for small icons or placeholder images to reduce the number of HTTP requests. For larger images, traditional file hosting is generally more efficient for caching.</p>
+                    </div>
+                    <div class="details-card">
+                        <h4>Client-Side Safety</h4>
+                        <p>Our tool processes the image data entirely in your browser. Your images are never uploaded to any server, keeping your data private and secure.</p>
                     </div>
                 </div>
             </div>
