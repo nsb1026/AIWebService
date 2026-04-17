@@ -708,6 +708,52 @@ button:disabled { cursor: not-allowed; opacity: 0.6; }
     margin: 0;
 }
 
+/* Cookie Consent Banner */
+.cookie-banner {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: var(--nav-bg);
+    color: white;
+    padding: 1.5rem 2rem;
+    z-index: 2000;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2);
+    display: none; /* Shown via JS */
+    animation: slideUp 0.5s ease-out;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+
+.cookie-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+}
+
+.cookie-content p {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: #cbd5e1;
+}
+
+.cookie-content a {
+    color: var(--accent-color);
+    text-decoration: underline;
+}
+
+.cookie-actions {
+    display: flex;
+    gap: 1rem;
+}
+
 /* Footer */
 .site-footer {
     padding: 4rem 2rem 2.5rem;
@@ -724,29 +770,50 @@ button:disabled { cursor: not-allowed; opacity: 0.6; }
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 2rem;
+    gap: 3rem;
 }
 
 .footer-brand {
-    font-size: 1.25rem;
+    font-size: 1.5rem;
     font-weight: 800;
     background: linear-gradient(to right, #818cf8, #c084fc);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
-.footer-links {
+.footer-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4rem;
+    width: 100%;
+}
+
+.footer-col h4 {
+    color: var(--text-main);
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin-top: 0;
+    margin-bottom: 1.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.footer-col {
     display: flex;
-    gap: 2rem;
+    flex-direction: column;
+    gap: 0.75rem;
 }
 
 .footer-link {
     color: var(--text-muted);
     text-decoration: none;
-    font-weight: 500;
+    font-size: 0.9rem;
+    transition: color 0.2s;
 }
 
-.footer-link:hover { color: var(--accent-color); }
+.footer-link:hover {
+    color: var(--accent-color);
+}
 
 /* Resources Grid */
 .resources-grid {

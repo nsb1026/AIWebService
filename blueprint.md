@@ -9,13 +9,18 @@ Parse Utils is a comprehensive developer utility platform providing fast, secure
 *   **JSON Parser & Formatter:** Validate, prettify, sort keys, and minify JSON data.
 *   **HTML Formatter:** Prettify or minify HTML markup with intelligent tag nesting.
 *   **Diff Checker:** Side-by-side text comparison with highlighted differences.
-*   **Learning Hub (New):** A collection of high-value, original technical articles and guides about web technologies, security, and optimization. Replaces "thin content" with substantial educational material.
+*   **Learning Hub:** A collection of high-value, original technical articles and guides about web technologies, security, and optimization.
+*   **AdSense & Policy Compliance:** 
+    *   **Cookie Consent:** Integrated banner for GDPR/CCPA compliance and AdSense cookie usage.
+    *   **Transparent About:** Detailed "About Us" section highlighting team expertise and technical stack.
+    *   **Comprehensive Privacy:** Clear disclosure of third-party services and cookie handling.
+    *   **Advanced Navigation:** Multi-column footer sitemap for improved user experience.
 *   **Technical Glossary:** Definitions for core web technologies like CORS, XSS, and Base64.
 *   **Theme Management:** Modern Light/Dark mode with persistent storage.
 
 ## 3. SEO & Content Strategy
 *   **Rich Metadata:** Optimized meta tags, Open Graph properties, and canonical URLs for better search visibility.
-*   **Value-Added Content:** In-depth articles provide original research and insights, moving beyond simple tool utility to an educational platform.
+*   **Substantial Value:** In-depth articles provide original research and insights, meeting Google AdSense quality standards.
 *   **A11Y & Performance:** Strict adherence to accessibility standards and zero-dependency vanilla JS for sub-second load times.
 
 ## 4. Architecture & Design
