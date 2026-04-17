@@ -54,46 +54,47 @@
         <!-- Encoder View -->
         <section id="encoder-view" class="view active">
             <header class="view-header">
-                <h1>String Encoder / Decoder</h1>
-                <p>Real-time processing for various formats and ciphers. All processing happens in your browser, ensuring data security and privacy.</p>
+                <h1>Professional String Encoder & Decoder</h1>
+                <p>A multi-format transformation engine designed for secure, real-time data processing. Unlike server-side alternatives, all logic executes within your browser's V8 engine, ensuring that sensitive strings never leave your local environment.</p>
                 <div class="tool-description">
-                    <p>Convert your strings into URL-safe formats, escape HTML for secure rendering, or use ciphers like ROT13 and Atbash. Perfect for developers debugging data or testing character encodings.</p>
+                    <p><strong>How to use:</strong> Simply paste your target string into the main input. The application will instantly generate transformations across all supported categories. Use the 'Copy' buttons for rapid workflow integration. This tool is ideal for debugging API requests, sanitizing user input, or analyzing encoded payloads.</p>
                 </div>
             </header>
 
             <div class="input-section">
                 <div class="input-header">
-                    <label>Main Input</label>
-                    <button id="btn-encoder-clear" class="btn-small danger-btn">Clear</button>
+                    <label>Main Input (Source String)</label>
+                    <button id="btn-encoder-clear" class="btn-small danger-btn">Clear Workspace</button>
                 </div>
-                <textarea id="main-input" placeholder="Type or paste your string here..."></textarea>
+                <textarea id="main-input" placeholder="Enter your raw text, Base64, or URL-encoded string..."></textarea>
                 <div id="stats" class="stats-bar">
                     <span>Characters: <b id="stat-chars">0</b></span>
                     <span>Words: <b id="stat-words">0</b></span>
                     <span>Lines: <b id="stat-lines">0</b></span>
+                    <span>Entropy: <b id="stat-entropy">Low</b></span>
                 </div>
             </div>
 
             <div class="output-grid">
                 <!-- Web Encodings -->
                 <div class="output-group">
-                    <h3>Web Encodings</h3>
+                    <h3>Web & Network Protocols</h3>
                     <div class="field">
-                        <label>URL Encode</label>
+                        <label>RFC 3986 URL Encode</label>
                         <div class="input-with-button">
                             <input type="text" id="url-encode" readonly>
                             <button class="copy-btn" data-target="url-encode">Copy</button>
                         </div>
                     </div>
                     <div class="field">
-                        <label>HTML Escape</label>
+                        <label>HTML Entity Escape (XSS Protection)</label>
                         <div class="input-with-button">
                             <input type="text" id="html-escape" readonly>
                             <button class="copy-btn" data-target="html-escape">Copy</button>
                         </div>
                     </div>
                     <div class="field">
-                        <label>Unicode Escape</label>
+                        <label>Unicode / UTF-16 Escape</label>
                         <div class="input-with-button">
                             <input type="text" id="unicode-escape" readonly>
                             <button class="copy-btn" data-target="unicode-escape">Copy</button>
@@ -103,23 +104,23 @@
 
                 <!-- Data Representations -->
                 <div class="output-group">
-                    <h3>Data Representations</h3>
+                    <h3>Binary & Data Structures</h3>
                     <div class="field">
-                        <label>Base64 Encode</label>
+                        <label>Base64 (Standard)</label>
                         <div class="input-with-button">
                             <input type="text" id="base64-encode" readonly>
                             <button class="copy-btn" data-target="base64-encode">Copy</button>
                         </div>
                     </div>
                     <div class="field">
-                        <label>Binary String</label>
+                        <label>Binary Stream (Space-separated)</label>
                         <div class="input-with-button">
                             <input type="text" id="binary-string" readonly>
                             <button class="copy-btn" data-target="binary-string">Copy</button>
                         </div>
                     </div>
                     <div class="field">
-                        <label>Hexadecimal</label>
+                        <label>Hexadecimal (Hex Dump)</label>
                         <div class="input-with-button">
                             <input type="text" id="hex-encode" readonly>
                             <button class="copy-btn" data-target="hex-encode">Copy</button>
@@ -129,23 +130,23 @@
 
                 <!-- Ciphers & Transforms -->
                 <div class="output-group">
-                    <h3>Ciphers & Case</h3>
+                    <h3>Ciphers & String Logic</h3>
                     <div class="field">
-                        <label>ROT13 (Caesar)</label>
+                        <label>ROT13 Obfuscation</label>
                         <div class="input-with-button">
                             <input type="text" id="rot13" readonly>
                             <button class="copy-btn" data-target="rot13">Copy</button>
                         </div>
                     </div>
                     <div class="field">
-                        <label>Atbash Cipher</label>
+                        <label>Atbash Substitution</label>
                         <div class="input-with-button">
                             <input type="text" id="atbash" readonly>
                             <button class="copy-btn" data-target="atbash">Copy</button>
                         </div>
                     </div>
                     <div class="field">
-                        <label>camelCase / snake_case</label>
+                        <label>Naming Conventions</label>
                         <div class="multi-output">
                             <input type="text" id="camel-case" readonly placeholder="camelCase">
                             <input type="text" id="snake-case" readonly placeholder="snake_case">
@@ -155,19 +156,19 @@
             </div>
 
             <div class="tech-details-section">
-                <h3>Encoding Pro Tips</h3>
+                <h3>Developer Insight: Advanced Encoding Applications</h3>
                 <div class="details-grid">
                     <div class="details-card">
-                        <h4>URL Encoding</h4>
-                        <p>Essential for passing parameters in URLs. Our encoder follows RFC 3986, ensuring that reserved characters like ?, &, and # are correctly escaped for reliable data transmission.</p>
+                        <h4>Securing API Payloads</h4>
+                        <p>When transmitting data via GET requests, URL encoding is mandatory to prevent character collision. Our tool ensures that reserved characters like <code>#</code>, <code>&</code>, and <code>?</code> are correctly converted to their percent-encoded equivalents (e.g., <code>%23</code>, <code>%26</code>, <code>%3F</code>), maintaining the integrity of your query parameters.</p>
                     </div>
                     <div class="details-card">
-                        <h4>Base64 Representation</h4>
-                        <p>Ideal for sending binary data over text-based protocols. Use this for data URIs or Basic Auth headers. Remember: Base64 is encoding, not encryption!</p>
+                        <h4>Defensive Coding with HTML Escaping</h4>
+                        <p>Cross-Site Scripting (XSS) occurs when raw user input is rendered directly in the DOM. By using our HTML Escape tool, you convert <code>&lt;script&gt;</code> tags into harmless text entities. This is a critical step in sanitizing data for localized previews or when building custom CMS interfaces.</p>
                     </div>
                     <div class="details-card">
-                        <h4>XSS Protection</h4>
-                        <p>Always use <strong>HTML Escape</strong> when rendering user-provided text in your web apps. This converts symbols like < into &lt;, preventing malicious script injection.</p>
+                        <h4>Binary Analysis via Hex/Base64</h4>
+                        <p>Debugging binary protocols often requires inspecting Hex dumps or Base64 strings. This tool allows you to quickly flip between these representations to verify header signatures or check for magic bytes in custom data formats. It's an essential utility for backend developers and security researchers alike.</p>
                     </div>
                 </div>
             </div>
@@ -176,51 +177,51 @@
         <!-- JSON Parser View -->
         <section id="json-view" class="view">
             <header class="view-header">
-                <h1>JSON Parser & Formatter</h1>
-                <p>Validate, prettify, and sort your JSON data. A powerful tool for debugging APIs and cleaning up data structures.</p>
+                <h1>High-Performance JSON Analytics & Formatting</h1>
+                <p>Validate, restructure, and optimize your JavaScript Object Notation payloads. Designed for handling large-scale API responses with millisecond latency.</p>
                 <div class="tool-description">
-                    <p>Enter your raw JSON to validate its structure, format it for readability with 2-space indentation, or sort the keys alphabetically. All parsing occurs client-side.</p>
+                    <p><strong>Usage Guide:</strong> Paste your raw JSON into the left panel. Use 'Prettify' for human readability or 'Sort Keys' to normalize objects for comparison. The 'Minify' option is recommended for reducing payload size before production deployment. Errors are caught in real-time with specific line-number feedback.</p>
                 </div>
             </header>
 
             <div class="parser-container">
                 <div class="parser-input-side">
                     <div class="input-header">
-                        <label>Raw JSON Input</label>
+                        <label>Raw JSON Payload</label>
                         <div id="json-status" class="json-status"></div>
-                        <button id="btn-json-clear" class="btn-small danger-btn">Clear</button>
+                        <button id="btn-json-clear" class="btn-small danger-btn">Clear Panel</button>
                     </div>
-                    <textarea id="json-input" placeholder="Paste your raw JSON here..."></textarea>
+                    <textarea id="json-input" placeholder="Paste your unformatted JSON here..."></textarea>
                 </div>
                 <div class="parser-controls">
-                    <button id="btn-json-prettify" class="primary-btn">Prettify (2-space)</button>
-                    <button id="btn-json-sort" class="primary-btn">Sort Keys (Asc)</button>
-                    <button id="btn-json-minify" class="secondary-btn">Minify</button>
-                    <button id="btn-json-apply" class="secondary-btn">Apply to Input</button>
+                    <button id="btn-json-prettify" class="primary-btn">Prettify (Indent 2)</button>
+                    <button id="btn-json-sort" class="primary-btn">Sort Keys (Alpha)</button>
+                    <button id="btn-json-minify" class="secondary-btn">Compress/Minify</button>
+                    <button id="btn-json-apply" class="secondary-btn">Push to Input</button>
                 </div>
                 <div class="parser-output-side">
                     <div class="input-header">
-                        <label>Formatted Output</label>
-                        <button class="copy-btn btn-small" data-target="json-output">Copy Result</button>
+                        <label>Restructured Output</label>
+                        <button class="copy-btn btn-small" data-target="json-output">Copy Formatted</button>
                     </div>
-                    <textarea id="json-output" readonly placeholder="Formatted output will appear here..."></textarea>
+                    <textarea id="json-output" readonly placeholder="Your optimized JSON will appear here..."></textarea>
                 </div>
             </div>
 
             <div class="tech-details-section">
-                <h3>JSON Best Practices</h3>
+                <h3>Technical Excellence: JSON Normalization</h3>
                 <div class="details-grid">
                     <div class="details-card">
-                        <h4>Why Prettify?</h4>
-                        <p>Raw JSON from APIs is often minified to save bandwidth. Prettifying with 2-space indentation makes it readable for humans, helping you spot structural errors or missing values.</p>
+                        <h4>The Importance of Key Sorting</h4>
+                        <p>In distributed systems, two API responses might contain the same data but have keys in a different order. This makes simple string comparisons fail. By 'Sorting Keys' alphabetically, you normalize the data structure, allowing for reliable diff-checking and cache-key generation.</p>
                     </div>
                     <div class="details-card">
-                        <h4>Sorting Keys</h4>
-                        <p>Sorting JSON keys alphabetically is extremely useful when comparing two different API responses using our <strong>Diff Checker</strong>. It ensures a consistent baseline for comparison.</p>
+                        <h4>Validation vs. Parsing</h4>
+                        <p>Our formatter uses a strict <code>JSON.parse()</code> implementation. If your JSON fails to load, it's usually due to non-standard syntax like trailing commas, single quotes, or unquoted keys. Fixing these ensures your data is compatible with all standard JSON libraries (Python's <code>json</code>, Go's <code>encoding/json</code>, etc.).</p>
                     </div>
                     <div class="details-card">
-                        <h4>Strict Validation</h4>
-                        <p>Our parser uses native <code>JSON.parse()</code>, which follows strict JSON standards. If your input is invalid, check for trailing commas or single quotes, which are common JSON syntax errors.</p>
+                        <h4>Client-Side Scalability</h4>
+                        <p>By offloading the formatting to your local CPU, we ensure that your sensitive data (like authentication tokens or PII) never traverses the network. This 'Edge Computing' approach is both faster and significantly more secure than traditional web-based formatters.</p>
                     </div>
                 </div>
             </div>
@@ -229,50 +230,50 @@
         <!-- Base64 to Image View -->
         <section id="base64-image-view" class="view">
             <header class="view-header">
-                <h1>Base64 to Image Converter</h1>
-                <p>Convert Base64 strings into viewable and downloadable images. Purely client-side processing.</p>
+                <h1>Advanced Base64 to Image Reconstruction</h1>
+                <p>Instantly render binary-encoded image data back into visual assets. This tool supports various MIME types including PNG, JPEG, SVG, and WEBP, utilizing the browser's native rendering pipeline for maximum accuracy.</p>
                 <div class="tool-description">
-                    <p>Paste your Base64 encoded image string (with or without the <code>data:image/...;base64,</code> prefix) to see an instant preview and download the file.</p>
+                    <p><strong>Operational Guide:</strong> Paste your Base64 string into the input area. The tool automatically detects if a Data URI prefix (e.g., <code>data:image/png;base64,</code>) is present; if not, it will attempt to infer the format. Once rendered, you can inspect the image dimensions and download the reconstructed file directly to your local storage.</p>
                 </div>
             </header>
 
             <div class="converter-container">
                 <div class="input-section">
                     <div class="input-header">
-                        <label>Base64 String Input</label>
-                        <button id="btn-b64-clear" class="btn-small danger-btn">Clear</button>
+                        <label>Base64 Data Stream</label>
+                        <button id="btn-b64-clear" class="btn-small danger-btn">Clear Workspace</button>
                     </div>
-                    <textarea id="b64-input" placeholder="Paste your Base64 string here..."></textarea>
+                    <textarea id="b64-input" placeholder="Paste your raw Base64 image data here..."></textarea>
                 </div>
 
                 <div class="preview-section">
                     <div class="input-header">
-                        <label>Image Preview</label>
+                        <label>Visual Reconstruction</label>
                         <div id="b64-status" class="json-status"></div>
                     </div>
                     <div id="b64-preview-container" class="image-preview-box">
-                        <p class="placeholder-text">Image preview will appear here.</p>
+                        <p class="placeholder-text">Waiting for valid Base64 input...</p>
                     </div>
                     <div class="preview-controls">
-                        <button id="btn-b64-download" class="primary-btn" disabled>Download Image</button>
+                        <button id="btn-b64-download" class="primary-btn" disabled>Export Reconstructed Image</button>
                     </div>
                 </div>
             </div>
 
             <div class="tech-details-section">
-                <h3>About Base64 Images</h3>
+                <h3>Technical Specification: Image Encoding</h3>
                 <div class="details-grid">
                     <div class="details-card">
-                        <h4>Data URIs</h4>
-                        <p>Base64 images are typically used as Data URIs. They start with <code>data:image/[type];base64,</code> followed by the encoded data. This allows you to embed images directly in HTML or CSS.</p>
+                        <h4>Understanding Data URIs</h4>
+                        <p>A Data URI is a scheme that allows you to embed assets directly into your code. While convenient for small icons (under 10KB), Base64 encoding increases file size by ~33%. Our tool helps you verify the integrity of these URIs before deployment, ensuring that your CSS or HTML won't fail to render due to malformed data.</p>
                     </div>
                     <div class="details-card">
-                        <h4>Use Cases</h4>
-                        <p>Best for small icons or placeholder images to reduce the number of HTTP requests. For larger images, traditional file hosting is generally more efficient for caching.</p>
+                        <h4>MIME Type Detection</h4>
+                        <p>The first few characters of a Base64 string (the "Magic Bytes") often identify the file format. For instance, <code>iVBORw0KGgo...</code> indicates a PNG. Our reconstruction engine analyzes these signatures to provide a seamless preview experience even when the formal Data URI header is missing.</p>
                     </div>
                     <div class="details-card">
-                        <h4>Client-Side Safety</h4>
-                        <p>Our tool processes the image data entirely in your browser. Your images are never uploaded to any server, keeping your data private and secure.</p>
+                        <h4>Privacy & Performance</h4>
+                        <p>Unlike server-side converters that upload your data to a remote machine, this tool uses the <code>URL.createObjectURL</code> or <code>canvas</code> APIs to render images locally. This means your private graphics, screenshots, or design assets never touch our servers, providing absolute data sovereignty.</p>
                     </div>
                 </div>
             </div>
@@ -281,33 +282,51 @@
         <!-- HTML Formatter View -->
         <section id="html-view" class="view">
             <header class="view-header">
-                <h1>HTML Formatter</h1>
-                <p>Prettify or minify your HTML markup. Improve the readability of your code or compress it for production.</p>
+                <h1>Semantic HTML Formatter & Optimizer</h1>
+                <p>Cleanse, indent, and validate your markup for better SEO and maintainability. This utility transforms cluttered "spaghetti code" into professional, standards-compliant HTML5.</p>
                 <div class="tool-description">
-                    <p>Clean up messy HTML code instantly. Our formatter handles tag nesting and indentation for a professional code look.</p>
+                    <p><strong>How to use:</strong> Input your raw HTML into the first panel. Use 'Prettify' to expand nested elements for easier debugging, or 'Minify' to strip unnecessary whitespace and comments for production use. The formatter intelligently handles void elements and maintains the integrity of your template tags.</p>
                 </div>
             </header>
 
             <div class="parser-container">
                 <div class="parser-input-side">
                     <div class="input-header">
-                        <label>Raw HTML Input</label>
+                        <label>Raw Markup Source</label>
                         <div id="html-status" class="json-status"></div>
-                        <button id="btn-html-clear" class="btn-small danger-btn">Clear</button>
+                        <button id="btn-html-clear" class="btn-small danger-btn">Clear Workspace</button>
                     </div>
-                    <textarea id="html-input" placeholder="Paste your raw HTML here..."></textarea>
+                    <textarea id="html-input" placeholder="Paste your HTML, SVG, or XML snippet here..."></textarea>
                 </div>
                 <div class="parser-controls">
-                    <button id="btn-html-prettify" class="primary-btn">Prettify</button>
-                    <button id="btn-html-minify" class="secondary-btn">Minify</button>
-                    <button id="btn-html-apply" class="secondary-btn">Apply to Input</button>
+                    <button id="btn-html-prettify" class="primary-btn">Prettify (Semantic)</button>
+                    <button id="btn-html-minify" class="secondary-btn">Optimize/Minify</button>
+                    <button id="btn-html-apply" class="secondary-btn">Push to Source</button>
                 </div>
                 <div class="parser-output-side">
                     <div class="input-header">
-                        <label>Formatted Output</label>
+                        <label>Standardized Output</label>
                         <button class="copy-btn btn-small" data-target="html-output">Copy Result</button>
                     </div>
-                    <textarea id="html-output" readonly placeholder="Formatted output will appear here..."></textarea>
+                    <textarea id="html-output" readonly placeholder="Cleaned markup will appear here..."></textarea>
+                </div>
+            </div>
+
+            <div class="tech-details-section">
+                <h3>Technical Insight: HTML Maintainability</h3>
+                <div class="details-grid">
+                    <div class="details-card">
+                        <h4>SEO & Readability</h4>
+                        <p>Search engines and screen readers rely on well-structured DOM trees. By using our 'Prettify' tool, you can easily spot unclosed tags or incorrect nesting that might break your site's accessibility compliance. Clean code is the foundation of a high-ranking web application.</p>
+                    </div>
+                    <div class="details-card">
+                        <h4>Production Minification</h4>
+                        <p>Reducing the Time to First Byte (TTFB) is crucial for user retention. Our 'Minify' option removes comments and whitespace without altering the logic of your scripts or styles, ensuring that your users download the absolute minimum amount of data required.</p>
+                    </div>
+                    <div class="details-card">
+                        <h4>Developer Workflow</h4>
+                        <p>Integrating this tool into your workflow helps maintain consistency across teams. Whether you're copying snippets from browser inspector tools or legacy projects, our formatter ensures every line of code adheres to modern 2-space indentation standards.</p>
+                    </div>
                 </div>
             </div>
         </section>
@@ -315,25 +334,25 @@
         <!-- Diff Checker View -->
         <section id="diff-view" class="view">
             <header class="view-header">
-                <h1>Diff Checker</h1>
-                <p>Compare two versions of text or code side-by-side to see what has changed.</p>
+                <h1>Intelligent Text & Code Diff Checker</h1>
+                <p>Perform side-by-side comparisons of code versions, API payloads, or text documents. Our algorithm highlights additions, deletions, and modifications with high precision.</p>
                 <div class="tool-description">
-                    <p>Paste the original text on the left and the modified version on the right. Differences will be highlighted below.</p>
+                    <p><strong>Operation Guide:</strong> Paste your baseline text into the 'Original' panel and your updated version into the 'Modified' panel. The results below will visually differentiate the two, making it easy to spot regressions or verify successful refactors.</p>
                 </div>
             </header>
 
             <div class="diff-input-container">
                 <div class="diff-input-side">
                     <div class="input-header">
-                        <label>Original Text</label>
-                        <button id="btn-diff-clear-original" class="btn-small danger-btn">Clear</button>
+                        <label>Original Source (Baseline)</label>
+                        <button id="btn-diff-clear-original" class="btn-small danger-btn">Clear Baseline</button>
                     </div>
                     <textarea id="diff-input-original" placeholder="Original content..."></textarea>
                 </div>
                 <div class="diff-input-side">
                     <div class="input-header">
-                        <label>Modified Text</label>
-                        <button id="btn-diff-clear-modified" class="btn-small danger-btn">Clear</button>
+                        <label>Modified Version (Comparison)</label>
+                        <button id="btn-diff-clear-modified" class="btn-small danger-btn">Clear Comparison</button>
                     </div>
                     <textarea id="diff-input-modified" placeholder="Modified content..."></textarea>
                 </div>
@@ -341,42 +360,66 @@
 
             <div class="diff-result-section">
                 <div class="input-header">
-                    <label>Comparison Result</label>
-                    <button class="copy-btn btn-small" data-target="diff-output-raw">Copy Diff</button>
+                    <label>Structural Delta Analysis</label>
+                    <button class="copy-btn btn-small" data-target="diff-output-raw">Copy Diff Summary</button>
                 </div>
                 <div id="diff-output" class="diff-output-display">
-                    <p class="placeholder-text">Enter text in both boxes above to see the difference.</p>
+                    <p class="placeholder-text">Awaiting input in both panels to perform delta analysis...</p>
                 </div>
                 <textarea id="diff-output-raw" style="display:none;"></textarea>
+            </div>
+
+            <div class="tech-details-section">
+                <h3>Technical Insight: Delta Analysis</h3>
+                <div class="details-grid">
+                    <div class="details-card">
+                        <h4>Debugging API Regressions</h4>
+                        <p>When an API response changes, it can be difficult to spot a single missing field in a 1000-line JSON object. By combining our <strong>JSON Sort</strong> feature with this <strong>Diff Checker</strong>, you can instantly see exactly which fields were added or removed between releases.</p>
+                    </div>
+                    <div class="details-card">
+                        <h4>Code Review Efficiency</h4>
+                        <p>This tool mimics the logic of professional Version Control Systems (VCS) like Git. It's perfect for reviewing local changes before staging them, or for comparing snippets from documentation with your current implementation.</p>
+                    </div>
+                    <div class="details-card">
+                        <h4>Zero-Server Logic</h4>
+                        <p>Most online diff checkers send your data to their backend for processing. Parse Utils performs the entire comparison using a highly optimized client-side algorithm, ensuring that your proprietary code or sensitive documentation never leaves your machine.</p>
+                    </div>
+                </div>
             </div>
         </section>
 
         <!-- Resources View (Glossary & FAQ) -->
         <section id="resources-view" class="view">
             <header class="view-header">
-                <h1>Developer Resources & FAQ</h1>
-                <p>Expand your knowledge with our technical glossary and find answers to common questions.</p>
+                <h1>Developer Knowledge Base & Technical FAQ</h1>
+                <p>A curated repository of web standards, security protocols, and data engineering concepts to support your daily development cycle.</p>
             </header>
 
             <div class="resources-grid">
                 <div class="resource-col">
                     <div class="content-card">
-                        <h3>Technical Glossary</h3>
+                        <h3>Advanced Technical Glossary</h3>
                         <dl class="glossary-list">
                             <dt>JSON (JavaScript Object Notation)</dt>
-                            <dd>A lightweight data-interchange format that is easy for humans to read and write and easy for machines to parse and generate.</dd>
+                            <dd>A language-independent data format derived from JavaScript. It is the industry standard for asynchronous browser-server communication (AJAX) and configuration files.</dd>
                             
-                            <dt>Base64</dt>
-                            <dd>A group of binary-to-text encoding schemes that represent binary data in an ASCII string format by translating it into a radix-64 representation.</dd>
+                            <dt>Base64 & Data URIs</dt>
+                            <dd>An encoding scheme that represents binary data in 6-bit chunks. Data URIs allow resources like images to be embedded directly into HTML/CSS to reduce HTTP overhead.</dd>
                             
-                            <dt>URL Encoding (Percent-encoding)</dt>
-                            <dd>A mechanism for encoding information in a Uniform Resource Identifier (URI). Characters not allowed in a URL are replaced by a % followed by their hexadecimal ASCII value.</dd>
+                            <dt>RFC 3986 (URL Encoding)</dt>
+                            <dd>The standard for uniform resource identifiers. It defines how non-ASCII and reserved characters should be percent-encoded to ensure safe transmission over the web.</dd>
                             
                             <dt>XSS (Cross-Site Scripting)</dt>
-                            <dd>A type of security vulnerability typically found in web applications. XSS enables attackers to inject client-side scripts into web pages viewed by other users.</dd>
+                            <dd>A security vulnerability where malicious scripts are injected into trusted websites. Prevention involves rigorous input validation and output encoding (HTML escaping).</dd>
                             
                             <dt>CORS (Cross-Origin Resource Sharing)</dt>
-                            <dd>A mechanism that uses additional HTTP headers to tell browsers to give a web application running at one origin, access to selected resources from a different origin.</dd>
+                            <dd>A browser-level security mechanism that uses HTTP headers to define which origins are permitted to access resources on a server, preventing unauthorized data access.</dd>
+
+                            <dt>Content Security Policy (CSP)</dt>
+                            <dd>An added layer of security that helps detect and mitigate certain types of attacks, including XSS and data injection attacks by restricting resource loading.</dd>
+
+                            <dt>ASCII vs. UTF-8</dt>
+                            <dd>ASCII is a 7-bit character set for English text, while UTF-8 is a variable-width encoding that can represent every character in the Unicode standard, becoming the dominant encoding for the World Wide Web.</dd>
                         </dl>
                     </div>
                 </div>
@@ -385,20 +428,24 @@
                     <div class="content-card">
                         <h3>Frequently Asked Questions</h3>
                         <div class="faq-item">
-                            <h4>Is my data stored on your servers?</h4>
-                            <p>No. All processing happens locally in your browser using JavaScript. We never see, store, or transmit your input data.</p>
+                            <h4>Is my data processed on a remote server?</h4>
+                            <p>No. Parse Utils is built on a decentralized processing model. All encoding, comparisons, and formatting happen locally in your browser's memory using standard Web APIs. This ensures zero latency and absolute data privacy.</p>
                         </div>
                         <div class="faq-item">
-                            <h4>Why does the JSON Parser show an error?</h4>
-                            <p>Most common JSON errors are trailing commas, using single quotes instead of double quotes, or missing brackets. Check our "JSON Best Practices" guide for more details.</p>
+                            <h4>Why does my JSON show a syntax error?</h4>
+                            <p>Our validator follows the strict JSON specification. Common pitfalls include trailing commas after the last element, using single quotes (<code>'</code>) instead of double quotes (<code>"</code>), or unquoted object keys.</p>
                         </div>
                         <div class="faq-item">
-                            <h4>Can I use these tools offline?</h4>
-                            <p>Once the page is loaded, most functions will work offline as they are client-side. However, we recommend an active connection for the latest updates.</p>
+                            <h4>How can I use these tools offline?</h4>
+                            <p>Since the application logic is entirely client-side JavaScript, you can keep the tab open even without an active internet connection. Most features will remain fully functional as long as the page remains loaded.</p>
                         </div>
                         <div class="faq-item">
-                            <h4>Is Base64 secure for passwords?</h4>
-                            <p>Absolutely not. Base64 is an encoding, not encryption. It can be reversed instantly and should never be used to secure sensitive information like passwords.</p>
+                            <h4>Are Base64 strings secure for API keys?</h4>
+                            <p>Absolutely not. Base64 is a deterministic encoding, not a cryptographic encryption. Anyone with access to the string can decode it instantly. Always use secure, encrypted vaults for storing sensitive credentials.</p>
+                        </div>
+                        <div class="faq-item">
+                            <h4>What browser versions are supported?</h4>
+                            <p>We leverage modern <strong>Baseline</strong> features including ES Modules, Async/Await, and CSS Custom Properties. We recommend the latest versions of Chrome, Firefox, Safari, or Edge for the best experience.</p>
                         </div>
                     </div>
                 </div>
@@ -580,12 +627,27 @@
     <footer class="site-footer">
         <div class="footer-content">
             <div class="footer-brand">Parse Utils</div>
-            <div class="footer-links">
-                <a href="#" class="footer-link" data-view="about-view">About Us</a>
-                <a href="#" class="footer-link" data-view="privacy-view">Privacy Policy</a>
-                <a href="#" class="footer-link" data-view="contact-view">Contact Us</a>
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <h4>Transformation Tools</h4>
+                    <a href="#" class="footer-link" data-view="encoder-view">String Encoder/Decoder</a>
+                    <a href="#" class="footer-link" data-view="json-view">JSON Parser & Formatter</a>
+                    <a href="#" class="footer-link" data-view="base64-image-view">Base64 to Image</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Analysis & Formatting</h4>
+                    <a href="#" class="footer-link" data-view="html-view">HTML Formatter</a>
+                    <a href="#" class="footer-link" data-view="diff-view">Intelligent Diff Checker</a>
+                    <a href="#" class="footer-link" data-view="guides-view">Developer Guides</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Trust & Transparency</h4>
+                    <a href="#" class="footer-link" data-view="about-view">About the Project</a>
+                    <a href="#" class="footer-link" data-view="privacy-view">Privacy & Cookie Policy</a>
+                    <a href="#" class="footer-link" data-view="contact-view">Contact & Community</a>
+                </div>
             </div>
-            <p class="copyright">&copy; 2026 Parse Utils - Optimized for Developers.</p>
+            <p class="copyright">&copy; 2026 Parse Utils - Precision Tools for Modern Engineering.</p>
         </div>
     </footer>
 
