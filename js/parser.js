@@ -8,8 +8,19 @@ export function setupParsers() {
 
     function updateJsonStatus(valid, msg) {
         if (!jsonStatus) return;
-        jsonStatus.textContent = valid ? 'Valid JSON' : msg;
-        jsonStatus.className = 'json-status ' + (valid ? 'valid' : 'invalid');
+        if (valid) {
+            jsonStatus.textContent = '✓ Valid JSON Structure';
+            jsonStatus.className = 'json-status valid';
+        } else {
+            // Make common V8 errors more human-readable
+            let userMsg = msg;
+            if (msg.includes('Unexpected token')) userMsg = 'Syntax Error: Unexpected character or missing quote.';
+            if (msg.includes('Unexpected end of JSON input')) userMsg = 'Syntax Error: Incomplete JSON (check for missing brackets).';
+            if (msg.includes('position')) userMsg += ' (Check the indicated position)';
+            
+            jsonStatus.textContent = '✗ ' + userMsg;
+            jsonStatus.className = 'json-status invalid';
+        }
     }
 
     document.getElementById('btn-json-prettify')?.addEventListener('click', () => {
