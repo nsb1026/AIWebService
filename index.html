@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Parse Utils - Professional Developer Utilities & Learning Hub</title>
+    <meta name="description" content="Parse Utils is a comprehensive, client-side suite of developer tools for data encoding, JSON parsing, HTML formatting, and diff checking. Secure, fast, and private processing in your browser.">
+    <meta name="keywords" content="developer tools, json parser, html formatter, base64 to image, string encoder, url encode, xss protection, diff checker, web developer utilities">
+    <meta property="og:title" content="Parse Utils - Professional Developer Utilities">
+    <meta property="og:description" content="Secure, fast, and private data transformations right in your browser.">
+    <meta property="og:type" content="website">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://parseutils.com">
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <!-- Google AdSense -->
@@ -454,60 +461,56 @@
             </header>
 
             <div class="guides-grid">
-                <article class="guide-card">
+                <article class="guide-card" data-article="base64">
                     <div class="guide-badge">Encoding</div>
                     <h2>Understanding Base64 Encoding</h2>
                     <p>Base64 is not encryption. It's a way to represent binary data in an ASCII string format. Learn why we use it for images, data URIs, and basic authentication...</p>
-                    <div class="guide-content-preview">
-                        <p>In web development, you'll often see Base64 used for embedding small images directly into CSS or HTML. While it increases the file size by about 33%, it reduces HTTP requests, which can be a significant performance win for small assets.</p>
-                    </div>
+                    <button class="btn-read-more secondary-btn">Read Full Article</button>
                 </article>
 
-                <article class="guide-card">
+                <article class="guide-card" data-article="api-debugging">
                     <div class="guide-badge">APIs</div>
                     <h2>REST API Debugging Best Practices</h2>
                     <p>Master the art of testing and debugging APIs. Learn about status codes, headers, and how to handle CORS issues effectively...</p>
-                    <div class="guide-content-preview">
-                        <p>When an API request fails, the first place to look is the Status Code. A 4xx error usually means something is wrong with your request (like missing auth), while a 5xx error indicates a server-side problem. Using a tool like our REST Tester helps you isolate these variables.</p>
-                    </div>
+                    <button class="btn-read-more secondary-btn">Read Full Article</button>
                 </article>
 
-                <article class="guide-card">
+                <article class="guide-card" data-article="json">
                     <div class="guide-badge">Data</div>
                     <h2>JSON: The Backbone of the Modern Web</h2>
                     <p>From validation to minification, learn how to handle JSON like a pro. Why is JSON better than XML for modern web applications?</p>
-                    <div class="guide-content-preview">
-                        <p>JSON (JavaScript Object Notation) is lightweight and easy for both humans and machines to read. Our formatter helps you visualize complex nested structures that would otherwise be impossible to read in a single line of raw data.</p>
-                    </div>
+                    <button class="btn-read-more secondary-btn">Read Full Article</button>
                 </article>
 
-                <article class="guide-card">
+                <article class="guide-card" data-article="xss">
                     <div class="guide-badge">Security</div>
                     <h2>HTML Escaping & XSS Prevention</h2>
                     <p>Why you should always escape user input before rendering it. Learn how HTML escaping protects your site from Cross-Site Scripting attacks.</p>
-                    <div class="guide-content-preview">
-                        <p>Escaping characters like <code>&lt;</code>, <code>&gt;</code>, and <code>&amp;</code> prevents the browser from interpreting them as HTML tags. This is the first line of defense against malicious scripts being injected into your pages.</p>
-                    </div>
+                    <button class="btn-read-more secondary-btn">Read Full Article</button>
                 </article>
 
-                <article class="guide-card">
+                <article class="guide-card" data-article="security-checklist">
                     <div class="guide-badge">Best Practices</div>
                     <h2>Web Security Checklist for 2026</h2>
                     <p>Essential security steps for every web developer. From CSP headers to secure cookie attributes...</p>
-                    <div class="guide-content-preview">
-                        <p>Security is a moving target. In 2026, implementing a strong Content Security Policy (CSP) and ensuring all data is escaped on the client side are non-negotiable requirements for modern web applications.</p>
-                    </div>
+                    <button class="btn-read-more secondary-btn">Read Full Article</button>
                 </article>
 
-                <article class="guide-card">
+                <article class="guide-card" data-article="optimization">
                     <div class="guide-badge">Optimization</div>
                     <h2>Minification vs. Compression</h2>
                     <p>Learn the difference between minifying your code and compressing it. Why you need both for a high-performance website.</p>
-                    <div class="guide-content-preview">
-                        <p>Minification removes unnecessary characters from your source code without changing its functionality. Compression (like Gzip or Brotli), on the other hand, happens at the server level to reduce the amount of data sent over the network.</p>
-                    </div>
+                    <button class="btn-read-more secondary-btn">Read Full Article</button>
                 </article>
             </div>
+        </section>
+
+        <!-- Article View (Full Content) -->
+        <section id="article-view" class="view">
+            <button id="btn-back-to-guides" class="btn-small secondary-btn">&larr; Back to Guides</button>
+            <article id="full-article-content" class="full-article">
+                <!-- Content will be injected via JS -->
+            </article>
         </section>
 
         <!-- Contact View -->

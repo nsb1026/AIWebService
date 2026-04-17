@@ -23,7 +23,8 @@ INI# To learn more about how to use Nix to configure your environment
         web = {
           command = ["python3" "-m" "http.server" "$PORT" "--bind" "0.0.0.0"];
           manager = "web";
-        };
+        };i
+        
       };
     };
     # Workspace lifecycle hooks
