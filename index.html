@@ -22,27 +22,28 @@
     <!-- Cookie Consent Banner -->
     <div id="cookie-banner" class="cookie-banner">
         <div class="cookie-content">
-            <p>We use cookies to personalize content and ads, and to analyze our traffic. We also share information about your use of our site with our advertising and analytics partners. <a href="#" data-view="privacy-view">Learn more</a></p>
+            <p><span data-i18n="cookie_text">We use cookies to personalize content and ads, and to analyze our traffic. We also share information about your use of our site with our advertising and analytics partners.</span> <a href="#" data-view="privacy-view" data-i18n="cookie_learn_more">Learn more</a></p>
             <div class="cookie-actions">
-                <button id="btn-cookie-accept" class="primary-btn btn-small">Accept All</button>
-                <button id="btn-cookie-decline" class="secondary-btn btn-small">Decline</button>
+                <button id="btn-cookie-accept" class="primary-btn btn-small" data-i18n="cookie_accept">Accept All</button>
+                <button id="btn-cookie-decline" class="secondary-btn btn-small" data-i18n="cookie_decline">Decline</button>
             </div>
         </div>
     </div>
 
     <nav class="top-nav">
-        <div class="nav-brand">Parse Utils</div>
+        <div class="nav-brand" data-i18n="nav_brand">Parse Utils</div>
         <div class="nav-links">
-            <a href="#" class="nav-link active" data-view="encoder-view">Encoder</a>
-            <a href="#" class="nav-link" data-view="json-view">JSON Parser</a>
-            <a href="#" class="nav-link" data-view="base64-image-view">Base64 to Image</a>
-            <a href="#" class="nav-link" data-view="html-view">HTML Formatter</a>
-            <a href="#" class="nav-link" data-view="diff-view">Diff Checker</a>
-            <a href="#" class="nav-link" data-view="guides-view">Guides</a>
-            <a href="#" class="nav-link" data-view="resources-view">Resources</a>
-            <a href="#" class="nav-link" data-view="about-view">About</a>
-            <a href="#" class="nav-link" data-view="privacy-view">Privacy</a>
-            <a href="#" class="nav-link" data-view="contact-view">Contact</a>
+            <a href="#" class="nav-link active" data-view="encoder-view" data-i18n="nav_encoder">Encoder</a>
+            <a href="#" class="nav-link" data-view="json-view" data-i18n="nav_json">JSON Parser</a>
+            <a href="#" class="nav-link" data-view="base64-image-view" data-i18n="nav_base64">Base64 to Image</a>
+            <a href="#" class="nav-link" data-view="html-view" data-i18n="nav_html">HTML Formatter</a>
+            <a href="#" class="nav-link" data-view="diff-view" data-i18n="nav_diff">Diff Checker</a>
+            <a href="#" class="nav-link" data-view="guides-view" data-i18n="nav_guides">Guides</a>
+            <a href="#" class="nav-link" data-view="resources-view" data-i18n="nav_resources">Resources</a>
+            <a href="#" class="nav-link" data-view="about-view" data-i18n="nav_about">About</a>
+            <a href="#" class="nav-link" data-view="privacy-view" data-i18n="nav_privacy">Privacy</a>
+            <a href="#" class="nav-link" data-view="contact-view" data-i18n="nav_contact">Contact</a>
+            <button id="lang-toggle" class="lang-toggle-btn" aria-label="Toggle Language">KO</button>
             <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle Theme">
                 <span class="icon-sun">☀️</span>
                 <span class="icon-moon">🌙</span>
@@ -54,24 +55,25 @@
         <!-- Encoder View -->
         <section id="encoder-view" class="view active">
             <header class="view-header">
-                <h1>Professional String Encoder & Decoder</h1>
-                <p>A multi-format transformation engine designed for secure, real-time data processing. Unlike server-side alternatives, all logic executes within your browser's V8 engine, ensuring that sensitive strings never leave your local environment.</p>
+                <h1 data-i18n="encoder_h1">Professional String Encoder & Decoder</h1>
+                <p data-i18n="encoder_p">A multi-format transformation engine designed for secure, real-time data processing. Unlike server-side alternatives, all logic executes within your browser's V8 engine, ensuring that sensitive strings never leave your local environment.</p>
                 <div class="tool-description">
-                    <p><strong>How to use:</strong> Simply paste your target string into the main input. The application will instantly generate transformations across all supported categories. Use the 'Copy' buttons for rapid workflow integration. This tool is ideal for debugging API requests, sanitizing user input, or analyzing encoded payloads.</p>
+                    <p><strong>Technical Overview:</strong> Parse Utils utilizes high-performance algorithms to handle character encoding and string manipulation. Whether you are dealing with <strong>Base64</strong> for data transmission, <strong>URL Encoding</strong> for API requests, or <strong>HTML Escaping</strong> for cross-site scripting (XSS) prevention, our tool provides a consolidated interface for all your needs. By processing data locally, we mitigate risks associated with data interception and server-side logging, making it the preferred choice for security-conscious developers.</p>
+                    <p><strong>How to use:</strong> Simply paste your target string into the main input. The application will instantly generate transformations across all supported categories. Use the 'Copy' buttons for rapid workflow integration. This tool is ideal for debugging API requests, sanitizing user input, or analyzing encoded payloads in various environments including Node.js, Python, and Go.</p>
                 </div>
             </header>
 
             <div class="input-section">
                 <div class="input-header">
-                    <label>Main Input (Source String)</label>
-                    <button id="btn-encoder-clear" class="btn-small danger-btn">Clear Workspace</button>
+                    <label data-i18n="label_main_input">Main Input (Source String)</label>
+                    <button id="btn-encoder-clear" class="btn-small danger-btn" data-i18n="btn_clear">Clear Workspace</button>
                 </div>
-                <textarea id="main-input" placeholder="Enter your raw text, Base64, or URL-encoded string..."></textarea>
+                <textarea id="main-input" data-i18n="placeholder_encoder" placeholder="Enter your raw text, Base64, or URL-encoded string..."></textarea>
                 <div id="stats" class="stats-bar">
-                    <span>Characters: <b id="stat-chars">0</b></span>
-                    <span>Words: <b id="stat-words">0</b></span>
-                    <span>Lines: <b id="stat-lines">0</b></span>
-                    <span>Entropy: <b id="stat-entropy">Low</b></span>
+                    <span><span data-i18n="label_characters">Characters:</span> <b id="stat-chars">0</b></span>
+                    <span><span data-i18n="label_words">Words:</span> <b id="stat-words">0</b></span>
+                    <span><span data-i18n="label_lines">Lines:</span> <b id="stat-lines">0</b></span>
+                    <span><span data-i18n="label_entropy">Entropy:</span> <b id="stat-entropy">Low</b></span>
                 </div>
             </div>
 
@@ -83,21 +85,21 @@
                         <label>RFC 3986 URL Encode</label>
                         <div class="input-with-button">
                             <input type="text" id="url-encode" readonly>
-                            <button class="copy-btn" data-target="url-encode">Copy</button>
+                            <button class="copy-btn" data-target="url-encode" data-i18n="btn_copy">Copy</button>
                         </div>
                     </div>
                     <div class="field">
                         <label>HTML Entity Escape (XSS Protection)</label>
                         <div class="input-with-button">
                             <input type="text" id="html-escape" readonly>
-                            <button class="copy-btn" data-target="html-escape">Copy</button>
+                            <button class="copy-btn" data-target="html-escape" data-i18n="btn_copy">Copy</button>
                         </div>
                     </div>
                     <div class="field">
                         <label>Unicode / UTF-16 Escape</label>
                         <div class="input-with-button">
                             <input type="text" id="unicode-escape" readonly>
-                            <button class="copy-btn" data-target="unicode-escape">Copy</button>
+                            <button class="copy-btn" data-target="unicode-escape" data-i18n="btn_copy">Copy</button>
                         </div>
                     </div>
                 </div>
@@ -109,21 +111,21 @@
                         <label>Base64 (Standard)</label>
                         <div class="input-with-button">
                             <input type="text" id="base64-encode" readonly>
-                            <button class="copy-btn" data-target="base64-encode">Copy</button>
+                            <button class="copy-btn" data-target="base64-encode" data-i18n="btn_copy">Copy</button>
                         </div>
                     </div>
                     <div class="field">
                         <label>Binary Stream (Space-separated)</label>
                         <div class="input-with-button">
                             <input type="text" id="binary-string" readonly>
-                            <button class="copy-btn" data-target="binary-string">Copy</button>
+                            <button class="copy-btn" data-target="binary-string" data-i18n="btn_copy">Copy</button>
                         </div>
                     </div>
                     <div class="field">
                         <label>Hexadecimal (Hex Dump)</label>
                         <div class="input-with-button">
                             <input type="text" id="hex-encode" readonly>
-                            <button class="copy-btn" data-target="hex-encode">Copy</button>
+                            <button class="copy-btn" data-target="hex-encode" data-i18n="btn_copy">Copy</button>
                         </div>
                     </div>
                 </div>
@@ -135,14 +137,14 @@
                         <label>ROT13 Obfuscation</label>
                         <div class="input-with-button">
                             <input type="text" id="rot13" readonly>
-                            <button class="copy-btn" data-target="rot13">Copy</button>
+                            <button class="copy-btn" data-target="rot13" data-i18n="btn_copy">Copy</button>
                         </div>
                     </div>
                     <div class="field">
                         <label>Atbash Substitution</label>
                         <div class="input-with-button">
                             <input type="text" id="atbash" readonly>
-                            <button class="copy-btn" data-target="atbash">Copy</button>
+                            <button class="copy-btn" data-target="atbash" data-i18n="btn_copy">Copy</button>
                         </div>
                     </div>
                     <div class="field">
@@ -177,8 +179,8 @@
         <!-- JSON Parser View -->
         <section id="json-view" class="view">
             <header class="view-header">
-                <h1>High-Performance JSON Analytics & Formatting</h1>
-                <p>Validate, restructure, and optimize your JavaScript Object Notation payloads. Designed for handling large-scale API responses with millisecond latency.</p>
+                <h1 data-i18n="json_h1">High-Performance JSON Analytics & Formatting</h1>
+                <p data-i18n="json_p">Validate, restructure, and optimize your JavaScript Object Notation payloads. Designed for handling large-scale API responses with millisecond latency.</p>
                 <div class="tool-description">
                     <p><strong>Usage Guide:</strong> Paste your raw JSON into the left panel. Use 'Prettify' for human readability or 'Sort Keys' to normalize objects for comparison. The 'Minify' option is recommended for reducing payload size before production deployment. Errors are caught in real-time with specific line-number feedback.</p>
                 </div>
@@ -189,20 +191,20 @@
                     <div class="input-header">
                         <label>Raw JSON Payload</label>
                         <div id="json-status" class="json-status"></div>
-                        <button id="btn-json-clear" class="btn-small danger-btn">Clear Panel</button>
+                        <button id="btn-json-clear" class="btn-small danger-btn" data-i18n="btn_clear_panel">Clear Panel</button>
                     </div>
-                    <textarea id="json-input" placeholder="Paste your unformatted JSON here..."></textarea>
+                    <textarea id="json-input" data-i18n="placeholder_json" placeholder="Paste your unformatted JSON here..."></textarea>
                 </div>
                 <div class="parser-controls">
-                    <button id="btn-json-prettify" class="primary-btn">Prettify (Indent 2)</button>
-                    <button id="btn-json-sort" class="primary-btn">Sort Keys (Alpha)</button>
-                    <button id="btn-json-minify" class="secondary-btn">Compress/Minify</button>
-                    <button id="btn-json-apply" class="secondary-btn">Push to Input</button>
+                    <button id="btn-json-prettify" class="primary-btn" data-i18n="btn_prettify">Prettify (Indent 2)</button>
+                    <button id="btn-json-sort" class="primary-btn" data-i18n="btn_sort">Sort Keys (Alpha)</button>
+                    <button id="btn-json-minify" class="secondary-btn" data-i18n="btn_minify">Compress/Minify</button>
+                    <button id="btn-json-apply" class="secondary-btn" data-i18n="btn_apply">Push to Input</button>
                 </div>
                 <div class="parser-output-side">
                     <div class="input-header">
                         <label>Restructured Output</label>
-                        <button class="copy-btn btn-small" data-target="json-output">Copy Formatted</button>
+                        <button class="copy-btn btn-small" data-target="json-output" data-i18n="btn_copy">Copy Formatted</button>
                     </div>
                     <textarea id="json-output" readonly placeholder="Your optimized JSON will appear here..."></textarea>
                 </div>
@@ -622,32 +624,56 @@
                 </div>
             </div>
         </section>
+        <!-- Terms of Service View -->
+        <section id="terms-view" class="view">
+            <header class="view-header">
+                <h1 data-i18n="terms_h1">Terms of Service</h1>
+                <p data-i18n="terms_p">Please read these terms carefully before using our utilities.</p>
+            </header>
+            <div class="content-card privacy-content">
+                <h2>1. Acceptance of Terms</h2>
+                <p>By accessing and using Parse Utils, you accept and agree to be bound by the terms and provision of this agreement.</p>
+
+                <h2>2. Use of License</h2>
+                <p>Permission is granted to temporarily use the tools on Parse Utils for personal or commercial developer-related tasks. This is the grant of a license, not a transfer of title.</p>
+
+                <h2>3. Disclaimer</h2>
+                <p>The materials on Parse Utils are provided on an 'as is' basis. Parse Utils makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties including, without limitation, implied warranties or conditions of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other violation of rights.</p>
+
+                <h2>4. Data Privacy</h2>
+                <p>As outlined in our <a href="#" data-view="privacy-view">Privacy Policy</a>, we do not store your input data. However, you are responsible for ensuring that the data you process does not violate any laws or third-party rights.</p>
+
+                <h2>5. Limitations</h2>
+                <p>In no event shall Parse Utils or its suppliers be liable for any damages (including, without limitation, damages for loss of data or profit, or due to business interruption) arising out of the use or inability to use the tools on Parse Utils.</p>
+            </div>
+        </section>
     </main>
 
     <footer class="site-footer">
         <div class="footer-content">
-            <div class="footer-brand">Parse Utils</div>
+            <div class="footer-brand" data-i18n="nav_brand">Parse Utils</div>
             <div class="footer-grid">
                 <div class="footer-col">
-                    <h4>Transformation Tools</h4>
-                    <a href="#" class="footer-link" data-view="encoder-view">String Encoder/Decoder</a>
-                    <a href="#" class="footer-link" data-view="json-view">JSON Parser & Formatter</a>
-                    <a href="#" class="footer-link" data-view="base64-image-view">Base64 to Image</a>
+                    <h4 data-i18n="footer_transform">Transformation Tools</h4>
+                    <a href="#" class="footer-link" data-view="encoder-view" data-i18n="nav_encoder">String Encoder/Decoder</a>
+                    <a href="#" class="footer-link" data-view="json-view" data-i18n="nav_json">JSON Parser & Formatter</a>
+                    <a href="#" class="footer-link" data-view="base64-image-view" data-i18n="nav_base64">Base64 to Image</a>
                 </div>
                 <div class="footer-col">
-                    <h4>Analysis & Formatting</h4>
-                    <a href="#" class="footer-link" data-view="html-view">HTML Formatter</a>
-                    <a href="#" class="footer-link" data-view="diff-view">Intelligent Diff Checker</a>
-                    <a href="#" class="footer-link" data-view="guides-view">Developer Guides</a>
+                    <h4 data-i18n="footer_analysis">Analysis & Formatting</h4>
+                    <a href="#" class="footer-link" data-view="html-view" data-i18n="nav_html">HTML Formatter</a>
+                    <a href="#" class="footer-link" data-view="diff-view" data-i18n="nav_diff">Intelligent Diff Checker</a>
+                    <a href="#" class="footer-link" data-view="guides-view" data-i18n="nav_guides">Developer Guides</a>
                 </div>
                 <div class="footer-col">
-                    <h4>Trust & Transparency</h4>
-                    <a href="#" class="footer-link" data-view="about-view">About the Project</a>
-                    <a href="#" class="footer-link" data-view="privacy-view">Privacy & Cookie Policy</a>
-                    <a href="#" class="footer-link" data-view="contact-view">Contact & Community</a>
+                    <h4 data-i18n="footer_trust">Trust & Transparency</h4>
+                    <a href="#" class="footer-link" data-view="about-view" data-i18n="nav_about">About the Project</a>
+                    <a href="#" class="footer-link" data-view="privacy-view" data-i18n="nav_privacy">Privacy Policy</a>
+                    <a href="#" class="footer-link" data-view="terms-view" data-i18n="nav_terms">Terms of Service</a>
+                    <a href="#" class="footer-link" data-view="contact-view" data-i18n="nav_contact">Contact & Community</a>
                 </div>
             </div>
-            <p class="copyright">&copy; 2026 Parse Utils - Precision Tools for Modern Engineering.</p>
+            <p class="copyright" data-i18n="footer_copyright">&copy; 2026 Parse Utils - Precision Tools for Modern Engineering.</p>
         </div>
     </footer>
 
