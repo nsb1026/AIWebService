@@ -1,0 +1,47 @@
+<section id="yaml-view" class="view">
+    <header class="view-header">
+        <h1 data-i18n="yaml_h1">Professional YAML Parser & Converter</h1>
+        <p data-i18n="yaml_p">Validate, format, and convert YAML data to JSON. Perfect for debugging Kubernetes configs, CI/CD pipelines, and application settings.</p>
+    </header>
+
+    <div class="parser-container">
+        <div class="parser-input-side">
+            <div class="input-header">
+                <label>Source YAML</label>
+                <div id="yaml-status" class="json-status"></div>
+                <button id="btn-yaml-clear" class="btn-small danger-btn" data-i18n="btn_clear_panel">Clear Panel</button>
+            </div>
+            <textarea id="yaml-input" data-i18n="placeholder_yaml" placeholder="Paste your YAML here..."></textarea>
+        </div>
+        <div class="parser-controls">
+            <button id="btn-yaml-prettify" class="primary-btn" data-i18n="btn_prettify">Validate & Prettify</button>
+            <button id="btn-yaml-to-json" class="primary-btn">Convert to JSON</button>
+            <button id="btn-yaml-apply" class="secondary-btn" data-i18n="btn_apply">Push to Input</button>
+        </div>
+        <div class="parser-output-side">
+            <div class="input-header">
+                <label>Processed Output</label>
+                <button class="copy-btn btn-small" data-target="yaml-output" data-i18n="btn_copy">Copy Result</button>
+            </div>
+            <textarea id="yaml-output" readonly placeholder="Your structured YAML or JSON will appear here..."></textarea>
+        </div>
+    </div>
+
+    <div class="tech-details-section">
+        <h3>Technical Insight: YAML Serialization</h3>
+        <div class="details-grid">
+            <div class="details-card">
+                <h4>YAML vs JSON</h4>
+                <p>YAML (YAML Ain't Markup Language) is a human-friendly data serialization standard. While it's more readable than JSON due to its use of indentation, it's also more prone to syntax errors (like mixing tabs and spaces). This tool helps you ensure your YAML is strictly valid before you commit it to your repo.</p>
+            </div>
+            <div class="details-card">
+                <h4>Kubernetes & Docker Support</h4>
+                <p>Modern cloud-native engineering relies heavily on YAML. Whether you're configuring a <code>deployment.yaml</code> for K8s or a <code>docker-compose.yml</code>, our parser catches common indentation mistakes and formatting issues instantly.</p>
+            </div>
+            <div class="details-card">
+                <h4>Security First</h4>
+                <p>Configurations often contain environment variables or secrets. By performing all parsing logic locally in your browser's V8 engine using <code>js-yaml</code>, we guarantee that your infrastructure details never leave your local machine.</p>
+            </div>
+        </div>
+    </div>
+</section>

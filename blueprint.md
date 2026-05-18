@@ -11,6 +11,8 @@ Parse Utils is a high-performance, decentralized developer utility platform. It 
     *   **JSON Analytics:** Strict validation, key sorting, and minification.
     *   **JWT Decoder:** Local decoding of headers and payloads.
     *   **URL Parser:** Breakdown of complex URLs into components.
+    *   **XML/SVG/RSS Formatter:** Hierarchical structuring and minification of XML-based data.
+    *   **YAML Parser & Converter:** Validation, formatting, and YAML-to-JSON conversion utilizing `js-yaml`.
     *   **CSS/HTML Formatter:** Prettifying and minification of stylesheets and markup.
     *   **SQL Formatter:** Semantic restructuring of SQL queries.
 *   **Intelligent Delta Analysis:** Precision side-by-side text/code comparison utilizing client-side diffing algorithms.
@@ -39,7 +41,7 @@ Parse Utils is a high-performance, decentralized developer utility platform. It 
 
 ## 6. Implementation Plan (Current Status)
 1.  **[DONE] Core Tools:** Encoder, JSON Parser, Base64 to Image, HTML Formatter, Diff Checker.
-2.  **[DONE] Parser Expansion:** Added JWT, URL, CSS, and SQL tools.
+2.  **[DONE] Parser Expansion:** Added JWT, URL, XML, YAML, CSS, and SQL tools.
 3.  **[DONE] UI Refactor:** Implemented dropdown navigation and shortened menu names.
 4.  **[DONE] Modularization:** Split monolithic index.html into separate view files for better maintainability.
 5.  **Content Expansion:** Expand existing 4 articles and add 6 new high-value guides.

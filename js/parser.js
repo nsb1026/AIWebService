@@ -1,4 +1,4 @@
-// --- JSON, JWT, URL, CSS & HTML Parser Module ---
+// --- JSON, JWT, URL, CSS, SQL, XML & YAML Parser Module ---
 
 function updateStatus(elId, valid, msg) {
     const statusEl = document.getElementById(elId);
@@ -315,6 +315,49 @@ export function setupXmlParser() {
     });
 }
 
+export function setupYamlParser() {
+    const yamlInput = document.getElementById('yaml-input');
+    const yamlOutput = document.getElementById('yaml-output');
+    const yamlStatus = document.getElementById('yaml-status');
+
+    if (!yamlInput || !yamlOutput) return;
+
+    document.getElementById('btn-yaml-prettify')?.addEventListener('click', () => {
+        try {
+            if (!window.jsyaml) throw new Error('YAML library not loaded');
+            const parsed = jsyaml.load(yamlInput.value);
+            yamlOutput.value = jsyaml.dump(parsed, { indent: 2 });
+            updateStatus('yaml-status', true);
+        } catch (e) {
+            updateStatus('yaml-status', false, e.message);
+        }
+    });
+
+    document.getElementById('btn-yaml-to-json')?.addEventListener('click', () => {
+        try {
+            if (!window.jsyaml) throw new Error('YAML library not loaded');
+            const parsed = jsyaml.load(yamlInput.value);
+            yamlOutput.value = JSON.stringify(parsed, null, 2);
+            updateStatus('yaml-status', true);
+        } catch (e) {
+            updateStatus('yaml-status', false, e.message);
+        }
+    });
+
+    document.getElementById('btn-yaml-apply')?.addEventListener('click', () => {
+        if (yamlOutput.value) yamlInput.value = yamlOutput.value;
+    });
+
+    document.getElementById('btn-yaml-clear')?.addEventListener('click', () => {
+        yamlInput.value = '';
+        yamlOutput.value = '';
+        if (yamlStatus) {
+            yamlStatus.textContent = '';
+            yamlStatus.className = 'json-status';
+        }
+    });
+}
+
 // Deprecated legacy entry point
 export function setupParsers() {
     setupJsonParser();
@@ -322,7 +365,8 @@ export function setupParsers() {
     setupUrlParser();
     setupCssFormatter();
     setupSqlFormatter();
-    setupXmlParser(); // Added to legacy support
+    setupXmlParser();
+    setupYamlParser();
     setupHtmlFormatter();
     setupDiffChecker();
 }
