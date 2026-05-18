@@ -1,0 +1,33 @@
+<section id="json-view" class="view">
+    <header class="view-header">
+        <h1 data-i18n="json_h1">High-Performance JSON Analytics & Formatting</h1>
+        <p data-i18n="json_p">Validate, restructure, and optimize your JavaScript Object Notation payloads. Designed for handling large-scale API responses with millisecond latency.</p>
+        <div class="tool-description">
+            <p><strong>Usage Guide:</strong> Paste your raw JSON into the left panel. Use 'Prettify' for human readability or 'Sort Keys' to normalize objects for comparison. The 'Minify' option is recommended for reducing payload size before production deployment. Errors are caught in real-time with specific line-number feedback.</p>
+        </div>
+    </header>
+
+    <div class="parser-container">
+        <div class="parser-input-side">
+            <div class="input-header">
+                <label>Raw JSON Payload</label>
+                <div id="json-status" class="json-status"></div>
+                <button id="btn-json-clear" class="btn-small danger-btn" data-i18n="btn_clear_panel">Clear Panel</button>
+            </div>
+            <textarea id="json-input" data-i18n="placeholder_json" placeholder="Paste your unformatted JSON here..."></textarea>
+        </div>
+        <div class="parser-controls">
+            <button id="btn-json-prettify" class="primary-btn" data-i18n="btn_prettify">Prettify (Indent 2)</button>
+            <button id="btn-json-sort" class="primary-btn" data-i18n="btn_sort">Sort Keys (Alpha)</button>
+            <button id="btn-json-minify" class="secondary-btn" data-i18n="btn_minify">Compress/Minify</button>
+            <button id="btn-json-apply" class="secondary-btn" data-i18n="btn_apply">Push to Input</button>
+        </div>
+        <div class="parser-output-side">
+            <div class="input-header">
+                <label>Restructured Output</label>
+                <button class="copy-btn btn-small" data-target="json-output" data-i18n="btn_copy">Copy Formatted</button>
+            </div>
+            <textarea id="json-output" readonly placeholder="Your optimized JSON will appear here..."></textarea>
+        </div>
+    </div>
+</section>

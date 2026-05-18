@@ -1,0 +1,50 @@
+<section id="html-view" class="view">
+    <header class="view-header">
+        <h1 data-i18n="html_h1">Semantic HTML Formatter & Optimizer</h1>
+        <p data-i18n="html_p">Cleanse, indent, and validate your markup for better SEO and maintainability. This utility transforms cluttered "spaghetti code" into professional, standards-compliant HTML5.</p>
+        <div class="tool-description">
+            <p><strong>How to use:</strong> Input your raw HTML into the first panel. Use 'Prettify' to expand nested elements for easier debugging, or 'Minify' to strip unnecessary whitespace and comments for production use. The formatter intelligently handles void elements and maintains the integrity of your template tags.</p>
+        </div>
+    </header>
+
+    <div class="parser-container">
+        <div class="parser-input-side">
+            <div class="input-header">
+                <label>Raw Markup Source</label>
+                <div id="html-status" class="json-status"></div>
+                <button id="btn-html-clear" class="btn-small danger-btn" data-i18n="btn_clear">Clear Workspace</button>
+            </div>
+            <textarea id="html-input" data-i18n="placeholder_html" placeholder="Paste your HTML, SVG, or XML snippet here..."></textarea>
+        </div>
+        <div class="parser-controls">
+            <button id="btn-html-prettify" class="primary-btn" data-i18n="btn_prettify">Prettify (Semantic)</button>
+            <button id="btn-html-minify" class="secondary-btn" data-i18n="btn_minify">Optimize/Minify</button>
+            <button id="btn-html-apply" class="secondary-btn" data-i18n="btn_apply">Push to Source</button>
+        </div>
+        <div class="parser-output-side">
+            <div class="input-header">
+                <label>Standardized Output</label>
+                <button class="copy-btn btn-small" data-target="html-output" data-i18n="btn_copy">Copy Result</button>
+            </div>
+            <textarea id="html-output" readonly placeholder="Cleaned markup will appear here..."></textarea>
+        </div>
+    </div>
+
+    <div class="tech-details-section">
+        <h3>Technical Insight: HTML Maintainability</h3>
+        <div class="details-grid">
+            <div class="details-card">
+                <h4>SEO & Readability</h4>
+                <p>Search engines and screen readers rely on well-structured DOM trees. By using our 'Prettify' tool, you can easily spot unclosed tags or incorrect nesting that might break your site's accessibility compliance. Clean code is the foundation of a high-ranking web application.</p>
+            </div>
+            <div class="details-card">
+                <h4>Production Minification</h4>
+                <p>Reducing the Time to First Byte (TTFB) is crucial for user retention. Our 'Minify' option removes comments and whitespace without altering the logic of your scripts or styles, ensuring that your users download the absolute minimum amount of data required.</p>
+            </div>
+            <div class="details-card">
+                <h4>Developer Workflow</h4>
+                <p>Integrating this tool into your workflow helps maintain consistency across teams. Whether you're copying snippets from browser inspector tools or legacy projects, our formatter ensures every line of code adheres to modern 2-space indentation standards.</p>
+            </div>
+        </div>
+    </div>
+</section>

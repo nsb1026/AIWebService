@@ -1,0 +1,26 @@
+<section id="css-view" class="view">
+    <header class="view-header">
+        <h1 data-i18n="css_h1">Modern CSS Formatter & Minifier</h1>
+        <p data-i18n="css_p">Cleanse and optimize your stylesheets. Prettify for development or minify for production.</p>
+    </header>
+    <div class="parser-container">
+        <div class="parser-input-side">
+            <div class="input-header">
+                <label>Raw CSS</label>
+                <div id="css-status" class="json-status"></div>
+            </div>
+            <textarea id="css-input" data-i18n="placeholder_css" placeholder="Paste your CSS here..."></textarea>
+        </div>
+        <div class="parser-controls">
+            <button id="btn-css-prettify" class="primary-btn" data-i18n="btn_prettify">Prettify</button>
+            <button id="btn-css-minify" class="secondary-btn" data-i18n="btn_minify">Minify</button>
+        </div>
+        <div class="parser-output-side">
+            <div class="input-header">
+                <label>Optimized CSS</label>
+                <button class="copy-btn btn-small" data-target="css-output" data-i18n="btn_copy">Copy Result</button>
+            </div>
+            <textarea id="css-output" readonly placeholder="Your formatted CSS will appear here..."></textarea>
+        </div>
+    </div>
+</section>

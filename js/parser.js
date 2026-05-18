@@ -1,23 +1,23 @@
 // --- JSON, JWT, URL, CSS & HTML Parser Module ---
 
-export function setupParsers() {
-    // Helper to update status
-    function updateStatus(elId, valid, msg) {
-        const statusEl = document.getElementById(elId);
-        if (!statusEl) return;
-        if (valid) {
-            statusEl.textContent = '✓ Valid Format';
-            statusEl.className = 'json-status valid';
-        } else {
-            statusEl.textContent = '✗ ' + (msg || 'Invalid Format');
-            statusEl.className = 'json-status invalid';
-        }
+function updateStatus(elId, valid, msg) {
+    const statusEl = document.getElementById(elId);
+    if (!statusEl) return;
+    if (valid) {
+        statusEl.textContent = '✓ Valid Format';
+        statusEl.className = 'json-status valid';
+    } else {
+        statusEl.textContent = '✗ ' + (msg || 'Invalid Format');
+        statusEl.className = 'json-status invalid';
     }
+}
 
-    // JSON Parser
+export function setupJsonParser() {
     const jsonInput = document.getElementById('json-input');
     const jsonOutput = document.getElementById('json-output');
     const jsonStatus = document.getElementById('json-status');
+
+    if (!jsonInput || !jsonOutput) return;
 
     function updateJsonStatus(valid, msg) {
         if (!jsonStatus) return;
@@ -85,10 +85,13 @@ export function setupParsers() {
             jsonStatus.className = 'json-status';
         }
     });
+}
 
-    // JWT Decoder
+export function setupJwtDecoder() {
     const jwtInput = document.getElementById('jwt-input');
     const jwtOutput = document.getElementById('jwt-output');
+    if (!jwtInput || !jwtOutput) return;
+
     document.getElementById('btn-jwt-decode')?.addEventListener('click', () => {
         try {
             const parts = jwtInput.value.split('.');
@@ -101,10 +104,13 @@ export function setupParsers() {
             updateStatus('jwt-status', false, e.message);
         }
     });
+}
 
-    // URL Parser
+export function setupUrlParser() {
     const urlInput = document.getElementById('url-input');
     const urlOutput = document.getElementById('url-output');
+    if (!urlInput || !urlOutput) return;
+
     document.getElementById('btn-url-parse')?.addEventListener('click', () => {
         try {
             const url = new URL(urlInput.value);
@@ -127,10 +133,13 @@ export function setupParsers() {
             updateStatus('url-status', false, e.message);
         }
     });
+}
 
-    // CSS Formatter
+export function setupCssFormatter() {
     const cssInput = document.getElementById('css-input');
     const cssOutput = document.getElementById('css-output');
+    if (!cssInput || !cssOutput) return;
+
     document.getElementById('btn-css-prettify')?.addEventListener('click', () => {
         let css = cssInput.value;
         css = css.replace(/\s*([\{\};])\s*/g, '$1\n');
@@ -145,10 +154,13 @@ export function setupParsers() {
         cssOutput.value = cssInput.value.replace(/\s+/g, ' ').replace(/\s*([\{\};:])\s*/g, '$1').trim();
         updateStatus('css-status', true);
     });
+}
 
-    // SQL Formatter (Basic)
+export function setupSqlFormatter() {
     const sqlInput = document.getElementById('sql-input');
     const sqlOutput = document.getElementById('sql-output');
+    if (!sqlInput || !sqlOutput) return;
+
     document.getElementById('btn-sql-prettify')?.addEventListener('click', () => {
         const keywords = ['SELECT', 'FROM', 'WHERE', 'AND', 'OR', 'GROUP BY', 'ORDER BY', 'LIMIT', 'JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'ON', 'INSERT INTO', 'VALUES', 'UPDATE', 'SET', 'DELETE'];
         let sql = sqlInput.value.replace(/\s+/g, ' ');
@@ -159,10 +171,12 @@ export function setupParsers() {
         sqlOutput.value = sql.trim();
         updateStatus('sql-status', true);
     });
+}
 
-    // HTML Formatter (Existing logic)
+export function setupHtmlFormatter() {
     const htmlInput = document.getElementById('html-input');
     const htmlOutput = document.getElementById('html-output');
+    if (!htmlInput || !htmlOutput) return;
 
     document.getElementById('btn-html-prettify')?.addEventListener('click', () => {
         let html = htmlInput.value;
@@ -192,12 +206,15 @@ export function setupParsers() {
         htmlInput.value = '';
         htmlOutput.value = '';
     });
+}
 
-    // Diff Checker
+export function setupDiffChecker() {
     const diffOriginal = document.getElementById('diff-input-original');
     const diffModified = document.getElementById('diff-input-modified');
     const diffOutput = document.getElementById('diff-output');
     const diffRaw = document.getElementById('diff-output-raw');
+
+    if (!diffOriginal || !diffModified) return;
 
     function updateDiff() {
         if (!diffOriginal || !diffModified || !diffOutput) return;
@@ -230,4 +247,15 @@ export function setupParsers() {
     diffModified?.addEventListener('input', updateDiff);
     document.getElementById('btn-diff-clear-original')?.addEventListener('click', () => { diffOriginal.value = ''; updateDiff(); });
     document.getElementById('btn-diff-clear-modified')?.addEventListener('click', () => { diffModified.value = ''; updateDiff(); });
+}
+
+// Deprecated legacy entry point
+export function setupParsers() {
+    setupJsonParser();
+    setupJwtDecoder();
+    setupUrlParser();
+    setupCssFormatter();
+    setupSqlFormatter();
+    setupHtmlFormatter();
+    setupDiffChecker();
 }

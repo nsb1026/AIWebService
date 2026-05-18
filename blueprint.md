@@ -26,9 +26,10 @@ Parse Utils is a high-performance, decentralized developer utility platform. It 
 *   **Zero Empty States:** Removing or populating all placeholder sections to ensure the site feels "complete" to crawlers.
 
 ## 4. Architectural Design
-*   **Client-Side Only Model:** Native Web APIs handle all logic locally for speed and security.
-*   **Internationalization (i18n) Engine:** Centralized translation dictionary (js/i18n.js) with dynamic DOM injection.
-*   **Hash-Based Routing:** Robust navigation system in `main.js` that supports deep-linking and bot crawlability.
+*   **Modular View System:** Content is segmented into "HTML units" within the `views/` directory, loaded dynamically via Fetch API to reduce file complexity.
+*   **Lazy-Loaded Initialization:** JavaScript logic for each tool is initialized only when the corresponding view is first loaded, optimizing memory usage.
+*   **Internationalization (i18n) Engine:** Centralized translation dictionary (js/i18n.js) with dynamic DOM injection, compatible with dynamically loaded content.
+*   **Hash-Based Routing:** Robust navigation system in `main.js` that handles asynchronous view loading and deep-linking.
 *   **Modular Article System:** Centralized article data (js/guides.js) with language-aware injection.
 
 ## 5. Design & Identity
@@ -39,6 +40,7 @@ Parse Utils is a high-performance, decentralized developer utility platform. It 
 ## 6. Implementation Plan (Current Status)
 1.  **[DONE] Core Tools:** Encoder, JSON Parser, Base64 to Image, HTML Formatter, Diff Checker.
 2.  **[DONE] Parser Expansion:** Added JWT, URL, CSS, and SQL tools.
-3.  **[DONE] UI Refactor:** Implemented dropdown navigation and shortened menu names for better space management.
-4.  **Content Expansion:** Expand existing 4 articles and add 6 new high-value guides.
-5.  **Glossary Expansion:** Increase the technical glossary to 20+ terms.
+3.  **[DONE] UI Refactor:** Implemented dropdown navigation and shortened menu names.
+4.  **[DONE] Modularization:** Split monolithic index.html into separate view files for better maintainability.
+5.  **Content Expansion:** Expand existing 4 articles and add 6 new high-value guides.
+6.  **Glossary Expansion:** Increase the technical glossary to 20+ terms.

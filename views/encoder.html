@@ -1,0 +1,122 @@
+<section id="encoder-view" class="view">
+    <header class="view-header">
+        <h1 data-i18n="encoder_h1">Professional String Encoder & Decoder</h1>
+        <p data-i18n="encoder_p">A multi-format transformation engine designed for secure, real-time data processing. Unlike server-side alternatives, all logic executes within your browser's V8 engine, ensuring that sensitive strings never leave your local environment.</p>
+        <div class="tool-description">
+            <p><strong>Technical Overview:</strong> Parse Utils utilizes high-performance algorithms to handle character encoding and string manipulation. Whether you are dealing with <strong>Base64</strong> for data transmission, <strong>URL Encoding</strong> for API requests, or <strong>HTML Escaping</strong> for cross-site scripting (XSS) prevention, our tool provides a consolidated interface for all your needs. By processing data locally, we mitigate risks associated with data interception and server-side logging, making it the preferred choice for security-conscious developers.</p>
+            <p><strong>How to use:</strong> Simply paste your target string into the main input. The application will instantly generate transformations across all supported categories. Use the 'Copy' buttons for rapid workflow integration. This tool is ideal for debugging API requests, sanitizing user input, or analyzing encoded payloads in various environments including Node.js, Python, and Go.</p>
+        </div>
+    </header>
+
+    <div class="input-section">
+        <div class="input-header">
+            <label data-i18n="label_main_input">Main Input (Source String)</label>
+            <button id="btn-encoder-clear" class="btn-small danger-btn" data-i18n="btn_clear">Clear Workspace</button>
+        </div>
+        <textarea id="main-input" data-i18n="placeholder_encoder" placeholder="Enter your raw text, Base64, or URL-encoded string..."></textarea>
+        <div id="stats" class="stats-bar">
+            <span><span data-i18n="label_characters">Characters:</span> <b id="stat-chars">0</b></span>
+            <span><span data-i18n="label_words">Words:</span> <b id="stat-words">0</b></span>
+            <span><span data-i18n="label_lines">Lines:</span> <b id="stat-lines">0</b></span>
+            <span><span data-i18n="label_entropy">Entropy:</span> <b id="stat-entropy">Low</b></span>
+        </div>
+    </div>
+
+    <div class="output-grid">
+        <!-- Web Encodings -->
+        <div class="output-group">
+            <h3>Web & Network Protocols</h3>
+            <div class="field">
+                <label>RFC 3986 URL Encode</label>
+                <div class="input-with-button">
+                    <input type="text" id="url-encode" readonly>
+                    <button class="copy-btn" data-target="url-encode" data-i18n="btn_copy">Copy</button>
+                </div>
+            </div>
+            <div class="field">
+                <label>HTML Entity Escape (XSS Protection)</label>
+                <div class="input-with-button">
+                    <input type="text" id="html-escape" readonly>
+                    <button class="copy-btn" data-target="html-escape" data-i18n="btn_copy">Copy</button>
+                </div>
+            </div>
+            <div class="field">
+                <label>Unicode / UTF-16 Escape</label>
+                <div class="input-with-button">
+                    <input type="text" id="unicode-escape" readonly>
+                    <button class="copy-btn" data-target="unicode-escape" data-i18n="btn_copy">Copy</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Representations -->
+        <div class="output-group">
+            <h3>Binary & Data Structures</h3>
+            <div class="field">
+                <label>Base64 (Standard)</label>
+                <div class="input-with-button">
+                    <input type="text" id="base64-encode" readonly>
+                    <button class="copy-btn" data-target="base64-encode" data-i18n="btn_copy">Copy</button>
+                </div>
+            </div>
+            <div class="field">
+                <label>Binary Stream (Space-separated)</label>
+                <div class="input-with-button">
+                    <input type="text" id="binary-string" readonly>
+                    <button class="copy-btn" data-target="binary-string" data-i18n="btn_copy">Copy</button>
+                </div>
+            </div>
+            <div class="field">
+                <label>Hexadecimal (Hex Dump)</label>
+                <div class="input-with-button">
+                    <input type="text" id="hex-encode" readonly>
+                    <button class="copy-btn" data-target="hex-encode" data-i18n="btn_copy">Copy</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ciphers & Transforms -->
+        <div class="output-group">
+            <h3>Ciphers & String Logic</h3>
+            <div class="field">
+                <label>ROT13 Obfuscation</label>
+                <div class="input-with-button">
+                    <input type="text" id="rot13" readonly>
+                    <button class="copy-btn" data-target="rot13" data-i18n="btn_copy">Copy</button>
+                </div>
+            </div>
+            <div class="field">
+                <label>Atbash Substitution</label>
+                <div class="input-with-button">
+                    <input type="text" id="atbash" readonly>
+                    <button class="copy-btn" data-target="atbash" data-i18n="btn_copy">Copy</button>
+                </div>
+            </div>
+            <div class="field">
+                <label>Naming Conventions</label>
+                <div class="multi-output">
+                    <input type="text" id="camel-case" readonly placeholder="camelCase">
+                    <input type="text" id="snake-case" readonly placeholder="snake_case">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tech-details-section">
+        <h3>Developer Insight: Advanced Encoding Applications</h3>
+        <div class="details-grid">
+            <div class="details-card">
+                <h4>Securing API Payloads</h4>
+                <p>When transmitting data via GET requests, URL encoding is mandatory to prevent character collision. Our tool ensures that reserved characters like <code>#</code>, <code>&</code>, and <code>?</code> are correctly converted to their percent-encoded equivalents (e.g., <code>%23</code>, <code>%26</code>, <code>%3F</code>), maintaining the integrity of your query parameters.</p>
+            </div>
+            <div class="details-card">
+                <h4>Defensive Coding with HTML Escaping</h4>
+                <p>Cross-Site Scripting (XSS) occurs when raw user input is rendered directly in the DOM. By using our HTML Escape tool, you convert <code>&lt;script&gt;</code> tags into harmless text entities. This is a critical step in sanitizing data for localized previews or when building custom CMS interfaces.</p>
+            </div>
+            <div class="details-card">
+                <h4>Binary Analysis via Hex/Base64</h4>
+                <p>Debugging binary protocols often requires inspecting Hex dumps or Base64 strings. This tool allows you to quickly flip between these representations to verify header signatures or check for magic bytes in custom data formats. It's an essential utility for backend developers and security researchers alike.</p>
+            </div>
+        </div>
+    </div>
+</section>

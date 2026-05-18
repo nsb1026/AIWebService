@@ -1,0 +1,25 @@
+<section id="sql-view" class="view">
+    <header class="view-header">
+        <h1 data-i18n="sql_h1">Semantic SQL Formatter</h1>
+        <p data-i18n="sql_p">Transform messy SQL queries into readable, structured statements.</p>
+    </header>
+    <div class="parser-container">
+        <div class="parser-input-side">
+            <div class="input-header">
+                <label>Raw SQL Query</label>
+                <div id="sql-status" class="json-status"></div>
+            </div>
+            <textarea id="sql-input" data-i18n="placeholder_sql" placeholder="Paste your SQL here..."></textarea>
+        </div>
+        <div class="parser-controls">
+            <button id="btn-sql-prettify" class="primary-btn" data-i18n="btn_prettify">Prettify SQL</button>
+        </div>
+        <div class="parser-output-side">
+            <div class="input-header">
+                <label>Structured Statement</label>
+                <button class="copy-btn btn-small" data-target="sql-output" data-i18n="btn_copy">Copy SQL</button>
+            </div>
+            <textarea id="sql-output" readonly placeholder="Your formatted SQL will appear here..."></textarea>
+        </div>
+    </div>
+</section>

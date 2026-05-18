@@ -1,20 +1,107 @@
 // --- Main Entry Point ---
 import { switchView } from './js/utils.js';
 import { setupEncoder } from './js/encoder.js';
-import { setupParsers } from './js/parser.js';
+import { 
+    setupJsonParser, 
+    setupJwtDecoder, 
+    setupUrlParser, 
+    setupCssFormatter, 
+    setupSqlFormatter, 
+    setupHtmlFormatter, 
+    setupDiffChecker 
+} from './js/parser.js';
 import { setupBase64ImageTool } from './js/base64-image.js';
 import { setupGuides, getArticleData, injectArticle } from './js/guides.js';
 import { updateLanguage } from './js/i18n.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const navLinks = document.querySelectorAll('.nav-link, .footer-link');
-    const views = document.querySelectorAll('.view');
+    const appContent = document.getElementById('app-content');
+    const loader = document.getElementById('loader');
+    
+    // Cache for loaded views
+    const loadedViews = new Set();
+
+    // Map of view IDs to their specific setup functions
+    const moduleSetupMap = {
+        'encoder-view': setupEncoder,
+        'json-view': setupJsonParser,
+        'jwt-view': setupJwtDecoder,
+        'url-view': setupUrlParser,
+        'css-view': setupCssFormatter,
+        'sql-view': setupSqlFormatter,
+        'html-view': setupHtmlFormatter,
+        'diff-view': setupDiffChecker,
+        'base64-image-view': setupBase64ImageTool,
+        'guides-view': setupGuides,
+        'article-view': setupGuides,
+        'resources-view': null,
+        'about-view': null,
+        'privacy-view': null,
+        'terms-view': null,
+        'contact-view': null,
+        'news-view': null
+    };
+
+    const ensureViewLoaded = async (viewId) => {
+        if (loadedViews.has(viewId)) return true;
+
+        const viewName = viewId.replace('-view', '');
+        const viewPath = `./views/${viewName}.html`;
+
+        try {
+            if (loader) loader.style.display = 'flex';
+            
+            const response = await fetch(viewPath);
+            if (!response.ok) throw new Error(`Failed to load view: ${viewId}`);
+            
+            const html = await response.text();
+            
+            const temp = document.createElement('div');
+            temp.innerHTML = html.trim();
+            const viewElement = temp.firstChild;
+            
+            if (!viewElement) throw new Error(`Empty response for view: ${viewId}`);
+            
+            appContent.appendChild(viewElement);
+            loadedViews.add(viewId);
+
+            // 1. Update translations for the new view
+            const currentLang = document.documentElement.lang || 'en';
+            updateLanguage(currentLang);
+
+            // 2. Initialize corresponding module logic
+            const setupFn = moduleSetupMap[viewId];
+            if (setupFn) {
+                setupFn();
+            }
+
+            return true;
+        } catch (error) {
+            console.error('Error loading view:', error);
+            const errorMsg = document.createElement('div');
+            errorMsg.className = 'error-view';
+            errorMsg.textContent = `Error loading tool: ${viewName}. Please check your connection and refresh.`;
+            appContent.appendChild(errorMsg);
+            return false;
+        } finally {
+            if (loader) loader.style.display = 'none';
+        }
+    };
 
     // 1. Enhanced Navigation with Hash Support
-    const handleRoute = () => {
+    const handleRoute = async () => {
         const hash = window.location.hash.replace('#', '') || 'encoder-view';
-        
-        if (hash.startsWith('article-')) {
+        const isArticle = hash.startsWith('article-');
+        const viewId = isArticle ? 'article-view' : hash;
+
+        // Ensure the view is loaded before switching
+        const loaded = await ensureViewLoaded(viewId);
+        if (!loaded) return;
+
+        const views = document.querySelectorAll('.view');
+
+        if (isArticle) {
             const articleId = hash.replace('article-', '').trim();
             const articleData = getArticleData(articleId);
             const lang = document.documentElement.lang || 'en';
@@ -31,11 +118,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 switchView(hash, views, navLinks);
                 updateMetadata(hash);
             } else {
-                switchView('encoder-view', views, navLinks);
-                updateMetadata('encoder-view');
+                window.location.hash = 'encoder-view';
             }
         }
-        window.scrollTo(0, 0);
     };
 
     const updateMetadata = (viewId) => {
@@ -96,8 +181,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const newLang = document.documentElement.lang === 'en' ? 'ko' : 'en';
         updateLanguage(newLang);
         localStorage.setItem('lang', newLang);
-        
-        // Refresh current view (especially articles) on lang change
         handleRoute();
     });
 
@@ -107,7 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnDecline = document.getElementById('btn-cookie-decline');
     const consent = localStorage.getItem('cookie-consent');
 
-    if (!consent) {
+    if (!consent && cookieBanner) {
         setTimeout(() => {
             cookieBanner.style.display = 'block';
         }, 1000);
@@ -115,29 +198,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const handleConsent = (status) => {
         localStorage.setItem('cookie-consent', status);
-        cookieBanner.style.opacity = '0';
-        setTimeout(() => {
-            cookieBanner.style.display = 'none';
-        }, 500);
+        if (cookieBanner) {
+            cookieBanner.style.opacity = '0';
+            setTimeout(() => {
+                cookieBanner.style.display = 'none';
+            }, 500);
+        }
         
         if (status === 'accepted') {
             console.log('User accepted cookies. Initializing AdSense...');
-            // Reload ads if needed
             if (window.adsbygoogle) {
                 (adsbygoogle = window.adsbygoogle || []).push({});
             }
         }
     };
 
-    btnAccept.addEventListener('click', () => handleConsent('accepted'));
-    btnDecline.addEventListener('click', () => handleConsent('declined'));
+    if (btnAccept) btnAccept.addEventListener('click', () => handleConsent('accepted'));
+    if (btnDecline) btnDecline.addEventListener('click', () => handleConsent('declined'));
 
-    // 4. Initial Routing & Module Initializations
-    setupEncoder();
-    setupParsers();
-    setupBase64ImageTool();
-    setupGuides();
-    handleRoute(); // Run initial route
+    // 4. Initial Routing
+    handleRoute();
 
     console.log('Parse Utils initialized.');
 });

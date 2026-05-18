@@ -1,0 +1,50 @@
+<section id="base64-image-view" class="view">
+    <header class="view-header">
+        <h1 data-i18n="base64_h1">Advanced Base64 to Image Reconstruction</h1>
+        <p data-i18n="base64_p">Instantly render binary-encoded image data back into visual assets. This tool supports various MIME types including PNG, JPEG, SVG, and WEBP, utilizing the browser's native rendering pipeline for maximum accuracy.</p>
+        <div class="tool-description">
+            <p><strong>Operational Guide:</strong> Paste your Base64 string into the input area. The tool automatically detects if a Data URI prefix (e.g., <code>data:image/png;base64,</code>) is present; if not, it will attempt to infer the format. Once rendered, you can inspect the image dimensions and download the reconstructed file directly to your local storage.</p>
+        </div>
+    </header>
+
+    <div class="converter-container">
+        <div class="input-section">
+            <div class="input-header">
+                <label>Base64 Data Stream</label>
+                <button id="btn-b64-clear" class="btn-small danger-btn">Clear Workspace</button>
+            </div>
+            <textarea id="b64-input" data-i18n="placeholder_base64" placeholder="Paste your raw Base64 image data here..."></textarea>
+        </div>
+
+        <div class="preview-section">
+            <div class="input-header">
+                <label>Visual Reconstruction</label>
+                <div id="b64-status" class="json-status"></div>
+            </div>
+            <div id="b64-preview-container" class="image-preview-box">
+                <p class="placeholder-text">Waiting for valid Base64 input...</p>
+            </div>
+            <div class="preview-controls">
+                <button id="btn-b64-download" class="primary-btn" data-i18n="btn_download" disabled>Export Reconstructed Image</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="tech-details-section">
+        <h3>Technical Specification: Image Encoding</h3>
+        <div class="details-grid">
+            <div class="details-card">
+                <h4>Understanding Data URIs</h4>
+                <p>A Data URI is a scheme that allows you to embed assets directly into your code. While convenient for small icons (under 10KB), Base64 encoding increases file size by ~33%. Our tool helps you verify the integrity of these URIs before deployment, ensuring that your CSS or HTML won't fail to render due to malformed data.</p>
+            </div>
+            <div class="details-card">
+                <h4>MIME Type Detection</h4>
+                <p>The first few characters of a Base64 string (the "Magic Bytes") often identify the file format. For instance, <code>iVBORw0KGgo...</code> indicates a PNG. Our reconstruction engine analyzes these signatures to provide a seamless preview experience even when the formal Data URI header is missing.</p>
+            </div>
+            <div class="details-card">
+                <h4>Privacy & Performance</h4>
+                <p>Unlike server-side converters that upload your data to a remote machine, this tool uses the <code>URL.createObjectURL</code> or <code>canvas</code> APIs to render images locally. This means your private graphics, screenshots, or design assets never touch our servers, providing absolute data sovereignty.</p>
+            </div>
+        </div>
+    </div>
+</section>

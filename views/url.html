@@ -1,0 +1,25 @@
+<section id="url-view" class="view">
+    <header class="view-header">
+        <h1 data-i18n="url_h1">Deep URL Parser & Analyzer</h1>
+        <p data-i18n="url_p">Deconstruct complex URLs into their fundamental components. Analyze protocols, query parameters, and fragments.</p>
+    </header>
+    <div class="parser-container">
+        <div class="parser-input-side">
+            <div class="input-header">
+                <label>Source URL</label>
+                <div id="url-status" class="json-status"></div>
+            </div>
+            <textarea id="url-input" data-i18n="placeholder_url" placeholder="Paste your URL here..."></textarea>
+        </div>
+        <div class="parser-controls">
+            <button id="btn-url-parse" class="primary-btn">Parse URL</button>
+        </div>
+        <div class="parser-output-side">
+            <div class="input-header">
+                <label>URL Components</label>
+                <button class="copy-btn btn-small" data-target="url-output" data-i18n="btn_copy">Copy JSON</button>
+            </div>
+            <textarea id="url-output" readonly placeholder="Analyzed URL components will appear here..."></textarea>
+        </div>
+    </div>
+</section>

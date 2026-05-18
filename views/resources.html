@@ -1,0 +1,68 @@
+<section id="resources-view" class="view">
+    <header class="view-header">
+        <h1 data-i18n="resources_h1">Developer Knowledge Base & Technical FAQ</h1>
+        <p data-i18n="resources_p">A curated repository of web standards, security protocols, and data engineering concepts to support your daily development cycle.</p>
+    </header>
+
+    <div class="resources-grid">
+        <div class="resource-col">
+            <div class="content-card">
+                <h3>Advanced Technical Glossary</h3>
+                <dl class="glossary-list">
+                    <dt>JSON (JavaScript Object Notation)</dt>
+                    <dd>A language-independent data format derived from JavaScript. It is the industry standard for asynchronous browser-server communication (AJAX) and configuration files.</dd>
+                    
+                    <dt>Base64 & Data URIs</dt>
+                    <dd>An encoding scheme that represents binary data in 6-bit chunks. Data URIs allow resources like images to be embedded directly into HTML/CSS to reduce HTTP overhead.</dd>
+                    
+                    <dt>RFC 3986 (URL Encoding)</dt>
+                    <dd>The standard for uniform resource identifiers. It defines how non-ASCII and reserved characters should be percent-encoded to ensure safe transmission over the web.</dd>
+                    
+                    <dt>XSS (Cross-Site Scripting)</dt>
+                    <dd>A security vulnerability where malicious scripts are injected into trusted websites. Prevention involves rigorous input validation and output encoding (HTML escaping).</dd>
+                    
+                    <dt>CORS (Cross-Origin Resource Sharing)</dt>
+                    <dd>A browser-level security mechanism that uses HTTP headers to define which origins are permitted to access resources on a server, preventing unauthorized data access.</dd>
+
+                    <dt>Content Security Policy (CSP)</dt>
+                    <dd>An added layer of security that helps detect and mitigate certain types of attacks, including XSS and data injection attacks by restricting resource loading.</dd>
+
+                    <dt>ASCII vs. UTF-8</dt>
+                    <dd>ASCII is a 7-bit character set for English text, while UTF-8 is a variable-width encoding that can represent every character in the Unicode standard, becoming the dominant encoding for the World Wide Web.</dd>
+
+                    <dt>WebAssembly (WASM)</dt>
+                    <dd>A binary instruction format for a stack-based virtual machine. WASM is designed as a portable compilation target for programming languages like C, C++, and Rust, enabling high-performance applications on web pages.</dd>
+
+                    <dt>Service Workers</dt>
+                    <dd>A type of web worker that runs in the background, separate from a web page, opening the door to features that don't need a web page or user interaction, such as push notifications and background sync.</dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="resource-col">
+            <div class="content-card">
+                <h3>Frequently Asked Questions</h3>
+                <div class="faq-item">
+                    <h4>Is my data processed on a remote server?</h4>
+                    <p>No. Parse Utils is built on a decentralized processing model. All encoding, comparisons, and formatting happen locally in your browser's memory using standard Web APIs. This ensures zero latency and absolute data privacy.</p>
+                </div>
+                <div class="faq-item">
+                    <h4>Why does my JSON show a syntax error?</h4>
+                    <p>Our validator follows the strict JSON specification. Common pitfalls include trailing commas after the last element, using single quotes (<code>'</code>) instead of double quotes (<code>"</code>), or unquoted object keys.</p>
+                </div>
+                <div class="faq-item">
+                    <h4>How can I use these tools offline?</h4>
+                    <p>Since the application logic is entirely client-side JavaScript, you can keep the tab open even without an active internet connection. Most features will remain fully functional as long as the page remains loaded.</p>
+                </div>
+                <div class="faq-item">
+                    <h4>Are Base64 strings secure for API keys?</h4>
+                    <p>Absolutely not. Base64 is a deterministic encoding, not a cryptographic encryption. Anyone with access to the string can decode it instantly. Always use secure, encrypted vaults for storing sensitive credentials.</p>
+                </div>
+                <div class="faq-item">
+                    <h4>What browser versions are supported?</h4>
+                    <p>We leverage modern <strong>Baseline</strong> features including ES Modules, Async/Await, and CSS Custom Properties. We recommend the latest versions of Chrome, Firefox, Safari, or Edge for the best experience.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

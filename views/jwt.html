@@ -1,0 +1,25 @@
+<section id="jwt-view" class="view">
+    <header class="view-header">
+        <h1 data-i18n="jwt_h1">Secure JWT Debugger & Decoder</h1>
+        <p data-i18n="jwt_p">Decode JSON Web Tokens locally. Inspect headers, payloads, and signatures without exposing your sensitive tokens to external servers.</p>
+    </header>
+    <div class="parser-container">
+        <div class="parser-input-side">
+            <div class="input-header">
+                <label>JWT Token</label>
+                <div id="jwt-status" class="json-status"></div>
+            </div>
+            <textarea id="jwt-input" data-i18n="placeholder_jwt" placeholder="Paste your JWT here..."></textarea>
+        </div>
+        <div class="parser-controls">
+            <button id="btn-jwt-decode" class="primary-btn">Decode Token</button>
+        </div>
+        <div class="parser-output-side">
+            <div class="input-header">
+                <label>Decoded Contents</label>
+                <button class="copy-btn btn-small" data-target="jwt-output" data-i18n="btn_copy">Copy Result</button>
+            </div>
+            <textarea id="jwt-output" readonly placeholder="Decoded header and payload will appear here..."></textarea>
+        </div>
+    </div>
+</section>

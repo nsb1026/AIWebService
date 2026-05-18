@@ -1,0 +1,55 @@
+<section id="diff-view" class="view">
+    <header class="view-header">
+        <h1 data-i18n="diff_h1">Intelligent Text & Code Diff Checker</h1>
+        <p data-i18n="diff_p">Perform side-by-side comparisons of code versions, API payloads, or text documents. Our algorithm highlights additions, deletions, and modifications with high precision.</p>
+        <div class="tool-description">
+            <p><strong>Operation Guide:</strong> Paste your baseline text into the 'Original' panel and your updated version into the 'Modified' panel. The results below will visually differentiate the two, making it easy to spot regressions or verify successful refactors.</p>
+        </div>
+    </header>
+
+    <div class="diff-input-container">
+        <div class="diff-input-side">
+            <div class="input-header">
+                <label>Original Source (Baseline)</label>
+                <button id="btn-diff-clear-original" class="btn-small danger-btn" data-i18n="btn_clear">Clear Baseline</button>
+            </div>
+            <textarea id="diff-input-original" data-i18n="placeholder_diff_orig" placeholder="Original content..."></textarea>
+        </div>
+        <div class="diff-input-side">
+            <div class="input-header">
+                <label>Modified Version (Comparison)</label>
+                <button id="btn-diff-clear-modified" class="btn-small danger-btn" data-i18n="btn_clear">Clear Comparison</button>
+            </div>
+            <textarea id="diff-input-modified" data-i18n="placeholder_diff_mod" placeholder="Modified content..."></textarea>
+        </div>
+    </div>
+
+    <div class="diff-result-section">
+        <div class="input-header">
+            <label>Structural Delta Analysis</label>
+            <button class="copy-btn btn-small" data-target="diff-output-raw" data-i18n="btn_copy">Copy Diff Summary</button>
+        </div>
+        <div id="diff-output" class="diff-output-display">
+            <p class="placeholder-text">Awaiting input in both panels to perform delta analysis...</p>
+        </div>
+        <textarea id="diff-output-raw" style="display:none;"></textarea>
+    </div>
+
+    <div class="tech-details-section">
+        <h3>Technical Insight: Delta Analysis</h3>
+        <div class="details-grid">
+            <div class="details-card">
+                <h4>Debugging API Regressions</h4>
+                <p>When an API response changes, it can be difficult to spot a single missing field in a 1000-line JSON object. By combining our <strong>JSON Sort</strong> feature with this <strong>Diff Checker</strong>, you can instantly see exactly which fields were added or removed between releases.</p>
+            </div>
+            <div class="details-card">
+                <h4>Code Review Efficiency</h4>
+                <p>This tool mimics the logic of professional Version Control Systems (VCS) like Git. It's perfect for reviewing local changes before staging them, or for comparing snippets from documentation with your current implementation.</p>
+            </div>
+            <div class="details-card">
+                <h4>Zero-Server Logic</h4>
+                <p>Most online diff checkers send your data to their backend for processing. Parse Utils performs the entire comparison using a highly optimized client-side algorithm, ensuring that your proprietary code or sensitive documentation never leaves your machine.</p>
+            </div>
+        </div>
+    </div>
+</section>
