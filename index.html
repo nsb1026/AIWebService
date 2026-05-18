@@ -34,15 +34,34 @@
         <div class="nav-brand" data-i18n="nav_brand">Parse Utils</div>
         <div class="nav-links">
             <a href="#" class="nav-link active" data-view="encoder-view" data-i18n="nav_encoder">Encoder</a>
-            <a href="#" class="nav-link" data-view="json-view" data-i18n="nav_json">JSON Parser</a>
-            <a href="#" class="nav-link" data-view="base64-image-view" data-i18n="nav_base64">Base64 to Image</a>
-            <a href="#" class="nav-link" data-view="html-view" data-i18n="nav_html">HTML Formatter</a>
-            <a href="#" class="nav-link" data-view="diff-view" data-i18n="nav_diff">Diff Checker</a>
-            <a href="#" class="nav-link" data-view="guides-view" data-i18n="nav_guides">Guides</a>
-            <a href="#" class="nav-link" data-view="resources-view" data-i18n="nav_resources">Resources</a>
-            <a href="#" class="nav-link" data-view="about-view" data-i18n="nav_about">About</a>
-            <a href="#" class="nav-link" data-view="privacy-view" data-i18n="nav_privacy">Privacy</a>
-            <a href="#" class="nav-link" data-view="contact-view" data-i18n="nav_contact">Contact</a>
+            
+            <div class="nav-item-dropdown">
+                <a href="#" class="nav-link dropdown-toggle" data-i18n="nav_parsers">Parsers</a>
+                <div class="dropdown-menu">
+                    <a href="#" class="nav-link" data-view="json-view" data-i18n="nav_json">JSON</a>
+                    <a href="#" class="nav-link" data-view="jwt-view" data-i18n="nav_jwt">JWT</a>
+                    <a href="#" class="nav-link" data-view="url-view" data-i18n="nav_url">URL</a>
+                    <a href="#" class="nav-link" data-view="html-view" data-i18n="nav_html">HTML</a>
+                    <a href="#" class="nav-link" data-view="css-view" data-i18n="nav_css">CSS</a>
+                    <a href="#" class="nav-link" data-view="sql-view" data-i18n="nav_sql">SQL</a>
+                </div>
+            </div>
+
+            <a href="#" class="nav-link" data-view="diff-view" data-i18n="nav_diff">Diff</a>
+            <a href="#" class="nav-link" data-view="base64-image-view" data-i18n="nav_base64">Base64</a>
+
+            <div class="nav-item-dropdown">
+                <a href="#" class="nav-link dropdown-toggle" data-i18n="nav_more">More</a>
+                <div class="dropdown-menu">
+                    <a href="#" class="nav-link" data-view="guides-view" data-i18n="nav_guides">Guides</a>
+                    <a href="#" class="nav-link" data-view="news-view" data-i18n="nav_news">News</a>
+                    <a href="#" class="nav-link" data-view="resources-view" data-i18n="nav_resources">Resources</a>
+                    <a href="#" class="nav-link" data-view="about-view" data-i18n="nav_about">About</a>
+                    <a href="#" class="nav-link" data-view="privacy-view" data-i18n="nav_privacy">Privacy</a>
+                    <a href="#" class="nav-link" data-view="contact-view" data-i18n="nav_contact">Contact</a>
+                </div>
+            </div>
+
             <button id="lang-toggle" class="lang-toggle-btn" aria-label="Toggle Language">KO</button>
             <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle Theme">
                 <span class="icon-sun">☀️</span>
@@ -209,22 +228,113 @@
                     <textarea id="json-output" readonly placeholder="Your optimized JSON will appear here..."></textarea>
                 </div>
             </div>
+        </section>
 
-            <div class="tech-details-section">
-                <h3>Technical Excellence: JSON Normalization</h3>
-                <div class="details-grid">
-                    <div class="details-card">
-                        <h4>The Importance of Key Sorting</h4>
-                        <p>In distributed systems, two API responses might contain the same data but have keys in a different order. This makes simple string comparisons fail. By 'Sorting Keys' alphabetically, you normalize the data structure, allowing for reliable diff-checking and cache-key generation.</p>
+        <!-- JWT Decoder View -->
+        <section id="jwt-view" class="view">
+            <header class="view-header">
+                <h1 data-i18n="jwt_h1">Secure JWT Debugger & Decoder</h1>
+                <p data-i18n="jwt_p">Decode JSON Web Tokens locally. Inspect headers, payloads, and signatures without exposing your sensitive tokens to external servers.</p>
+            </header>
+            <div class="parser-container">
+                <div class="parser-input-side">
+                    <div class="input-header">
+                        <label>JWT Token</label>
+                        <div id="jwt-status" class="json-status"></div>
                     </div>
-                    <div class="details-card">
-                        <h4>Validation vs. Parsing</h4>
-                        <p>Our formatter uses a strict <code>JSON.parse()</code> implementation. If your JSON fails to load, it's usually due to non-standard syntax like trailing commas, single quotes, or unquoted keys. Fixing these ensures your data is compatible with all standard JSON libraries (Python's <code>json</code>, Go's <code>encoding/json</code>, etc.).</p>
+                    <textarea id="jwt-input" data-i18n="placeholder_jwt" placeholder="Paste your JWT here..."></textarea>
+                </div>
+                <div class="parser-controls">
+                    <button id="btn-jwt-decode" class="primary-btn">Decode Token</button>
+                </div>
+                <div class="parser-output-side">
+                    <div class="input-header">
+                        <label>Decoded Contents</label>
+                        <button class="copy-btn btn-small" data-target="jwt-output" data-i18n="btn_copy">Copy Result</button>
                     </div>
-                    <div class="details-card">
-                        <h4>Client-Side Scalability</h4>
-                        <p>By offloading the formatting to your local CPU, we ensure that your sensitive data (like authentication tokens or PII) never traverses the network. This 'Edge Computing' approach is both faster and significantly more secure than traditional web-based formatters.</p>
+                    <textarea id="jwt-output" readonly placeholder="Decoded header and payload will appear here..."></textarea>
+                </div>
+            </div>
+        </section>
+
+        <!-- URL Parser View -->
+        <section id="url-view" class="view">
+            <header class="view-header">
+                <h1 data-i18n="url_h1">Deep URL Parser & Analyzer</h1>
+                <p data-i18n="url_p">Deconstruct complex URLs into their fundamental components. Analyze protocols, query parameters, and fragments.</p>
+            </header>
+            <div class="parser-container">
+                <div class="parser-input-side">
+                    <div class="input-header">
+                        <label>Source URL</label>
+                        <div id="url-status" class="json-status"></div>
                     </div>
+                    <textarea id="url-input" data-i18n="placeholder_url" placeholder="Paste your URL here..."></textarea>
+                </div>
+                <div class="parser-controls">
+                    <button id="btn-url-parse" class="primary-btn">Parse URL</button>
+                </div>
+                <div class="parser-output-side">
+                    <div class="input-header">
+                        <label>URL Components</label>
+                        <button class="copy-btn btn-small" data-target="url-output" data-i18n="btn_copy">Copy JSON</button>
+                    </div>
+                    <textarea id="url-output" readonly placeholder="Analyzed URL components will appear here..."></textarea>
+                </div>
+            </div>
+        </section>
+
+        <!-- CSS Formatter View -->
+        <section id="css-view" class="view">
+            <header class="view-header">
+                <h1 data-i18n="css_h1">Modern CSS Formatter & Minifier</h1>
+                <p data-i18n="css_p">Cleanse and optimize your stylesheets. Prettify for development or minify for production.</p>
+            </header>
+            <div class="parser-container">
+                <div class="parser-input-side">
+                    <div class="input-header">
+                        <label>Raw CSS</label>
+                        <div id="css-status" class="json-status"></div>
+                    </div>
+                    <textarea id="css-input" data-i18n="placeholder_css" placeholder="Paste your CSS here..."></textarea>
+                </div>
+                <div class="parser-controls">
+                    <button id="btn-css-prettify" class="primary-btn" data-i18n="btn_prettify">Prettify</button>
+                    <button id="btn-css-minify" class="secondary-btn" data-i18n="btn_minify">Minify</button>
+                </div>
+                <div class="parser-output-side">
+                    <div class="input-header">
+                        <label>Optimized CSS</label>
+                        <button class="copy-btn btn-small" data-target="css-output" data-i18n="btn_copy">Copy Result</button>
+                    </div>
+                    <textarea id="css-output" readonly placeholder="Your formatted CSS will appear here..."></textarea>
+                </div>
+            </div>
+        </section>
+
+        <!-- SQL Formatter View -->
+        <section id="sql-view" class="view">
+            <header class="view-header">
+                <h1 data-i18n="sql_h1">Semantic SQL Formatter</h1>
+                <p data-i18n="sql_p">Transform messy SQL queries into readable, structured statements.</p>
+            </header>
+            <div class="parser-container">
+                <div class="parser-input-side">
+                    <div class="input-header">
+                        <label>Raw SQL Query</label>
+                        <div id="sql-status" class="json-status"></div>
+                    </div>
+                    <textarea id="sql-input" data-i18n="placeholder_sql" placeholder="Paste your SQL here..."></textarea>
+                </div>
+                <div class="parser-controls">
+                    <button id="btn-sql-prettify" class="primary-btn" data-i18n="btn_prettify">Prettify SQL</button>
+                </div>
+                <div class="parser-output-side">
+                    <div class="input-header">
+                        <label>Structured Statement</label>
+                        <button class="copy-btn btn-small" data-target="sql-output" data-i18n="btn_copy">Copy SQL</button>
+                    </div>
+                    <textarea id="sql-output" readonly placeholder="Your formatted SQL will appear here..."></textarea>
                 </div>
             </div>
         </section>
@@ -232,8 +342,8 @@
         <!-- Base64 to Image View -->
         <section id="base64-image-view" class="view">
             <header class="view-header">
-                <h1>Advanced Base64 to Image Reconstruction</h1>
-                <p>Instantly render binary-encoded image data back into visual assets. This tool supports various MIME types including PNG, JPEG, SVG, and WEBP, utilizing the browser's native rendering pipeline for maximum accuracy.</p>
+                <h1 data-i18n="base64_h1">Advanced Base64 to Image Reconstruction</h1>
+                <p data-i18n="base64_p">Instantly render binary-encoded image data back into visual assets. This tool supports various MIME types including PNG, JPEG, SVG, and WEBP, utilizing the browser's native rendering pipeline for maximum accuracy.</p>
                 <div class="tool-description">
                     <p><strong>Operational Guide:</strong> Paste your Base64 string into the input area. The tool automatically detects if a Data URI prefix (e.g., <code>data:image/png;base64,</code>) is present; if not, it will attempt to infer the format. Once rendered, you can inspect the image dimensions and download the reconstructed file directly to your local storage.</p>
                 </div>
@@ -245,7 +355,7 @@
                         <label>Base64 Data Stream</label>
                         <button id="btn-b64-clear" class="btn-small danger-btn">Clear Workspace</button>
                     </div>
-                    <textarea id="b64-input" placeholder="Paste your raw Base64 image data here..."></textarea>
+                    <textarea id="b64-input" data-i18n="placeholder_base64" placeholder="Paste your raw Base64 image data here..."></textarea>
                 </div>
 
                 <div class="preview-section">
@@ -257,7 +367,7 @@
                         <p class="placeholder-text">Waiting for valid Base64 input...</p>
                     </div>
                     <div class="preview-controls">
-                        <button id="btn-b64-download" class="primary-btn" disabled>Export Reconstructed Image</button>
+                        <button id="btn-b64-download" class="primary-btn" data-i18n="btn_download" disabled>Export Reconstructed Image</button>
                     </div>
                 </div>
             </div>
@@ -284,8 +394,8 @@
         <!-- HTML Formatter View -->
         <section id="html-view" class="view">
             <header class="view-header">
-                <h1>Semantic HTML Formatter & Optimizer</h1>
-                <p>Cleanse, indent, and validate your markup for better SEO and maintainability. This utility transforms cluttered "spaghetti code" into professional, standards-compliant HTML5.</p>
+                <h1 data-i18n="html_h1">Semantic HTML Formatter & Optimizer</h1>
+                <p data-i18n="html_p">Cleanse, indent, and validate your markup for better SEO and maintainability. This utility transforms cluttered "spaghetti code" into professional, standards-compliant HTML5.</p>
                 <div class="tool-description">
                     <p><strong>How to use:</strong> Input your raw HTML into the first panel. Use 'Prettify' to expand nested elements for easier debugging, or 'Minify' to strip unnecessary whitespace and comments for production use. The formatter intelligently handles void elements and maintains the integrity of your template tags.</p>
                 </div>
@@ -296,19 +406,19 @@
                     <div class="input-header">
                         <label>Raw Markup Source</label>
                         <div id="html-status" class="json-status"></div>
-                        <button id="btn-html-clear" class="btn-small danger-btn">Clear Workspace</button>
+                        <button id="btn-html-clear" class="btn-small danger-btn" data-i18n="btn_clear">Clear Workspace</button>
                     </div>
-                    <textarea id="html-input" placeholder="Paste your HTML, SVG, or XML snippet here..."></textarea>
+                    <textarea id="html-input" data-i18n="placeholder_html" placeholder="Paste your HTML, SVG, or XML snippet here..."></textarea>
                 </div>
                 <div class="parser-controls">
-                    <button id="btn-html-prettify" class="primary-btn">Prettify (Semantic)</button>
-                    <button id="btn-html-minify" class="secondary-btn">Optimize/Minify</button>
-                    <button id="btn-html-apply" class="secondary-btn">Push to Source</button>
+                    <button id="btn-html-prettify" class="primary-btn" data-i18n="btn_prettify">Prettify (Semantic)</button>
+                    <button id="btn-html-minify" class="secondary-btn" data-i18n="btn_minify">Optimize/Minify</button>
+                    <button id="btn-html-apply" class="secondary-btn" data-i18n="btn_apply">Push to Source</button>
                 </div>
                 <div class="parser-output-side">
                     <div class="input-header">
                         <label>Standardized Output</label>
-                        <button class="copy-btn btn-small" data-target="html-output">Copy Result</button>
+                        <button class="copy-btn btn-small" data-target="html-output" data-i18n="btn_copy">Copy Result</button>
                     </div>
                     <textarea id="html-output" readonly placeholder="Cleaned markup will appear here..."></textarea>
                 </div>
@@ -336,8 +446,8 @@
         <!-- Diff Checker View -->
         <section id="diff-view" class="view">
             <header class="view-header">
-                <h1>Intelligent Text & Code Diff Checker</h1>
-                <p>Perform side-by-side comparisons of code versions, API payloads, or text documents. Our algorithm highlights additions, deletions, and modifications with high precision.</p>
+                <h1 data-i18n="diff_h1">Intelligent Text & Code Diff Checker</h1>
+                <p data-i18n="diff_p">Perform side-by-side comparisons of code versions, API payloads, or text documents. Our algorithm highlights additions, deletions, and modifications with high precision.</p>
                 <div class="tool-description">
                     <p><strong>Operation Guide:</strong> Paste your baseline text into the 'Original' panel and your updated version into the 'Modified' panel. The results below will visually differentiate the two, making it easy to spot regressions or verify successful refactors.</p>
                 </div>
@@ -347,23 +457,23 @@
                 <div class="diff-input-side">
                     <div class="input-header">
                         <label>Original Source (Baseline)</label>
-                        <button id="btn-diff-clear-original" class="btn-small danger-btn">Clear Baseline</button>
+                        <button id="btn-diff-clear-original" class="btn-small danger-btn" data-i18n="btn_clear">Clear Baseline</button>
                     </div>
-                    <textarea id="diff-input-original" placeholder="Original content..."></textarea>
+                    <textarea id="diff-input-original" data-i18n="placeholder_diff_orig" placeholder="Original content..."></textarea>
                 </div>
                 <div class="diff-input-side">
                     <div class="input-header">
                         <label>Modified Version (Comparison)</label>
-                        <button id="btn-diff-clear-modified" class="btn-small danger-btn">Clear Comparison</button>
+                        <button id="btn-diff-clear-modified" class="btn-small danger-btn" data-i18n="btn_clear">Clear Comparison</button>
                     </div>
-                    <textarea id="diff-input-modified" placeholder="Modified content..."></textarea>
+                    <textarea id="diff-input-modified" data-i18n="placeholder_diff_mod" placeholder="Modified content..."></textarea>
                 </div>
             </div>
 
             <div class="diff-result-section">
                 <div class="input-header">
                     <label>Structural Delta Analysis</label>
-                    <button class="copy-btn btn-small" data-target="diff-output-raw">Copy Diff Summary</button>
+                    <button class="copy-btn btn-small" data-target="diff-output-raw" data-i18n="btn_copy">Copy Diff Summary</button>
                 </div>
                 <div id="diff-output" class="diff-output-display">
                     <p class="placeholder-text">Awaiting input in both panels to perform delta analysis...</p>
@@ -393,8 +503,8 @@
         <!-- Resources View (Glossary & FAQ) -->
         <section id="resources-view" class="view">
             <header class="view-header">
-                <h1>Developer Knowledge Base & Technical FAQ</h1>
-                <p>A curated repository of web standards, security protocols, and data engineering concepts to support your daily development cycle.</p>
+                <h1 data-i18n="resources_h1">Developer Knowledge Base & Technical FAQ</h1>
+                <p data-i18n="resources_p">A curated repository of web standards, security protocols, and data engineering concepts to support your daily development cycle.</p>
             </header>
 
             <div class="resources-grid">
@@ -422,6 +532,12 @@
 
                             <dt>ASCII vs. UTF-8</dt>
                             <dd>ASCII is a 7-bit character set for English text, while UTF-8 is a variable-width encoding that can represent every character in the Unicode standard, becoming the dominant encoding for the World Wide Web.</dd>
+
+                            <dt>WebAssembly (WASM)</dt>
+                            <dd>A binary instruction format for a stack-based virtual machine. WASM is designed as a portable compilation target for programming languages like C, C++, and Rust, enabling high-performance applications on web pages.</dd>
+
+                            <dt>Service Workers</dt>
+                            <dd>A type of web worker that runs in the background, separate from a web page, opening the door to features that don't need a web page or user interaction, such as push notifications and background sync.</dd>
                         </dl>
                     </div>
                 </div>
@@ -457,8 +573,8 @@
         <!-- About View -->
         <section id="about-view" class="view">
             <header class="view-header">
-                <h1>About Parse Utils</h1>
-                <p>Professional Developer Utilities for the Modern Web.</p>
+                <h1 data-i18n="about_h1">About Parse Utils</h1>
+                <p data-i18n="about_p">Professional Developer Utilities for the Modern Web.</p>
             </header>
             <div class="content-card grid-about">
                 <div class="about-section">
@@ -486,8 +602,8 @@
         <!-- Privacy View -->
         <section id="privacy-view" class="view">
             <header class="view-header">
-                <h1>Privacy Policy</h1>
-                <p>Last Updated: April 2026</p>
+                <h1 data-i18n="privacy_h1">Privacy Policy</h1>
+                <p data-i18n="privacy_p">Last Updated: May 2026</p>
             </header>
             <div class="content-card privacy-content">
                 <h2>1. Commitment to Privacy</h2>
@@ -510,15 +626,15 @@
                 <p>By using Parse Utils, you consent to the use of cookies as described in this policy. You can manage your cookie preferences through your browser settings or via our on-site cookie banner.</p>
 
                 <h2>5. Contact Us</h2>
-                <p>If you have any questions regarding this policy, please reach out via our <a href="#" data-view="contact-view">Contact Page</a>.</p>
+                <p>If you have any questions regarding this policy, please reach out via our <a href="#" data-view="contact-view" data-i18n="nav_contact">Contact Page</a>.</p>
             </div>
         </section>
 
         <!-- Guides View -->
         <section id="guides-view" class="view">
             <header class="view-header">
-                <h1>Developer Guides & Resources</h1>
-                <p>In-depth articles to help you master web development and data processing.</p>
+                <h1 data-i18n="guides_h1">Developer Guides & Resources</h1>
+                <p data-i18n="guides_p">In-depth articles to help you master web development and data processing.</p>
             </header>
 
             <div class="guides-grid">
@@ -526,49 +642,74 @@
                     <div class="guide-badge">Encoding</div>
                     <h2>Understanding Base64 Encoding</h2>
                     <p>Base64 is not encryption. It's a way to represent binary data in an ASCII string format. Learn why we use it for images, data URIs, and basic authentication...</p>
-                    <button class="btn-read-more secondary-btn">Read Full Article</button>
+                    <button class="btn-read-more secondary-btn" data-i18n="btn_read_more">Read Full Article</button>
                 </article>
 
                 <article class="guide-card" data-article="api-debugging">
                     <div class="guide-badge">APIs</div>
                     <h2>REST API Debugging Best Practices</h2>
                     <p>Master the art of testing and debugging APIs. Learn about status codes, headers, and how to handle CORS issues effectively...</p>
-                    <button class="btn-read-more secondary-btn">Read Full Article</button>
+                    <button class="btn-read-more secondary-btn" data-i18n="btn_read_more">Read Full Article</button>
                 </article>
 
                 <article class="guide-card" data-article="json">
                     <div class="guide-badge">Data</div>
                     <h2>JSON: The Backbone of the Modern Web</h2>
                     <p>From validation to minification, learn how to handle JSON like a pro. Why is JSON better than XML for modern web applications?</p>
-                    <button class="btn-read-more secondary-btn">Read Full Article</button>
+                    <button class="btn-read-more secondary-btn" data-i18n="btn_read_more">Read Full Article</button>
                 </article>
 
                 <article class="guide-card" data-article="xss">
                     <div class="guide-badge">Security</div>
                     <h2>HTML Escaping & XSS Prevention</h2>
                     <p>Why you should always escape user input before rendering it. Learn how HTML escaping protects your site from Cross-Site Scripting attacks.</p>
-                    <button class="btn-read-more secondary-btn">Read Full Article</button>
+                    <button class="btn-read-more secondary-btn" data-i18n="btn_read_more">Read Full Article</button>
                 </article>
 
                 <article class="guide-card" data-article="security-checklist">
                     <div class="guide-badge">Best Practices</div>
                     <h2>Web Security Checklist for 2026</h2>
                     <p>Essential security steps for every web developer. From CSP headers to secure cookie attributes...</p>
-                    <button class="btn-read-more secondary-btn">Read Full Article</button>
+                    <button class="btn-read-more secondary-btn" data-i18n="btn_read_more">Read Full Article</button>
                 </article>
 
                 <article class="guide-card" data-article="optimization">
                     <div class="guide-badge">Optimization</div>
                     <h2>Minification vs. Compression</h2>
                     <p>Learn the difference between minifying your code and compressing it. Why you need both for a high-performance website.</p>
-                    <button class="btn-read-more secondary-btn">Read Full Article</button>
+                    <button class="btn-read-more secondary-btn" data-i18n="btn_read_more">Read Full Article</button>
+                </article>
+            </div>
+        </section>
+
+        <!-- News View -->
+        <section id="news-view" class="view">
+            <header class="view-header">
+                <h1 data-i18n="news_h1">What's New & Site Notices</h1>
+                <p data-i18n="news_p">Stay updated with the latest improvements, new tools, and technical announcements.</p>
+            </header>
+            <div class="news-feed">
+                <article class="news-item content-card">
+                    <div class="news-meta">May 12, 2026 | Site Update</div>
+                    <h3>New Feature: Intelligent Diff Checker</h3>
+                    <p>We've just launched our side-by-side diff checker for text and code comparison. This tool uses an optimized client-side algorithm to highlight changes with high precision. Perfect for comparing API payloads or code versions safely in your browser.</p>
+                </article>
+                <article class="news-item content-card">
+                    <div class="news-meta">May 10, 2026 | Content Launch</div>
+                    <h3>Expanded Developer Guides</h3>
+                    <p>We've added several new deep-dive articles to our Guides section, covering topics like XSS prevention, JSON normalization, and REST API debugging. All content is original and tailored for engineering workflows.</p>
+                </article>
+                <article class="news-item content-card">
+                    <div class="news-meta">May 5, 2026 | Performance</div>
+                    <h3>Engine Optimization</h3>
+                    <p>Our JSON parser and HTML formatter have been upgraded for better performance with large files. You can now process payloads up to 5MB entirely in the browser without UI blocking.</p>
                 </article>
             </div>
         </section>
 
         <!-- Article View (Full Content) -->
         <section id="article-view" class="view">
-            <button id="btn-back-to-guides" class="btn-small secondary-btn">&larr; Back to Guides</button>
+            <button id="btn-back-to-guides" class="btn-small secondary-btn" data-i18n="btn_back_guides">&larr; Back to Guides</button>
             <article id="full-article-content" class="full-article">
                 <!-- Content will be injected via JS -->
             </article>
@@ -577,8 +718,8 @@
         <!-- Contact View -->
         <section id="contact-view" class="view">
             <header class="view-header">
-                <h1>Contact & Community</h1>
-                <p>Get in touch or join the discussion with our developer community.</p>
+                <h1 data-i18n="contact_h1">Contact & Community</h1>
+                <p data-i18n="contact_p">Get in touch or join the discussion with our developer community.</p>
             </header>
             
             <div class="contact-layout">
@@ -624,6 +765,7 @@
                 </div>
             </div>
         </section>
+
         <!-- Terms of Service View -->
         <section id="terms-view" class="view">
             <header class="view-header">
@@ -641,10 +783,13 @@
                 <p>The materials on Parse Utils are provided on an 'as is' basis. Parse Utils makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties including, without limitation, implied warranties or conditions of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other violation of rights.</p>
 
                 <h2>4. Data Privacy</h2>
-                <p>As outlined in our <a href="#" data-view="privacy-view">Privacy Policy</a>, we do not store your input data. However, you are responsible for ensuring that the data you process does not violate any laws or third-party rights.</p>
+                <p>As outlined in our <a href="#" data-view="privacy-view" data-i18n="nav_privacy">Privacy Policy</a>, we do not store your input data. However, you are responsible for ensuring that the data you process does not violate any laws or third-party rights.</p>
 
                 <h2>5. Limitations</h2>
                 <p>In no event shall Parse Utils or its suppliers be liable for any damages (including, without limitation, damages for loss of data or profit, or due to business interruption) arising out of the use or inability to use the tools on Parse Utils.</p>
+
+                <h2>6. Governing Law</h2>
+                <p>These terms and conditions are governed by and construed in accordance with the laws of the jurisdiction in which the service operates and you irrevocably submit to the exclusive jurisdiction of the courts in that State or location.</p>
             </div>
         </section>
     </main>

@@ -1,6 +1,19 @@
-// --- JSON & HTML Parser Module ---
+// --- JSON, JWT, URL, CSS & HTML Parser Module ---
 
 export function setupParsers() {
+    // Helper to update status
+    function updateStatus(elId, valid, msg) {
+        const statusEl = document.getElementById(elId);
+        if (!statusEl) return;
+        if (valid) {
+            statusEl.textContent = '✓ Valid Format';
+            statusEl.className = 'json-status valid';
+        } else {
+            statusEl.textContent = '✗ ' + (msg || 'Invalid Format');
+            statusEl.className = 'json-status invalid';
+        }
+    }
+
     // JSON Parser
     const jsonInput = document.getElementById('json-input');
     const jsonOutput = document.getElementById('json-output');
@@ -12,12 +25,9 @@ export function setupParsers() {
             jsonStatus.textContent = '✓ Valid JSON Structure';
             jsonStatus.className = 'json-status valid';
         } else {
-            // Make common V8 errors more human-readable
             let userMsg = msg;
             if (msg.includes('Unexpected token')) userMsg = 'Syntax Error: Unexpected character or missing quote.';
             if (msg.includes('Unexpected end of JSON input')) userMsg = 'Syntax Error: Incomplete JSON (check for missing brackets).';
-            if (msg.includes('position')) userMsg += ' (Check the indicated position)';
-            
             jsonStatus.textContent = '✗ ' + userMsg;
             jsonStatus.className = 'json-status invalid';
         }
@@ -76,7 +86,81 @@ export function setupParsers() {
         }
     });
 
-    // HTML Formatter
+    // JWT Decoder
+    const jwtInput = document.getElementById('jwt-input');
+    const jwtOutput = document.getElementById('jwt-output');
+    document.getElementById('btn-jwt-decode')?.addEventListener('click', () => {
+        try {
+            const parts = jwtInput.value.split('.');
+            if (parts.length !== 3) throw new Error('Invalid JWT format (must have 3 parts)');
+            const header = JSON.parse(atob(parts[0]));
+            const payload = JSON.parse(atob(parts[1]));
+            jwtOutput.value = 'HEADER: \n' + JSON.stringify(header, null, 2) + '\n\nPAYLOAD: \n' + JSON.stringify(payload, null, 2);
+            updateStatus('jwt-status', true);
+        } catch (e) {
+            updateStatus('jwt-status', false, e.message);
+        }
+    });
+
+    // URL Parser
+    const urlInput = document.getElementById('url-input');
+    const urlOutput = document.getElementById('url-output');
+    document.getElementById('btn-url-parse')?.addEventListener('click', () => {
+        try {
+            const url = new URL(urlInput.value);
+            const params = {};
+            url.searchParams.forEach((v, k) => params[k] = v);
+            const result = {
+                protocol: url.protocol,
+                host: url.host,
+                hostname: url.hostname,
+                port: url.port,
+                pathname: url.pathname,
+                search: url.search,
+                searchParams: params,
+                hash: url.hash,
+                origin: url.origin
+            };
+            urlOutput.value = JSON.stringify(result, null, 2);
+            updateStatus('url-status', true);
+        } catch (e) {
+            updateStatus('url-status', false, e.message);
+        }
+    });
+
+    // CSS Formatter
+    const cssInput = document.getElementById('css-input');
+    const cssOutput = document.getElementById('css-output');
+    document.getElementById('btn-css-prettify')?.addEventListener('click', () => {
+        let css = cssInput.value;
+        css = css.replace(/\s*([\{\};])\s*/g, '$1\n');
+        css = css.replace(/\n+/g, '\n');
+        css = css.replace(/([\{;])\n/g, '$1\n  ');
+        css = css.replace(/\n\s*\}/g, '\n}');
+        cssOutput.value = css.trim();
+        updateStatus('css-status', true);
+    });
+
+    document.getElementById('btn-css-minify')?.addEventListener('click', () => {
+        cssOutput.value = cssInput.value.replace(/\s+/g, ' ').replace(/\s*([\{\};:])\s*/g, '$1').trim();
+        updateStatus('css-status', true);
+    });
+
+    // SQL Formatter (Basic)
+    const sqlInput = document.getElementById('sql-input');
+    const sqlOutput = document.getElementById('sql-output');
+    document.getElementById('btn-sql-prettify')?.addEventListener('click', () => {
+        const keywords = ['SELECT', 'FROM', 'WHERE', 'AND', 'OR', 'GROUP BY', 'ORDER BY', 'LIMIT', 'JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'ON', 'INSERT INTO', 'VALUES', 'UPDATE', 'SET', 'DELETE'];
+        let sql = sqlInput.value.replace(/\s+/g, ' ');
+        keywords.forEach(key => {
+            const regex = new RegExp('\\b' + key + '\\b', 'gi');
+            sql = sql.replace(regex, '\n' + key);
+        });
+        sqlOutput.value = sql.trim();
+        updateStatus('sql-status', true);
+    });
+
+    // HTML Formatter (Existing logic)
     const htmlInput = document.getElementById('html-input');
     const htmlOutput = document.getElementById('html-output');
 
