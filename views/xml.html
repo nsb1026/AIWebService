@@ -1,0 +1,47 @@
+<section id="xml-view" class="view">
+    <header class="view-header">
+        <h1 data-i18n="xml_h1">Professional XML Formatter & Beautifier</h1>
+        <p data-i18n="xml_p">Transform cluttered XML, SVG, or RSS data into a clean, hierarchical structure. Our local parser ensures your sensitive data remains private.</p>
+    </header>
+
+    <div class="parser-container">
+        <div class="parser-input-side">
+            <div class="input-header">
+                <label>Raw XML / SVG Source</label>
+                <div id="xml-status" class="json-status"></div>
+                <button id="btn-xml-clear" class="btn-small danger-btn" data-i18n="btn_clear_panel">Clear Panel</button>
+            </div>
+            <textarea id="xml-input" data-i18n="placeholder_xml" placeholder="Paste your XML, SVG, or XML snippet here..."></textarea>
+        </div>
+        <div class="parser-controls">
+            <button id="btn-xml-prettify" class="primary-btn" data-i18n="btn_prettify">Prettify (Indent 2)</button>
+            <button id="btn-xml-minify" class="secondary-btn" data-i18n="btn_minify">Minify XML</button>
+            <button id="btn-xml-apply" class="secondary-btn" data-i18n="btn_apply">Push to Input</button>
+        </div>
+        <div class="parser-output-side">
+            <div class="input-header">
+                <label>Beautified XML</label>
+                <button class="copy-btn btn-small" data-target="xml-output" data-i18n="btn_copy">Copy Result</button>
+            </div>
+            <textarea id="xml-output" readonly placeholder="Your structured XML will appear here..."></textarea>
+        </div>
+    </div>
+
+    <div class="tech-details-section">
+        <h3>Technical Excellence: XML Hierarchy</h3>
+        <div class="details-grid">
+            <div class="details-card">
+                <h4>Validation & Syntax</h4>
+                <p>The formatter uses a robust regex-based logic to handle tags, attributes, and self-closing elements. It helps you identify broken tags or missing prologues in large configuration files.</p>
+            </div>
+            <div class="details-card">
+                <h4>SVG & RSS Support</h4>
+                <p>Because SVG and RSS are subsets of XML, this tool is ideal for cleaning up procedurally generated graphics or news feeds before manual inspection or code review.</p>
+            </div>
+            <div class="details-card">
+                <h4>Local Processing</h4>
+                <p>Your XML payloads—which often contain internal system paths or sensitive configuration—are never sent to a server. Everything happens within your browser's local sandbox.</p>
+            </div>
+        </div>
+    </div>
+</section>

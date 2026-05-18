@@ -7,6 +7,7 @@ import {
     setupUrlParser, 
     setupCssFormatter, 
     setupSqlFormatter, 
+    setupXmlParser,
     setupHtmlFormatter, 
     setupDiffChecker 
 } from './js/parser.js';
@@ -30,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'url-view': setupUrlParser,
         'css-view': setupCssFormatter,
         'sql-view': setupSqlFormatter,
+        'xml-view': setupXmlParser,
         'html-view': setupHtmlFormatter,
         'diff-view': setupDiffChecker,
         'base64-image-view': setupBase64ImageTool,
@@ -132,6 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
             'url-view': { en: 'Deep URL Parser & Analyzer | Parse Utils', ko: '심층 URL 파서 및 분석기 | 파스 유틸' },
             'css-view': { en: 'Modern CSS Formatter & Minifier | Parse Utils', ko: '최신 CSS 포맷터 및 압축기 | 파스 유틸' },
             'sql-view': { en: 'Semantic SQL Formatter | Parse Utils', ko: '시맨틱 SQL 포맷터 | 파스 유틸' },
+            'xml-view': { en: 'Professional XML Formatter & Beautifier | Parse Utils', ko: '전문적인 XML 포맷터 및 뷰티파이어 | 파스 유틸' },
             'base64-image-view': { en: 'Advanced Base64 to Image Reconstruction | Parse Utils', ko: '고급 Base64 이미지 재구성 | 파스 유틸' },
             'html-view': { en: 'Semantic HTML Formatter & Optimizer | Parse Utils', ko: '시맨틱 HTML 포맷터 및 최적화 도구 | 파스 유틸' },
             'diff-view': { en: 'Intelligent Text & Code Diff Checker | Parse Utils', ko: '지능형 텍스트 및 코드 차이점 분석기 | 파스 유틸' },

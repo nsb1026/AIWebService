@@ -249,6 +249,72 @@ export function setupDiffChecker() {
     document.getElementById('btn-diff-clear-modified')?.addEventListener('click', () => { diffModified.value = ''; updateDiff(); });
 }
 
+export function setupXmlParser() {
+    const xmlInput = document.getElementById('xml-input');
+    const xmlOutput = document.getElementById('xml-output');
+    const xmlStatus = document.getElementById('xml-status');
+
+    if (!xmlInput || !xmlOutput) return;
+
+    function formatXml(xml, indent = '  ') {
+        let formatted = '';
+        let reg = /(>)(<)(\/*)/g;
+        xml = xml.replace(reg, '$1\r\n$2$3');
+        let pad = 0;
+        xml.split('\r\n').forEach(node => {
+            let indentLevel = 0;
+            if (node.match(/.+<\/\w[^>]*>$/)) {
+                indentLevel = 0;
+            } else if (node.match(/^<\/\w/)) {
+                if (pad !== 0) pad -= 1;
+            } else if (node.match(/^<\w[^>]*[^\/]>.*$/)) {
+                indentLevel = 1;
+            } else {
+                indentLevel = 0;
+            }
+
+            let padding = '';
+            for (let i = 0; i < pad; i++) padding += indent;
+            formatted += padding + node + '\r\n';
+            pad += indentLevel;
+        });
+        return formatted.trim();
+    }
+
+    document.getElementById('btn-xml-prettify')?.addEventListener('click', () => {
+        try {
+            const xml = xmlInput.value;
+            if (!xml.trim()) throw new Error('Empty input');
+            xmlOutput.value = formatXml(xml);
+            updateStatus('xml-status', true);
+        } catch (e) {
+            updateStatus('xml-status', false, e.message);
+        }
+    });
+
+    document.getElementById('btn-xml-minify')?.addEventListener('click', () => {
+        try {
+            xmlOutput.value = xmlInput.value.replace(/>\s+</g, '><').trim();
+            updateStatus('xml-status', true);
+        } catch (e) {
+            updateStatus('xml-status', false, e.message);
+        }
+    });
+
+    document.getElementById('btn-xml-apply')?.addEventListener('click', () => {
+        if (xmlOutput.value) xmlInput.value = xmlOutput.value;
+    });
+
+    document.getElementById('btn-xml-clear')?.addEventListener('click', () => {
+        xmlInput.value = '';
+        xmlOutput.value = '';
+        if (xmlStatus) {
+            xmlStatus.textContent = '';
+            xmlStatus.className = 'json-status';
+        }
+    });
+}
+
 // Deprecated legacy entry point
 export function setupParsers() {
     setupJsonParser();
@@ -256,6 +322,7 @@ export function setupParsers() {
     setupUrlParser();
     setupCssFormatter();
     setupSqlFormatter();
+    setupXmlParser(); // Added to legacy support
     setupHtmlFormatter();
     setupDiffChecker();
 }

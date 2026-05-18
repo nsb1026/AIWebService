@@ -10,6 +10,7 @@ export const translations = {
         nav_url: "URL",
         nav_css: "CSS",
         nav_sql: "SQL",
+        nav_xml: "XML",
         nav_more: "More",
         nav_parsers: "Parsers",
         nav_guides: "Guides",
@@ -37,6 +38,9 @@ export const translations = {
 
         sql_h1: "Semantic SQL Formatter",
         sql_p: "Transform messy SQL queries into readable, structured statements. Supports various SQL dialects for better database management.",
+
+        xml_h1: "Professional XML Formatter & Beautifier",
+        xml_p: "Transform cluttered XML, SVG, or RSS data into a clean, hierarchical structure. Our local parser ensures your sensitive data remains private.",
 
         base64_h1: "Advanced Base64 to Image Reconstruction",
         base64_p: "Instantly render binary-encoded image data back into visual assets. This tool supports various MIME types including PNG, JPEG, SVG, and WEBP, utilizing the browser's native rendering pipeline for maximum accuracy.",
@@ -91,6 +95,7 @@ export const translations = {
         placeholder_url: "Paste your URL here (https://example.com/path?query=val)...",
         placeholder_css: "Paste your CSS here...",
         placeholder_sql: "Paste your SQL here...",
+        placeholder_xml: "Paste your XML here...",
         placeholder_base64: "Paste your raw Base64 image data here...",
         placeholder_html: "Paste your HTML, SVG, or XML snippet here...",
         placeholder_diff_orig: "Original content...",
@@ -117,6 +122,7 @@ export const translations = {
         nav_url: "URL",
         nav_css: "CSS",
         nav_sql: "SQL",
+        nav_xml: "XML",
         nav_more: "더 보기",
         nav_parsers: "파서",
         nav_guides: "가이드",
@@ -144,6 +150,9 @@ export const translations = {
 
         sql_h1: "시맨틱 SQL 포맷터",
         sql_p: "지저분한 SQL 쿼리를 읽기 쉽고 구조화된 문장으로 변환합니다. 더 나은 데이터베이스 관리를 위해 다양한 SQL 방언을 지원합니다.",
+
+        xml_h1: "전문적인 XML 포맷터 및 뷰티파이어",
+        xml_p: "복잡한 XML, SVG 또는 RSS 데이터를 깨끗하고 계층적인 구조로 변환합니다. 로컬 파서를 통해 민감한 데이터를 안전하게 보호합니다.",
 
         base64_h1: "고급 Base64 이미지 재구성",
         base64_p: "바이너리 인코딩된 이미지 데이터를 즉시 시각적 자산으로 렌더링합니다. 이 도구는 PNG, JPEG, SVG, WEBP를 포함한 다양한 MIME 유형을 지원하며, 정확도를 극대화하기 위해 브라우저의 기본 렌더링 파이프라인을 활용합니다.",
@@ -198,6 +207,7 @@ export const translations = {
         placeholder_url: "여기에 URL을 붙여넣으세요 (https://example.com/path?query=val)...",
         placeholder_css: "여기에 CSS를 붙여넣으세요...",
         placeholder_sql: "여기에 SQL을 붙여넣으세요...",
+        placeholder_xml: "여기에 XML을 붙여넣으세요...",
         placeholder_base64: "여기에 원시 Base64 이미지 데이터를 붙여넣으세요...",
         placeholder_html: "여기에 HTML, SVG 또는 XML 스니펫을 붙여넣으세요...",
         placeholder_diff_orig: "원본 내용...",
