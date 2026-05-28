@@ -2,6 +2,9 @@
     <header class="view-header">
         <h1 data-i18n="jwt_h1">Secure JWT Debugger & Decoder</h1>
         <p data-i18n="jwt_p">Decode JSON Web Tokens locally. Inspect headers, payloads, and signatures without exposing your sensitive tokens to external servers.</p>
+        <div class="tool-description">
+            <p><strong>Security Note:</strong> Unlike other online JWT decoders, Parse Utils performs all decoding operations in your browser's local environment. Your tokens are never transmitted to a server, ensuring that your authentication secrets and sensitive user data remain strictly private.</p>
+        </div>
     </header>
     <div class="parser-container">
         <div class="parser-input-side">
@@ -22,4 +25,27 @@
             <textarea id="jwt-output" readonly placeholder="Decoded header and payload will appear here..."></textarea>
         </div>
     </div>
+
+    <footer class="view-footer-content">
+        <div class="content-card">
+            <h2>Understanding JSON Web Tokens (JWT)</h2>
+            <p>JSON Web Token (JWT) is an open standard (RFC 7519) that defines a compact and self-contained way for securely transmitting information between parties as a JSON object. This information can be verified and trusted because it is digitally signed. JWTs can be signed using a secret (with the HMAC algorithm) or a public/private key pair using RSA or ECDSA.</p>
+            
+            <h3>The Structure of a JWT</h3>
+            <p>In its compact form, a JWT consists of three parts separated by dots (<code>.</code>):</p>
+            <ol>
+                <li><strong>Header:</strong> Typically consists of two parts: the type of the token (JWT) and the signing algorithm being used, such as HMAC SHA256 or RSA.</li>
+                <li><strong>Payload:</strong> Contains the claims. Claims are statements about an entity (typically, the user) and additional data. There are three types of claims: registered, public, and private claims.</li>
+                <li><strong>Signature:</strong> To create the signature part you have to take the encoded header, the encoded payload, a secret, the algorithm specified in the header, and sign that.</li>
+            </ol>
+
+            <h3>Key Security Best Practices</h3>
+            <ul>
+                <li><strong>Never store secrets in the payload:</strong> JWT payloads are Base64Url encoded, not encrypted. Anyone who can see the token can read the data inside.</li>
+                <li><strong>Always verify the algorithm:</strong> Ensure your server-side implementation explicitly checks the <code>alg</code> header and doesn't allow the "none" algorithm.</li>
+                <li><strong>Set an Expiration:</strong> Always include an <code>exp</code> (expiration time) claim to limit the window of opportunity for a stolen token.</li>
+                <li><strong>Use HTTPS:</strong> Even though the token is signed, it should always be transmitted over an encrypted connection to prevent interception.</li>
+            </ul>
+        </div>
+    </footer>
 </section>

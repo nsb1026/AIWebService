@@ -30,4 +30,31 @@
             <textarea id="json-output" readonly placeholder="Your optimized JSON will appear here..."></textarea>
         </div>
     </div>
+
+    <footer class="view-footer-content">
+        <div class="content-card">
+            <h2>Technical Documentation & JSON Standards</h2>
+            <p>JSON (JavaScript Object Notation) is a lightweight data-interchange format that is easy for humans to read and write and easy for machines to parse and generate. It is based on a subset of the JavaScript Programming Language Standard (ECMA-262 3rd Edition). JSON is a text format that is completely language independent but uses conventions that are familiar to programmers of the C-family of languages, including C, C++, C#, Java, JavaScript, Perl, Python, and many others.</p>
+            
+            <h3>Core Structural Rules</h3>
+            <ul>
+                <li><strong>Data is in name/value pairs:</strong> A name/value pair consists of a field name (in double quotes), followed by a colon, followed by a value.</li>
+                <li><strong>Data is separated by commas:</strong> Commas are used to separate multiple name/value pairs or array elements.</li>
+                <li><strong>Curly braces hold objects:</strong> Objects start with <code>{</code> and end with <code>}</code>.</li>
+                <li><strong>Square brackets hold arrays:</strong> Arrays start with <code>[</code> and end with <code>]</code>.</li>
+            </ul>
+
+            <h3>Common JSON Validation Pitfalls</h3>
+            <p>While JSON is flexible, our validator enforces strict adherence to RFC 8259 to ensure compatibility across all systems. Common errors include:</p>
+            <ol>
+                <li><strong>Single Quotes:</strong> JSON requires double quotes (<code>"</code>) for both keys and string values. Single quotes (<code>'</code>) will cause a syntax error.</li>
+                <li><strong>Trailing Commas:</strong> Unlike JavaScript objects, JSON does not allow a comma after the last element in an object or array.</li>
+                <li><strong>Unquoted Keys:</strong> All keys in a JSON object must be wrapped in double quotes.</li>
+                <li><strong>Control Characters:</strong> Strings must not contain unescaped control characters.</li>
+            </ol>
+
+            <h3>The Benefits of Key Sorting & Minification</h3>
+            <p>Sorting keys alphabetically (Deterministic JSON) is essential for caching and digital signatures, as it ensures that identical objects always produce the same string representation. Minification, on the other hand, is a production-level optimization that strips all whitespace, significantly reducing the amount of data transferred over the network without affecting the data's integrity.</p>
+        </div>
+    </footer>
 </section>

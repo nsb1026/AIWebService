@@ -288,6 +288,322 @@ const guidesData = {
                 </blockquote>
             `
         }
+    },
+    'security-checklist': {
+        en: {
+            title: 'Web Security Checklist for 2026',
+            content: `
+                <p>Building a secure web application requires a multi-layered approach. This checklist outlines the essential steps every developer should take to protect their users and infrastructure.</p>
+                
+                <h2>1. Communication Security</h2>
+                <ul>
+                    <li><strong>Enforce HTTPS:</strong> Use TLS 1.3 for all traffic. Obtain certificates from trusted authorities like Let's Encrypt.</li>
+                    <li><strong>HSTS (HTTP Strict Transport Security):</strong> Tell browsers to only communicate with your site via HTTPS.</li>
+                    <li><strong>Secure Cookies:</strong> Set the <code>Secure</code>, <code>HttpOnly</code>, and <code>SameSite=Strict</code> flags on all sensitive cookies.</li>
+                </ul>
+
+                <h2>2. Content Control</h2>
+                <ul>
+                    <li><strong>Content Security Policy (CSP):</strong> Implement a strict CSP to mitigate XSS and data injection attacks.</li>
+                    <li><strong>X-Content-Type-Options:</strong> Set this header to <code>nosniff</code> to prevent the browser from interpreting files as a different MIME type.</li>
+                    <li><strong>Permissions Policy:</strong> Restrict access to browser features like camera, microphone, and geolocation.</li>
+                </ul>
+
+                <h2>3. Authentication & Authorization</h2>
+                <ul>
+                    <li><strong>Multi-Factor Authentication (MFA):</strong> Encourage or require MFA for all user accounts.</li>
+                    <li><strong>Password Hashing:</strong> Use modern algorithms like Argon2 or bcrypt. Never store passwords in plain text.</li>
+                    <li><strong>JWT Security:</strong> Sign tokens with a strong secret or private key. Always set an expiration time (exp).</li>
+                </ul>
+
+                <div class="technical-note">
+                    <strong>Note:</strong> Security is a process, not a destination. Regularly audit your dependencies and perform penetration testing to identify new vulnerabilities.
+                </div>
+            `
+        },
+        ko: {
+            title: '2026년 웹 보안 체크리스트',
+            content: `
+                <p>안전한 웹 애플리케이션을 구축하려면 다층적인 접근 방식이 필요합니다. 이 체크리스트는 모든 개발자가 사용자 및 인프라를 보호하기 위해 취해야 할 필수 단계를 설명합니다.</p>
+                
+                <h2>1. 통신 보안</h2>
+                <ul>
+                    <li><strong>HTTPS 강제 적용:</strong> 모든 트래픽에 TLS 1.3을 사용하세요. Let's Encrypt와 같은 신뢰할 수 있는 기관에서 인증서를 받으세요.</li>
+                    <li><strong>HSTS (HTTP Strict Transport Security):</strong> 브라우저가 HTTPS를 통해서만 사이트와 통신하도록 설정하세요.</li>
+                    <li><strong>보안 쿠키:</strong> 모든 민감한 쿠키에 <code>Secure</code>, <code>HttpOnly</code>, <code>SameSite=Strict</code> 플래그를 설정하세요.</li>
+                </ul>
+
+                <h2>2. 콘텐츠 제어</h2>
+                <ul>
+                    <li><strong>콘텐츠 보안 정책 (CSP):</strong> XSS 및 데이터 주입 공격을 완화하기 위해 엄격한 CSP를 구현하세요.</li>
+                    <li><strong>X-Content-Type-Options:</strong> 브라우저가 파일을 다른 MIME 유형으로 해석하지 못하도록 이 헤더를 <code>nosniff</code>로 설정하세요.</li>
+                    <li><strong>권한 정책 (Permissions Policy):</strong> 카메라, 마이크, 위치 정보와 같은 브라우저 기능에 대한 액세스를 제한하세요.</li>
+                </ul>
+
+                <h2>3. 인증 및 권한 부여</h2>
+                <ul>
+                    <li><strong>다요소 인증 (MFA):</strong> 모든 사용자 계정에 대해 MFA를 권장하거나 요구하세요.</li>
+                    <li><strong>비밀번호 해싱:</strong> Argon2 또는 bcrypt와 같은 현대적인 알고리즘을 사용하세요. 비밀번호를 일반 텍스트로 저장하지 마세요.</li>
+                    <li><strong>JWT 보안:</strong> 강력한 비밀 키 또는 개인 키로 토큰을 서명하세요. 항상 만료 시간(exp)을 설정하세요.</li>
+                </ul>
+
+                <div class="technical-note">
+                    <strong>참고:</strong> 보안은 목적지가 아니라 과정입니다. 정기적으로 종속성을 감사하고 침투 테스트를 수행하여 새로운 취약점을 식별하세요.
+                </div>
+            `
+        }
+    },
+    'optimization': {
+        en: {
+            title: 'Minification vs. Compression: Performance Secrets',
+            content: `
+                <p>Web performance is a critical factor in user retention and SEO. Two common techniques used to improve speed are minification and compression. While they sound similar, they serve different purposes.</p>
+                
+                <h2>What is Minification?</h2>
+                <p>Minification is the process of removing unnecessary characters from source code without changing its functionality. This includes:</p>
+                <ul>
+                    <li>Whitespace characters (spaces, tabs, newlines)</li>
+                    <li>Comments</li>
+                    <li>Block delimiters</li>
+                    <li>Shortening variable names (obfuscation)</li>
+                </ul>
+                <p>Minification reduces the file size that needs to be downloaded, but the browser still parses the code as-is.</p>
+
+                <h2>What is Compression?</h2>
+                <p>Compression (like Gzip or Brotli) happens at the server level. The server compresses the file before sending it over the network, and the browser decompresses it before execution. This can reduce the transfer size by up to 70-90%.</p>
+
+                <h2>Why You Need Both</h2>
+                <p>Minification and compression work together. Minification cleans the code and prepares it for more efficient compression. For example, removing repetitive comments or long variable names allows compression algorithms to find more patterns and achieve higher ratios.</p>
+
+                <blockquote>
+                    Performance Tip: Use tools like our <strong>HTML Formatter</strong> (which includes a minification engine) as part of your build pipeline to ensure your assets are as lean as possible.
+                </blockquote>
+            `
+        },
+        ko: {
+            title: '압축(Minification) vs. 압축(Compression): 성능의 비밀',
+            content: `
+                <p>웹 성능은 사용자 유지 및 SEO의 핵심 요소입니다. 속도를 향상시키기 위해 사용되는 두 가지 일반적인 기술은 Minification과 Compression입니다. 비슷하게 들리지만 목적은 다릅니다.</p>
+                
+                <h2>Minification이란 무엇인가요?</h2>
+                <p>Minification은 기능을 변경하지 않고 소스 코드에서 불필요한 문자를 제거하는 프로세스입니다. 여기에는 다음이 포함됩니다:</p>
+                <ul>
+                    <li>공백 문자 (공백, 탭, 줄바꿈)</li>
+                    <li>주석</li>
+                    <li>블록 구분 기호</li>
+                    <li>변수 이름 축소 (난독화)</li>
+                </ul>
+                <p>Minification은 다운로드해야 하는 파일 크기를 줄여주지만, 브라우저는 여전히 코드를 그대로 파싱합니다.</p>
+
+                <h2>Compression이란 무엇인가요?</h2>
+                <p>Compression (Gzip 또는 Brotli 등)은 서버 수준에서 발생합니다. 서버는 네트워크를 통해 파일을 보내기 전에 파일을 압축하고, 브라우저는 실행 전에 압축을 해제합니다. 이는 전송 크기를 70-90%까지 줄일 수 있습니다.</p>
+
+                <h2>왜 둘 다 필요한가요?</h2>
+                <p>Minification과 Compression은 함께 작동합니다. Minification은 코드를 정리하고 더 효율적인 압축을 위해 준비합니다. 예를 들어, 반복되는 주석이나 긴 변수 이름을 제거하면 압축 알고리즘이 더 많은 패턴을 찾아내어 더 높은 압축률을 달성할 수 있습니다.</p>
+
+                <blockquote>
+                    성능 팁: 빌드 파이프라인의 일부로 <strong>HTML 포맷터</strong>(압축 엔진 포함)와 같은 도구를 사용하여 자산을 최대한 가볍게 유지하세요.
+                </blockquote>
+            `
+        }
+    },
+    'jwt-security': {
+        en: {
+            title: 'JWT Security Best Practices: Beyond Decoding',
+            content: `
+                <p>JSON Web Tokens (JWT) are a popular choice for stateless authentication. However, their simplicity can lead to dangerous security flaws if not implemented correctly.</p>
+                
+                <h2>1. Never Store Sensitive Data in the Payload</h2>
+                <p>As our <strong>JWT Decoder</strong> demonstrates, the payload of a JWT is merely Base64Url encoded. It is <strong>not encrypted</strong>. Anyone who intercepts the token can read the payload. Never store passwords, social security numbers, or other PII (Personally Identifiable Information) in a JWT.</p>
+
+                <h2>2. Use Strong Signing Algorithms</h2>
+                <p>Always prefer asymmetric algorithms like <code>RS256</code> (RSA Signature with SHA-256) over symmetric ones like <code>HS256</code>. RS256 uses a private key to sign the token and a public key to verify it, which is much more secure for distributed systems.</p>
+
+                <h2>3. Validate the 'exp' and 'iat' Claims</h2>
+                <p>A JWT should always have an expiration time (<code>exp</code>). Without it, a stolen token could be used forever. Also, validate the "issued at" (<code>iat</code>) time to ensure the token is not being reused from an old session.</p>
+
+                <h2>4. Handle Token Revocation</h2>
+                <p>Since JWTs are stateless, revoking them before they expire is difficult. Common strategies include:</p>
+                <ul>
+                    <li>Short-lived access tokens and longer-lived refresh tokens.</li>
+                    <li>A database "allow-list" or "deny-list" of active token IDs (jti).</li>
+                    <li>Rotating signing keys periodically.</li>
+                </ul>
+            `
+        },
+        ko: {
+            title: 'JWT 보안 모범 사례: 디코딩 그 이상',
+            content: `
+                <p>JSON 웹 토큰(JWT)은 상태 비저장(stateless) 인증에 널리 사용되는 선택지입니다. 하지만 제대로 구현하지 않으면 그 단순함이 위험한 보안 결함으로 이어질 수 있습니다.</p>
+                
+                <h2>1. 페이로드에 민감한 데이터를 저장하지 마세요</h2>
+                <p>우리의 <strong>JWT 디코더</strong>가 보여주듯이, JWT의 페이로드는 단지 Base64Url로 인코딩된 것입니다. <strong>암호화된 것이 아닙니다</strong>. 토큰을 가로챈 사람은 누구나 페이로드를 읽을 수 있습니다. 비밀번호, 주민등록번호 또는 기타 PII(개인 식별 정보)를 JWT에 저장하지 마세요.</p>
+
+                <h2>2. 강력한 서명 알고리즘 사용</h2>
+                <p><code>HS256</code>과 같은 대칭형 알고리즘보다 <code>RS256</code>(SHA-256을 사용한 RSA 서명)과 같은 비대칭 알고리즘을 선호하세요. RS256은 개인 키를 사용하여 토큰에 서명하고 공개 키를 사용하여 검증하므로 분산 시스템에서 훨씬 더 안전합니다.</p>
+
+                <h2>3. 'exp' 및 'iat' 클레임 검증</h2>
+                <p>JWT에는 항상 만료 시간(<code>exp</code>)이 있어야 합니다. 이것이 없으면 도난당한 토큰이 영원히 사용될 수 있습니다. 또한 "발급 시간"(<code>iat</code>)을 검증하여 이전 세션의 토큰이 재사용되지 않도록 하세요.</p>
+
+                <h2>4. 토큰 취소 처리</h2>
+                <p>JWT는 상태 비저장이므로 만료되기 전에 취소하는 것이 어렵습니다. 일반적인 전략은 다음과 같습니다:</p>
+                <ul>
+                    <li>수명이 짧은 액세스 토큰과 수명이 긴 리프레시 토큰 사용.</li>
+                    <li>활성 토큰 ID(jti)의 데이터베이스 "허용 목록" 또는 "거부 목록" 관리.</li>
+                    <li>정기적으로 서명 키 교체.</li>
+                </ul>
+            `
+        }
+    },
+    'sql-best-practices': {
+        en: {
+            title: 'SQL Formatting & Security: Preventing Injections',
+            content: `
+                <p>Structured Query Language (SQL) is the lifeblood of most data-driven applications. Maintaining clean SQL and preventing injections are two sides of the same coin: clarity and safety.</p>
+                
+                <h2>The Danger of SQL Injection</h2>
+                <p>SQL Injection occurs when an attacker can interfere with the queries that an application makes to its database. This can result in unauthorized data access, deletion, or even full server takeover.</p>
+                <p><strong>Wrong Way:</strong> <code>SELECT * FROM users WHERE id = ' + userInput + ';</code></p>
+                <p><strong>Right Way (Prepared Statements):</strong> <code>SELECT * FROM users WHERE id = ?;</code></p>
+
+                <h2>Why Semantic Formatting Matters</h2>
+                <p>Clean SQL isn't just about aesthetics. Our <strong>SQL Formatter</strong> helps you identify structural issues in your queries by properly indenting JOINs, WHERE clauses, and subqueries. Well-formatted SQL is easier to review, which means security flaws are more likely to be caught during development.</p>
+
+                <h2>Database Security Best Practices</h2>
+                <ul>
+                    <li><strong>Principle of Least Privilege:</strong> The database user used by your application should only have the permissions it absolutely needs.</li>
+                    <li><strong>Input Validation:</strong> Never trust user input. Even with prepared statements, validate the type, length, and format of the data.</li>
+                    <li><strong>Encryption at Rest:</strong> Ensure your database files are encrypted on the disk to protect against physical theft.</li>
+                </ul>
+            `
+        },
+        ko: {
+            title: 'SQL 포맷팅 및 보안: 인젝션 방지',
+            content: `
+                <p>구조화된 쿼리 언어(SQL)는 대부분의 데이터 기반 애플리케이션의 핵심입니다. 깨끗한 SQL 유지와 인젝션 방지는 명확성과 안전이라는 동전의 양면과 같습니다.</p>
+                
+                <h2>SQL 인젝션의 위험성</h2>
+                <p>SQL 인젝션은 공격자가 애플리케이션이 데이터베이스에 수행하는 쿼리를 방해할 수 있을 때 발생합니다. 이는 무단 데이터 액세스, 삭제 또는 서버 전체 장악으로 이어질 수 있습니다.</p>
+                <p><strong>잘못된 방식:</strong> <code>SELECT * FROM users WHERE id = ' + userInput + ';</code></p>
+                <p><strong>올바른 방식 (준비된 문구):</strong> <code>SELECT * FROM users WHERE id = ?;</code></p>
+
+                <h2>시맨틱 포맷팅이 중요한 이유</h2>
+                <p>깨끗한 SQL은 단순히 미적인 문제가 아닙니다. 우리의 <strong>SQL 포맷터</strong>는 JOIN, WHERE 절 및 서브쿼리를 적절하게 들여쓰기하여 쿼리의 구조적 문제를 식별하는 데 도움을 줍니다. 잘 포맷된 SQL은 검토하기 쉬우며, 이는 개발 과정에서 보안 결함이 발견될 가능성이 높음을 의미합니다.</p>
+
+                <h2>데이터베이스 보안 모범 사례</h2>
+                <ul>
+                    <li><strong>최소 권한 원칙:</strong> 애플리케이션에서 사용하는 데이터베이스 사용자는 꼭 필요한 권한만 가져야 합니다.</li>
+                    <li><strong>입력 검증:</strong> 사용자 입력을 절대 신뢰하지 마세요. 준비된 문구를 사용하더라도 데이터의 유형, 길이 및 형식을 검증하세요.</li>
+                    <li><strong>저장 데이터 암호화:</strong> 물리적 도난으로부터 보호하기 위해 디스크의 데이터베이스 파일이 암호화되어 있는지 확인하세요.</li>
+                </ul>
+            `
+        }
+    },
+    'url-encoding': {
+        en: {
+            title: 'Mastering URL Encoding (RFC 3986)',
+            content: `
+                <p>The Uniform Resource Locator (URL) is the address system of the web. Because URLs are sent over the network as plain text, certain characters have special meanings and must be encoded to avoid ambiguity.</p>
+                
+                <h2>Reserved vs. Unreserved Characters</h2>
+                <p>RFC 3986 defines which characters are safe to use in a URL and which are reserved. Reserved characters like <code>?</code>, <code>&</code>, <code>=</code>, and <code>#</code> are used as delimiters for query parameters and fragments.</p>
+                <p>If you need to include a reserved character as actual data (e.g., a search query containing an ampersand), it must be percent-encoded:</p>
+                <ul>
+                    <li><code>&</code> &rarr; <code>%26</code></li>
+                    <li><code>=</code> &rarr; <code>%3D</code></li>
+                    <li>Space &rarr; <code>%20</code> (or <code>+</code> in some contexts)</li>
+                </ul>
+
+                <h2>The Anatomy of a URL</h2>
+                <p>Our <strong>URL Parser</strong> breaks down a URL into its constituent parts:</p>
+                <ol>
+                    <li><strong>Scheme:</strong> The protocol (e.g., <code>https</code>).</li>
+                    <li><strong>Authority:</strong> The domain name and port.</li>
+                    <li><strong>Path:</strong> The specific resource on the server.</li>
+                    <li><strong>Query:</strong> Key-value pairs providing additional parameters.</li>
+                    <li><strong>Fragment:</strong> An internal anchor within the resource.</li>
+                </ol>
+
+                <blockquote>
+                    SEO Tip: Keep your URLs clean, descriptive, and use hyphens instead of underscores for better search engine indexing.
+                </blockquote>
+            `
+        },
+        ko: {
+            title: 'URL 인코딩 마스터하기 (RFC 3986)',
+            content: `
+                <p>URL(Uniform Resource Locator)은 웹의 주소 체계입니다. URL은 네트워크를 통해 일반 텍스트로 전송되므로 일부 문자는 특별한 의미를 가지며 모호함을 피하기 위해 인코딩되어야 합니다.</p>
+                
+                <h2>예약된 문자 vs. 예약되지 않은 문자</h2>
+                <p>RFC 3986은 URL에서 사용하기 안전한 문자와 예약된 문자를 정의합니다. <code>?</code>, <code>&</code>, <code>=</code>, <code>#</code>와 같은 예약된 문자는 쿼리 매개변수 및 프래그먼트의 구분 기호로 사용됩니다.</p>
+                <p>예약된 문자를 실제 데이터로 포함해야 하는 경우(예: 앰퍼샌드가 포함된 검색 쿼리), 퍼센트 인코딩을 해야 합니다:</p>
+                <ul>
+                    <li><code>&</code> &rarr; <code>%26</code></li>
+                    <li><code>=</code> &rarr; <code>%3D</code></li>
+                    <li>공백 &rarr; <code>%20</code> (또는 일부 컨텍스트에서는 <code>+</code>)</li>
+                </ul>
+
+                <h2>URL의 구조</h2>
+                <p>우리의 <strong>URL 파서</strong>는 URL을 다음과 같은 구성 요소로 분해합니다:</p>
+                <ol>
+                    <li><strong>Scheme:</strong> 프로토콜 (예: <code>https</code>).</li>
+                    <li><strong>Authority:</strong> 도메인 이름 및 포트.</li>
+                    <li><strong>Path:</strong> 서버의 특정 리소스.</li>
+                    <li><strong>Query:</strong> 추가 매개변수를 제공하는 키-값 쌍.</li>
+                    <li><strong>Fragment:</strong> 리소스 내의 내부 앵커.</li>
+                </ol>
+
+                <blockquote>
+                    SEO 팁: 검색 엔진 인덱싱을 개선하려면 URL을 깨끗하고 설명적으로 유지하고 밑줄 대신 하이픈을 사용하세요.
+                </blockquote>
+            `
+        }
+    },
+    'modern-css': {
+        en: {
+            title: 'Modern CSS Baseline: Container Queries & Beyond',
+            content: `
+                <p>CSS has undergone a revolution in recent years. Features that once required JavaScript are now natively supported in CSS, leading to better performance and more maintainable styles.</p>
+                
+                <h2>1. Container Queries (@container)</h2>
+                <p>For a decade, we relied on media queries based on the viewport size. Container queries allow a component to respond to the size of its <strong>parent container</strong>. this is a game-changer for modular, reusable components.</p>
+
+                <h2>2. The :has() Selector</h2>
+                <p>Known as the "parent selector," <code>:has()</code> allows you to style an element based on its children. For example, you can style a form field differently if it contains an invalid input.</p>
+
+                <h2>3. Logical Properties</h2>
+                <p>Properties like <code>margin-inline-start</code> and <code>padding-block-end</code> allow your styles to adapt automatically to different writing modes (like Right-to-Left languages) without changing the CSS.</p>
+
+                <h2>4. Modern Color Functions</h2>
+                <p>Functions like <code>oklch()</code> provide access to a wider range of colors that are perceptually uniform, making it easier to create accessible color palettes.</p>
+
+                <div class="technical-note">
+                    <strong>Developer Tip:</strong> Use our <strong>CSS Formatter</strong> to keep your modern CSS organized and readable. We support the latest syntax, including nesting and custom properties.
+                </div>
+            `
+        },
+        ko: {
+            title: '현대적인 CSS 베이스라인: 컨테이너 쿼리 그 이상',
+            content: `
+                <p>CSS는 최근 몇 년 동안 혁신을 거듭해 왔습니다. 한때 JavaScript가 필요했던 기능들이 이제 CSS에서 기본적으로 지원되어 더 나은 성능과 유지보수가 쉬운 스타일을 제공합니다.</p>
+                
+                <h2>1. 컨테이너 쿼리 (@container)</h2>
+                <p>지난 10년 동안 우리는 뷰포트 크기에 따른 미디어 쿼리에 의존해 왔습니다. 컨테이너 쿼리는 구성 요소가 <strong>부모 컨테이너</strong>의 크기에 반응하도록 합니다. 이는 모듈식 재사용 가능 구성 요소의 게임 체인저입니다.</p>
+
+                <h2>2. :has() 선택자</h2>
+                <p>"부모 선택자"로 알려진 <code>:has()</code>를 사용하면 자식 요소를 기반으로 요소를 스타일링할 수 있습니다. 예를 들어, 유효하지 않은 입력이 포함된 경우 양식 필드를 다르게 스타일링할 수 있습니다.</p>
+
+                <h2>3. 논리적 속성 (Logical Properties)</h2>
+                <p><code>margin-inline-start</code> 및 <code>padding-block-end</code>와 같은 속성을 사용하면 CSS를 변경하지 않고도 다양한 쓰기 모드(예: 오른쪽에서 왼쪽으로 쓰는 언어)에 스타일을 자동으로 적응시킬 수 있습니다.</p>
+
+                <h2>4. 현대적인 색상 함수</h2>
+                <p><code>oklch()</code>와 같은 함수는 지각적으로 균일한 더 넓은 범위의 색상에 대한 액세스를 제공하여 접근성 있는 색상 팔레트를 더 쉽게 만들 수 있도록 합니다.</p>
+
+                <div class="technical-note">
+                    <strong>개발자 팁:</strong> 현대적인 CSS를 체계적이고 읽기 쉽게 유지하려면 우리의 <strong>CSS 포맷터</strong>를 사용하세요. 중첩 및 사용자 정의 속성을 포함한 최신 구문을 지원합니다.
+                </div>
+            `
+        }
     }
 };
 
