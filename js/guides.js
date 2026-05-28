@@ -609,35 +609,34 @@ const guidesData = {
 
 export function setupGuides() {
     const guideCards = document.querySelectorAll('.guide-card');
-    const articleView = document.getElementById('article-view');
     const backBtn = document.getElementById('btn-back-to-guides');
-    const allViews = document.querySelectorAll('.view');
-    const navLinks = document.querySelectorAll('.nav-link');
 
-    guideCards.forEach(card => {
-        const readMoreBtn = card.querySelector('.btn-read-more');
-        if (readMoreBtn) {
-            readMoreBtn.addEventListener('click', () => {
-                const articleId = card.getAttribute('data-article');
-                const lang = document.documentElement.lang || 'en';
-                const articleData = guidesData[articleId];
-                
-                if (articleData && articleData[lang]) {
-                    injectArticle(articleData[lang]);
-                    // Updated to handle hash
-                    window.location.hash = `article-${articleId}`;
-                } else if (articleData && articleData['en']) {
-                    // Fallback to English
-                    injectArticle(articleData['en']);
-                    window.location.hash = `article-${articleId}`;
-                }
-            });
-        }
-    });
+    if (guideCards.length > 0) {
+        guideCards.forEach(card => {
+            const readMoreBtn = card.querySelector('.btn-read-more');
+            if (readMoreBtn) {
+                readMoreBtn.addEventListener('click', () => {
+                    const articleId = card.getAttribute('data-article');
+                    const lang = document.documentElement.lang || 'en';
+                    const articleData = guidesData[articleId];
+                    
+                    if (articleData && articleData[lang]) {
+                        injectArticle(articleData[lang]);
+                        window.location.hash = `article-${articleId}`;
+                    } else if (articleData && articleData['en']) {
+                        injectArticle(articleData['en']);
+                        window.location.hash = `article-${articleId}`;
+                    }
+                });
+            }
+        });
+    }
 
-    backBtn.addEventListener('click', () => {
-        window.location.hash = 'guides-view';
-    });
+    if (backBtn) {
+        backBtn.addEventListener('click', () => {
+            window.location.hash = 'guides-view';
+        });
+    }
 }
 
 export function injectArticle(data) {
