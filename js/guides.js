@@ -604,6 +604,60 @@ const guidesData = {
                 </div>
             `
         }
+    },
+    'core-web-vitals': {
+        en: {
+            title: 'Core Web Vitals: Measuring User Experience',
+            content: `
+                <p>In 2026, Core Web Vitals remain the most important metrics for measuring the real-world user experience of a web page. Google uses these signals as key ranking factors, making them essential for SEO and user retention.</p>
+                
+                <h2>1. Largest Contentful Paint (LCP)</h2>
+                <p>LCP measures loading performance. To provide a good user experience, LCP should occur within <strong>2.5 seconds</strong> of when the page first starts loading.</p>
+
+                <h2>2. Interaction to Next Paint (INP)</h2>
+                <p>INP is the successor to FID (First Input Delay). It measures the overall responsiveness of a page to user interactions throughout its entire lifecycle. A good INP score is <strong>200 milliseconds</strong> or less.</p>
+
+                <h2>3. Cumulative Layout Shift (CLS)</h2>
+                <p>CLS measures visual stability. It quantifies how much the page layout "jumps" as resources load. A good CLS score is <strong>0.1</strong> or less.</p>
+
+                <h2>Optimization Strategies</h2>
+                <ul>
+                    <li><strong>Image Optimization:</strong> Always include width and height attributes to prevent layout shifts. Use modern formats like WEBP or AVIF.</li>
+                    <li><strong>Critical CSS:</strong> Inline the CSS required for above-the-fold content to improve LCP.</li>
+                    <li><strong>JavaScript Execution:</strong> Break up long tasks to keep the main thread responsive, improving INP.</li>
+                </ul>
+
+                <div class="technical-note">
+                    <strong>Note:</strong> You can test your site's Vitals using our <strong>Resource Hub</strong> links or directly in Chrome DevTools under the "Lighthouse" or "Performance" tabs.
+                </div>
+            `
+        },
+        ko: {
+            title: '코어 웹 바이탈 (Core Web Vitals): 사용자 경험 측정하기',
+            content: `
+                <p>2026년에도 코어 웹 바이탈은 웹 페이지의 실제 사용자 경험을 측정하는 가장 중요한 지표로 남아 있습니다. 구글은 이러한 신호를 주요 랭킹 요소로 사용하므로 SEO와 사용자 유지에 필수적입니다.</p>
+                
+                <h2>1. 최대 콘텐츠풀 페인트 (LCP)</h2>
+                <p>LCP는 로딩 성능을 측정합니다. 좋은 사용자 경험을 제공하려면 페이지 로딩 시작 후 <strong>2.5초</strong> 이내에 LCP가 발생해야 합니다.</p>
+
+                <h2>2. 다음 페인트와의 상호작용 (INP)</h2>
+                <p>INP는 FID(최초 입력 지연)의 후속 지표입니다. 전체 수명 동안 사용자 상호작용에 대한 페이지의 전반적인 응답성을 측정합니다. 좋은 INP 점수는 <strong>200밀리초</strong> 이하입니다.</p>
+
+                <h2>3. 누적 레이아웃 이동 (CLS)</h2>
+                <p>CLS는 시각적 안정성을 측정합니다. 리소스가 로드됨에 따라 페이지 레이아웃이 얼마나 "튀는지" 수치화합니다. 좋은 CLS 점수는 <strong>0.1</strong> 이하입니다.</p>
+
+                <h2>최적화 전략</h2>
+                <ul>
+                    <li><strong>이미지 최적화:</strong> 레이아웃 이동을 방지하기 위해 항상 width와 height 속성을 포함하세요. WEBP 또는 AVIF와 같은 최신 형식을 사용하세요.</li>
+                    <li><strong>Critical CSS:</strong> LCP를 개선하기 위해 페이지 상단(above-the-fold) 콘텐츠에 필요한 CSS를 인라인으로 처리하세요.</li>
+                    <li><strong>JavaScript 실행:</strong> 메인 스레드의 응답성을 유지하여 INP를 개선하기 위해 긴 작업을 분할하세요.</li>
+                </ul>
+
+                <div class="technical-note">
+                    <strong>참고:</strong> 우리의 <strong>리소스 허브</strong> 링크를 사용하거나 크롬 개발자 도구의 "Lighthouse" 또는 "Performance" 탭에서 직접 사이트의 바이탈을 테스트할 수 있습니다.
+                </div>
+            `
+        }
     }
 };
 

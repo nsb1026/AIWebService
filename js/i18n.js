@@ -21,6 +21,11 @@ export const translations = {
         nav_contact: "Contact",
         nav_news: "News",
         nav_terms: "Terms",
+        nav_glossary: "Glossary",
+        
+        glossary_h1: "Technical Glossary",
+        glossary_p: "A comprehensive directory of modern web development and data engineering terminology.",
+        glossary_filter_placeholder: "Filter terms...",
         
         encoder_h1: "Professional String Encoder & Decoder",
         encoder_p: "A multi-format transformation engine designed for secure, real-time data processing. Unlike server-side alternatives, all logic executes within your browser's V8 engine, ensuring that sensitive strings never leave your local environment.",
@@ -138,6 +143,11 @@ export const translations = {
         nav_contact: "문의",
         nav_news: "소식",
         nav_terms: "약관",
+        nav_glossary: "기술 용어집",
+        
+        glossary_h1: "기술 용어집",
+        glossary_p: "현대적인 웹 개발 및 데이터 엔지니어링 용어에 대한 포괄적인 디렉토리입니다.",
+        glossary_filter_placeholder: "용어 필터링...",
         
         encoder_h1: "전문적인 문자열 인코더 및 디코더",
         encoder_p: "안전한 실시간 데이터 처리를 위해 설계된 다중 형식 변환 엔진입니다. 서버측 대안과 달리 모든 로직이 브라우저의 V8 엔진 내에서 실행되어 민감한 문자열이 로컬 환경을 절대 떠나지 않도록 보장합니다.",

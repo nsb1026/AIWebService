@@ -44,8 +44,24 @@ document.addEventListener('DOMContentLoaded', () => {
         'privacy-view': null,
         'terms-view': null,
         'contact-view': null,
-        'news-view': null
+        'news-view': null,
+        'glossary-view': setupGlossaryFilter
     };
+
+    function setupGlossaryFilter() {
+        const filterInput = document.getElementById('glossary-filter');
+        const items = document.querySelectorAll('.glossary-item');
+        
+        if (filterInput) {
+            filterInput.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                items.forEach(item => {
+                    const text = item.getAttribute('data-term') + ' ' + item.textContent.toLowerCase();
+                    item.style.display = text.includes(term) ? 'block' : 'none';
+                });
+            });
+        }
+    }
 
     const ensureViewLoaded = async (viewId) => {
         if (loadedViews.has(viewId)) return true;
@@ -147,7 +163,8 @@ document.addEventListener('DOMContentLoaded', () => {
             'resources-view': { en: 'Developer Knowledge Base & FAQ | Parse Utils', ko: '개발자 지식 베이스 및 FAQ | 파스 유틸' },
             'about-view': { en: 'About Parse Utils - Our Mission', ko: '파스 유틸 소개 - 우리의 미션' },
             'privacy-view': { en: 'Privacy Policy & Cookie Consent | Parse Utils', ko: '개인정보 처리방침 및 쿠키 동의 | 파스 유틸' },
-            'contact-view': { en: 'Contact & Community Discussion | Parse Utils', ko: '문의 및 커뮤니티 토론 | 파스 유틸' }
+            'contact-view': { en: 'Contact & Community Discussion | Parse Utils', ko: '문의 및 커뮤니티 토론 | 파스 유틸' },
+            'glossary-view': { en: 'Technical Glossary & Web Terminology | Parse Utils', ko: '기술 용어집 및 웹 용어 사전 | 파스 유틸' }
         };
 
         if (titles[viewId]) {
