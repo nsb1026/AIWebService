@@ -675,38 +675,45 @@ const guidesData = {
 
                 <h2>1. Dependency Configuration (build.gradle)</h2>
                 <p>Add Spring Security and modern JJWT 0.12.5 dependencies to your <code>build.gradle</code> file:</p>
-                <pre><code>plugins {
+                <pre><code class="language-groovy">// [build.gradle] Spring Boot 3.3.0 & Java 21 LTS Project Dependencies Configuration
+plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.3.0'
-    id 'io.spring.dependency-management' version '1.1.5'
+    id 'org.springframework.boot' version '3.3.0' // Spring Boot 3.3 Framework Plugin
+    id 'io.spring.dependency-management' version '1.1.5' // Spring Dependency Management
 }
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(21) // Force JDK 21 LTS Toolchain
     }
 }
 
 dependencies {
+    // Spring Boot Starter Web (Embedded Tomcat, RESTful APIs, Spring MVC)
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    // Spring Boot Starter Security (Authentication, Authorization, Filter Chains)
     implementation 'org.springframework.boot:spring-boot-starter-security'
     
-    // JJWT 0.12.5 Modern Library
-    implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
-    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
-    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
+    // JJWT 0.12.5 Modern JWT Token Specification Libraries
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.5'     // JJWT API Interface Layer
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'    // JJWT Runtime Implementation
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5' // Jackson JSON Parser integration
 }</code></pre>
 
                 <h2>2. Application Configuration (application.yml)</h2>
                 <p>Define your 256-bit HMAC secret key and token expiration times in <code>application.yml</code>:</p>
-                <pre><code>jwt:
-  secret: "v9y$B&E)H@MbQeThWmZq4t7w!z%C*F-JaNdRfUjXn2r5u8x/A?D(G+KbPeShVkYp" # Min 256-bit secret
-  access-token-expiration: 1800000   # 30 Minutes in Milliseconds
-  refresh-token-expiration: 604800000 # 7 Days in Milliseconds</code></pre>
+                <pre><code class="language-yaml"># [application.yml] Spring Boot Environment & JWT Token Properties Configuration
+jwt:
+  # Secret key used for signing HMAC-SHA256 JWT signatures (Must be at least 256 bits / 32 characters)
+  secret: "v9y$B&E)H@MbQeThWmZq4t7w!z%C*F-JaNdRfUjXn2r5u8x/A?D(G+KbPeShVkYp"
+  # Access Token Expiration Time: 1,800,000 ms = 30 Minutes
+  access-token-expiration: 1800000   
+  # Refresh Token Expiration Time: 604,800,000 ms = 7 Days
+  refresh-token-expiration: 604800000</code></pre>
 
                 <h2>3. JWT Utility Class (JwtTokenProvider.java)</h2>
                 <p>Create a token provider using JJWT 0.12.x fluent builder and parser APIs:</p>
-                <pre><code>package com.example.config.jwt;
+                <pre><code class="language-java">package com.example.config.jwt;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
@@ -722,58 +729,63 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
 
+// [@Component] Registered as a Spring Bean for JWT creation, validation, and parsing operations
 @Component
 public class JwtTokenProvider {
 
-    private final SecretKey secretKey;
-    private final long accessTokenExpiration;
+    private final SecretKey secretKey;          // HMAC-SHA Cryptographic Key Object
+    private final long accessTokenExpiration;   // Token Lifespan in Milliseconds
 
+    // Constructor Injection: Read YAML configuration values and generate SecretKey
     public JwtTokenProvider(
-            @Value("\${jwt.secret}") String secret,
-            @Value("\${jwt.access-token-expiration}") long accessTokenExpiration) {
+            @Value("${jwt.secret}") String secret,
+            @Value("${jwt.access-token-expiration}") long accessTokenExpiration) {
+        // Transform plain string secret into SecretKey object using Keys.hmacShaKeyFor
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.accessTokenExpiration = accessTokenExpiration;
     }
 
-    // 1. Generate JWT Access Token (JJWT 0.12.x Builder)
+    // 1. Generate JWT Access Token (JJWT 0.12.x Fluent Builder API)
     public String createAccessToken(String username, String role) {
         Date now = new Date();
         Date validity = new Date(now.getTime() + accessTokenExpiration);
 
         return Jwts.builder()
-                .subject(username)
-                .claim("role", role)
-                .issuedAt(now)
-                .expiration(validity)
-                .signWith(secretKey)
-                .compact();
+                .subject(username)                  // Registered claim 'sub': Username / User ID
+                .claim("role", role)                // Custom claim: User Role (e.g. USER, ADMIN)
+                .issuedAt(now)                      // Registered claim 'iat': Issue Timestamp
+                .expiration(validity)               // Registered claim 'exp': Expiration Timestamp
+                .signWith(secretKey)                // Sign with HMAC-SHA256 SecretKey
+                .compact();                         // Compact claims into URL-safe JWT string
     }
 
-    // 2. Validate JWT Signature &amp; Expiration
+    // 2. Validate JWT Signature & Expiration Date
     public boolean validateToken(String token) {
         try {
             Jwts.parser()
-                    .verifyWith(secretKey)
+                    .verifyWith(secretKey)          // Configure verification key
                     .build()
-                    .parseSignedClaims(token);
+                    .parseSignedClaims(token);       // Parse and verify token signature/expiration
             return true;
         } catch (JwtException | IllegalArgumentException e) {
-            return false; // Token expired or tampered
+            // Token expired, signature tampered, malformed format, or unsupported algorithm
+            return false;
         }
     }
 
-    // 3. Extract Spring Security Authentication
+    // 3. Extract Spring Security Authentication Object from Claims
     public Authentication getAuthentication(String token) {
         Claims claims = Jwts.parser()
                 .verifyWith(secretKey)
                 .build()
                 .parseSignedClaims(token)
-                .getPayload();
+                .getPayload();                       // Retrieve verified Claims Payload
 
-        String username = claims.getSubject();
-        String role = claims.get("role", String.class);
+        String username = claims.getSubject();       // Extract subject (username)
+        String role = claims.get("role", String.class); // Extract custom role claim
         var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
 
+        // Construct User Principal and UsernamePasswordAuthenticationToken for SecurityContext
         User principal = new User(username, "", authorities);
         return new UsernamePasswordAuthenticationToken(principal, token, authorities);
     }
@@ -781,7 +793,7 @@ public class JwtTokenProvider {
 
                 <h2>4. Custom Security Filter (JwtAuthenticationFilter.java)</h2>
                 <p>Intercept HTTP requests to extract the Bearer token and populate the SecurityContext:</p>
-                <pre><code>package com.example.config.jwt;
+                <pre><code class="language-java">package com.example.config.jwt;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -794,6 +806,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+// [OncePerRequestFilter] Guarantees single execution per HTTP request in Spring Security chain
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider tokenProvider;
@@ -802,24 +815,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         this.tokenProvider = tokenProvider;
     }
 
+    // Intercept incoming HTTP request, parse JWT, and store authentication in SecurityContext
     @Override
     protected void doFilterInternal(HttpServletRequest request, 
                                     HttpServletResponse response, 
                                     FilterChain filterChain) throws ServletException, IOException {
+        // 1. Extract bearer token from HTTP Authorization header
         String token = resolveToken(request);
 
-        if (StringUtils.hasText(token) &amp;&amp; tokenProvider.validateToken(token)) {
+        // 2. Validate token presence and cryptographic integrity
+        if (StringUtils.hasText(token) && tokenProvider.validateToken(token)) {
+            // 3. Obtain Spring Security Authentication object from token claims
             Authentication auth = tokenProvider.getAuthentication(token);
+            // 4. Store Authentication in SecurityContextHolder (Authenticates user for request lifecycle)
             SecurityContextHolder.getContext().setAuthentication(auth);
         }
 
+        // 5. Continue execution to next filter in the security filter chain
         filterChain.doFilter(request, response);
     }
 
+    // Extract Bearer token prefix ("Bearer <token>") from Authorization Header
     private String resolveToken(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
-        if (StringUtils.hasText(bearerToken) &amp;&amp; bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7); // Remove "Bearer " prefix (7 characters)
         }
         return null;
     }
@@ -827,7 +847,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 <h2>5. Spring Security 6 Config (SecurityConfig.java)</h2>
                 <p>Configure stateless session policy and register the JWT filter using Spring Security 6 Lambda DSL:</p>
-                <pre><code>package com.example.config;
+                <pre><code class="language-java">package com.example.config;
 
 import com.example.config.jwt.JwtAuthenticationFilter;
 import com.example.config.jwt.JwtTokenProvider;
@@ -841,6 +861,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+// [@Configuration & @EnableWebSecurity] Spring Security 6 Configuration Bean Class
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -851,21 +872,27 @@ public class SecurityConfig {
         this.tokenProvider = tokenProvider;
     }
 
+    // [@Bean SecurityFilterChain] Configures HTTP Security, Session Policy, & URL Authorization rules
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -&gt; csrf.disable())
-            .sessionManagement(session -&gt; session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -&gt; auth
-                .requestMatchers("/api/auth/**", "/public/**").permitAll()
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                .anyRequest().authenticated()
+            // Disable CSRF protection (Not needed for stateless REST APIs using JWT tokens)
+            .csrf(csrf -> csrf.disable())
+            // Configure Session Creation Policy as STATELESS (Do not create HTTP sessions)
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            // Define Request Authorization rules using Spring Security 6.3 Lambda DSL
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/auth/**", "/public/**").permitAll() // Public endpoints
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")        // Admin only endpoints
+                .anyRequest().authenticated()                             // All other endpoints require JWT
             )
+            // Add custom JwtAuthenticationFilter before default UsernamePasswordAuthenticationFilter
             .addFilterBefore(new JwtAuthenticationFilter(tokenProvider), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
+    // [@Bean PasswordEncoder] BCrypt Password Encoder for hashing and validating passwords
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -874,7 +901,7 @@ public class SecurityConfig {
 
                 <h2>6. Authentication Controller (AuthController.java)</h2>
                 <p>Expose REST endpoints for authenticating user credentials and issuing JWT tokens:</p>
-                <pre><code>package com.example.controller;
+                <pre><code class="language-java">package com.example.controller;
 
 import com.example.config.jwt.JwtTokenProvider;
 import org.springframework.http.ResponseEntity;
@@ -882,6 +909,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+// [@RestController] REST API Controller handling User Authentication & JWT token issuance
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -892,12 +920,14 @@ public class AuthController {
         this.tokenProvider = tokenProvider;
     }
 
+    // [POST /api/auth/login] Validates credentials and returns Bearer access token
     @PostMapping("/login")
-    public ResponseEntity&lt;?&gt; login(@RequestBody Map&lt;String, String&gt; loginRequest) {
+    public ResponseEntity<?> login(@RequestBody Map<String, String> loginRequest) {
         String username = loginRequest.get("username");
         String password = loginRequest.get("password");
 
-        if ("admin".equals(username) &amp;&amp; "password123".equals(password)) {
+        // Simple authentication check (Replace with UserDetailsService / AuthenticationManager in production)
+        if ("admin".equals(username) && "password123".equals(password)) {
             String token = tokenProvider.createAccessToken(username, "ADMIN");
             return ResponseEntity.ok(Map.of(
                 "token_type", "Bearer",
@@ -906,6 +936,7 @@ public class AuthController {
             ));
         }
 
+        // Return HTTP 401 Unauthorized for invalid credentials
         return ResponseEntity.status(401).body(Map.of("error", "Invalid credentials"));
     }
 }</code></pre>
@@ -926,38 +957,45 @@ public class AuthController {
 
                 <h2>1단계: 프로젝트 의존성 설정 (build.gradle)</h2>
                 <p>최신 Spring Security 6 및 JJWT 0.12.5 라이브러리를 <code>build.gradle</code>에 추가합니다:</p>
-                <pre><code>plugins {
+                <pre><code class="language-groovy">// [build.gradle] Spring Boot 3.3.0 & Java 21 LTS 의존성 설정 파일
+plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.3.0'
-    id 'io.spring.dependency-management' version '1.1.5'
+    id 'org.springframework.boot' version '3.3.0'        // Spring Boot 3.3 프레임워크 플러그인
+    id 'io.spring.dependency-management' version '1.1.5' // Spring 의존성 버전 관리
 }
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(21) // JDK 21 LTS 빌드 툴체인 강제 지정
     }
 }
 
 dependencies {
+    // Spring Boot Starter Web (내장 톰캣, RESTful API 지원, Spring MVC)
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    // Spring Boot Starter Security (인증/인가 보안 프레임워크 및 필터 체인)
     implementation 'org.springframework.boot:spring-boot-starter-security'
     
-    // JJWT 0.12.5 최신 암호화 라이브러리
-    implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
-    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
-    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
+    // JJWT 0.12.5 최신 암호화 및 JWT 토큰 라이브러리 모듈
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.5'     // JJWT API 인터페이스
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'    // JJWT 런타임 구현체
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5' // Jackson JSON 파서 연동
 }</code></pre>
 
                 <h2>2단계: application.yml 서명 키 및 만료시간 설정</h2>
                 <p>최소 256비트 이상의 HMAC SHA-256 비밀키와 토큰 유효 기간을 설정합니다:</p>
-                <pre><code>jwt:
-  secret: "v9y$B&E)H@MbQeThWmZq4t7w!z%C*F-JaNdRfUjXn2r5u8x/A?D(G+KbPeShVkYp" # 최소 256비트 암호키
-  access-token-expiration: 1800000   # 30분 (밀리초)
-  refresh-token-expiration: 604800000 # 7일 (밀리초)</code></pre>
+                <pre><code class="language-yaml"># [application.yml] JWT 암호키 및 토큰 유효시간 설정
+jwt:
+  # HMAC-SHA256 암호화에 사용되는 256비트(32자 이상) 비밀키 문자열
+  secret: "v9y$B&E)H@MbQeThWmZq4t7w!z%C*F-JaNdRfUjXn2r5u8x/A?D(G+KbPeShVkYp"
+  # Access Token 만료 시간: 1,800,000 밀리초 = 30분
+  access-token-expiration: 1800000   
+  # Refresh Token 만료 시간: 604,800,000 밀리초 = 7일
+  refresh-token-expiration: 604800000</code></pre>
 
                 <h2>3단계: JwtTokenProvider.java (토큰 생성, 검증 및 추출)</h2>
                 <p>JJWT 0.12.x의 최신 파서 및 빌더 API를 사용하여 토큰 컴포넌트를 구현합니다:</p>
-                <pre><code>package com.example.config.jwt;
+                <pre><code class="language-java">package com.example.config.jwt;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
@@ -973,66 +1011,71 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
 
+// [@Component] Spring Container Bean으로 등록되어 토큰 생성, 검증, 파싱 기능 제공
 @Component
 public class JwtTokenProvider {
 
-    private final SecretKey secretKey;
-    private final long accessTokenExpiration;
+    private final SecretKey secretKey;          // HMAC-SHA 규격 암호화 키 객체
+    private final long accessTokenExpiration;   // 토큰 유효시간 (밀리초)
 
+    // 생성자 주입: application.yml에서 암호키와 유효시간을 읽어와 SecretKey 객체 생성
     public JwtTokenProvider(
-            @Value("\${jwt.secret}") String secret,
-            @Value("\${jwt.access-token-expiration}") long accessTokenExpiration) {
+            @Value("${jwt.secret}") String secret,
+            @Value("${jwt.access-token-expiration}") long accessTokenExpiration) {
+        // 문자열 키를 HMAC-SHA 비밀키 객체로 변환 (Keys.hmacShaKeyFor API)
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.accessTokenExpiration = accessTokenExpiration;
     }
 
-    // 1. JWT Access Token 발급 (JJWT 0.12.x 빌더)
+    // 1. JWT Access Token 발급 (JJWT 0.12.x 빌더 패턴 적용)
     public String createAccessToken(String username, String role) {
         Date now = new Date();
         Date validity = new Date(now.getTime() + accessTokenExpiration);
 
         return Jwts.builder()
-                .subject(username)
-                .claim("role", role)
-                .issuedAt(now)
-                .expiration(validity)
-                .signWith(secretKey)
-                .compact();
+                .subject(username)                  // Registered Claim 'sub': 사용자 식별자(ID)
+                .claim("role", role)                // Custom Claim: 사용자 권한 (USER, ADMIN 등)
+                .issuedAt(now)                      // Registered Claim 'iat': 발급 시각
+                .expiration(validity)               // Registered Claim 'exp': 만료 시각
+                .signWith(secretKey)                // 256비트 SecretKey로 디지털 서명 생성
+                .compact();                         // URL-safe 형태의 JWT 토큰 문자열로 직렬화
     }
 
-    // 2. JWT 서명 및 유효성 검증
+    // 2. JWT 서명 검증 및 만료 여부 판별
     public boolean validateToken(String token) {
         try {
             Jwts.parser()
-                    .verifyWith(secretKey)
+                    .verifyWith(secretKey)          // 검증할 HMAC SecretKey 설정
                     .build()
-                    .parseSignedClaims(token);
+                    .parseSignedClaims(token);       // 토큰 서명 및 만료시간 검증 수행
             return true;
         } catch (JwtException | IllegalArgumentException e) {
-            return false; // 만료되었거나 변조된 토큰
+            // 토큰 서명 위변조, 만료, 형식 오류 등 예외 발생 시 false 반환
+            return false;
         }
     }
 
-    // 3. 토큰에서 Spring Security Authentication 인증 객체 생성
+    // 3. 검증된 토큰 클레임(Claims)에서 Spring Security Authentication 인증 객체 추출
     public Authentication getAuthentication(String token) {
         Claims claims = Jwts.parser()
                 .verifyWith(secretKey)
                 .build()
                 .parseSignedClaims(token)
-                .getPayload();
+                .getPayload();                       // 검증이 완료된 Payload(Claims) 반환
 
-        String username = claims.getSubject();
-        String role = claims.get("role", String.class);
+        String username = claims.getSubject();       // 사용자 ID 추출
+        String role = claims.get("role", String.class); // 권한 정보 추출
         var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
 
+        // SecurityContext에 등록할 User Principal 및 UsernamePasswordAuthenticationToken 생성
         User principal = new User(username, "", authorities);
         return new UsernamePasswordAuthenticationToken(principal, token, authorities);
     }
 }</code></pre>
 
-                <h2>4단계: JwtAuthenticationFilter.java (Spring Security 필터)</h2>
+                <h2>4단계: JwtAuthenticationFilter.java (Spring Security 커스텀 필터)</h2>
                 <p>HTTP 요청 헤더의 <code>Authorization: Bearer &lt;token&gt;</code>을 추출하고 검증하여 보안 컨텍스트에 등록합니다:</p>
-                <pre><code>package com.example.config.jwt;
+                <pre><code class="language-java">package com.example.config.jwt;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -1045,30 +1088,43 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+// [OncePerRequestFilter] 클라이언트의 매 HTTP 요청마다 단 1회만 전위 실행되는 보안 전처리 필터
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider tokenProvider;
 
+    // [의존성 주입] JWT 토큰 검증 및 Authentication 객체 생성을 담당하는 JwtTokenProvider 전달받음
     public JwtAuthenticationFilter(JwtTokenProvider tokenProvider) {
         this.tokenProvider = tokenProvider;
     }
 
+    // [필터 내부 동작 메서드] 요청 헤더에서 JWT를 검증하고 SecurityContextHolder에 인증 정보 등록
     @Override
     protected void doFilterInternal(HttpServletRequest request, 
                                     HttpServletResponse response, 
                                     FilterChain filterChain) throws ServletException, IOException {
+        // 1. HTTP 요청의 'Authorization' 헤더에서 'Bearer <token>' 토큰 문자열 추출
         String token = resolveToken(request);
 
+        // 2. 토큰이 존재하고 서명 및 만료일시 검증(validateToken)을 정상 통과한 경우
         if (StringUtils.hasText(token) &amp;&amp; tokenProvider.validateToken(token)) {
+            // 3. 토큰 내부 클레임(Claims) 정보를 바탕으로 Spring Security Authentication 객체 생성
             Authentication auth = tokenProvider.getAuthentication(token);
+            
+            // 4. SecurityContextHolder에 인증 객체 저장 (현재 스레드 전역에서 로그인 유저로 인정)
             SecurityContextHolder.getContext().setAuthentication(auth);
         }
 
+        // 5. 필터 체인의 다음 보안 필터로 요청 계속 전달 (필수: 미호출 시 컨트롤러에 도달하지 않음)
         filterChain.doFilter(request, response);
     }
 
+    // [Authorization 헤더 'Bearer ' 접두사 파싱 메서드]
     private String resolveToken(HttpServletRequest request) {
+        // HTTP 요청 헤더: Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...
         String bearerToken = request.getHeader("Authorization");
+        
+        // 'Bearer ' 7글자 접두사 제거 후 순수 JWT 토큰 문자열만 반환
         if (StringUtils.hasText(bearerToken) &amp;&amp; bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
         }
@@ -1078,7 +1134,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 <h2>5단계: SecurityConfig.java (Spring Security 6 Lambda DSL 설정)</h2>
                 <p>무상태 세션 정책과 JWT 필터를 등록하는 보안 체인을 구성합니다:</p>
-                <pre><code>package com.example.config;
+                <pre><code class="language-java">package com.example.config;
 
 import com.example.config.jwt.JwtAuthenticationFilter;
 import com.example.config.jwt.JwtTokenProvider;
@@ -1092,6 +1148,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+// [@Configuration &amp; @EnableWebSecurity] Spring Security 6.x 보안 설정 빈 등록 선언
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -1102,21 +1159,34 @@ public class SecurityConfig {
         this.tokenProvider = tokenProvider;
     }
 
+    // [@Bean SecurityFilterChain] HTTP 보안 규칙 및 체인을 등록하는 핵심 설정 메서드
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -&gt; csrf.disable()) // REST API 무상태 설정
+            // [1. CSRF 비활성화] REST API는 무상태 JWT를 사용하므로 CSRF 보조 토큰 불필요
+            .csrf(csrf -&gt; csrf.disable())
+            
+            // [2. 무상태 세션 정책] 서버 측 HttpSession을 생성하지 않고 완전히 Stateless하게 동작
             .sessionManagement(session -&gt; session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            
+            // [3. URL 경로별 접근 인가 규칙 설정] (Spring Security 6.3 Lambda DSL 방식)
             .authorizeHttpRequests(auth -&gt; auth
+                // 로그인, 회원가입, 공개 엔드포인트는 인증 없이 누구나 접근 허용
                 .requestMatchers("/api/auth/**", "/public/**").permitAll()
+                // /api/admin/** 관리자 경로는 'ADMIN' 권한 보유자만 접근 허용
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                // 나머지 모든 API 요청은 인증(JWT 토큰 보유) 완료된 사용자만 접근 허용
                 .anyRequest().authenticated()
             )
+            
+            // [4. 커스텀 JWT 필터 배치] 
+            // 폼 로그인 전용 UsernamePasswordAuthenticationFilter 실행 직전에 JwtAuthenticationFilter 배치
             .addFilterBefore(new JwtAuthenticationFilter(tokenProvider), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
+    // [비밀번호 암호화 인코더 빈] BCrypt 해시 알고리즘 기반 단방향 비밀번호 암호화
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -1125,7 +1195,7 @@ public class SecurityConfig {
 
                 <h2>6단계: AuthController.java (로그인 REST API 컨트롤러)</h2>
                 <p>사용자 인증 후 JWT 토큰을 발급하는 REST 엔드포인트를 구현합니다:</p>
-                <pre><code>package com.example.controller;
+                <pre><code class="language-java">package com.example.controller;
 
 import com.example.config.jwt.JwtTokenProvider;
 import org.springframework.http.ResponseEntity;
@@ -1133,23 +1203,30 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+// [@RestController & @RequestMapping] 로그인 및 토큰 발급 전용 REST API 컨트롤러
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
     private final JwtTokenProvider tokenProvider;
 
+    // 생성자 주입 방식으로 JwtTokenProvider 의존성 전달받음
     public AuthController(JwtTokenProvider tokenProvider) {
         this.tokenProvider = tokenProvider;
     }
 
+    // [POST /api/auth/login] 사용자 로그인 검증 및 Bearer Access Token 반환 API
     @PostMapping("/login")
-    public ResponseEntity&lt;?&gt; login(@RequestBody Map&lt;String, String&gt; loginRequest) {
+    public ResponseEntity<?> login(@RequestBody Map<String, String> loginRequest) {
         String username = loginRequest.get("username");
         String password = loginRequest.get("password");
 
-        if ("admin".equals(username) &amp;&amp; "password123".equals(password)) {
+        // [사용자 인증 수행] ID/PW 일치 여부 확인 (실운영 환경에서는 AuthenticationManager 연동)
+        if ("admin".equals(username) && "password123".equals(password)) {
+            // 인증 성공 시 ADMIN 권한을 부여한 30분 유효 JWT 토큰 생성
             String token = tokenProvider.createAccessToken(username, "ADMIN");
+            
+            // HTTP 200 OK와 함께 Bearer 토큰 정보 JSON 응답
             return ResponseEntity.ok(Map.of(
                 "token_type", "Bearer",
                 "access_token", token,
@@ -1157,7 +1234,8 @@ public class AuthController {
             ));
         }
 
-        return ResponseEntity.status(401).body(Map.of("error", "Invalid credentials"));
+        // 인증 실패 시 HTTP 401 Unauthorized 오류 응답
+        return ResponseEntity.status(401).body(Map.of("error", "아이디 또는 비밀번호가 올바르지 않습니다."));
     }
 }</code></pre>
             `
@@ -1181,13 +1259,16 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+// [@Getter & @NoArgsConstructor] Request DTO carrying user credentials for authentication
 @Getter
 @NoArgsConstructor
 public class LoginRequestDto {
 
+    // [@NotBlank] Validates that username is not null and contains non-whitespace characters
     @NotBlank(message = "Username is required")
     private String username;
 
+    // [@NotBlank] Validates that password is not null and non-empty
     @NotBlank(message = "Password is required")
     private String password;
 
@@ -1203,13 +1284,14 @@ public class LoginRequestDto {
 import lombok.Builder;
 import lombok.Getter;
 
+// [@Getter & @Builder] Immutable Token Response DTO returned to client upon successful login
 @Getter
 @Builder
 public class JwtTokenResponseDto {
-    private String grantType;     // "Bearer"
-    private String accessToken;
-    private String refreshToken;
-    private long accessTokenExpiresIn; // Milliseconds
+    private String grantType;           // Authorization Scheme Header (e.g. "Bearer")
+    private String accessToken;         // Signed JWT Access Token for authenticating API requests
+    private String refreshToken;        // Long-lived JWT Refresh Token for renewing access tokens
+    private long accessTokenExpiresIn;   // Expiration duration in milliseconds (1,800,000 ms = 30 mins)
 }</code></pre>
 
                 <h2>2. Custom UserDetails & UserDetailsService</h2>
@@ -1226,6 +1308,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+// [@Service] Custom UserDetailsService implementation bridge between DB Repository and Spring Security
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
@@ -1235,13 +1318,14 @@ public class CustomUserDetailsService implements UserDetailsService {
         this.userRepository = userRepository;
     }
 
+    // Called by AuthenticationProvider during credential check to retrieve DB User details
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return userRepository.findByUsername(username)
             .map(user -> new User(
-                user.getUsername(),
-                user.getPassword(),
-                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole()))
+                user.getUsername(),                                                 // DB Username
+                user.getPassword(),                                                 // Hashed DB Password
+                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole()))      // Granted Authority Role
             ))
             .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
     }
@@ -1264,6 +1348,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+// [@Configuration & @EnableWebSecurity] Configures Security Beans and Spring Security Filter Chain
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -1274,25 +1359,28 @@ public class SecurityConfig {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
+    // [@Bean PasswordEncoder] Uses BCrypt strong hashing algorithm for safe password encoding/verification
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    // [@Bean AuthenticationManager] Exposes AuthenticationManager Spring bean required by AuthService
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
     }
 
+    // [@Bean SecurityFilterChain] Configures HTTP stateless rules and URL permission matchers
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
+            .csrf(csrf -> csrf.disable()) // Disable CSRF for stateless REST architecture
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/auth/login", "/api/v1/auth/signup").permitAll()
-                .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                .anyRequest().authenticated()
+                .requestMatchers("/api/v1/auth/login", "/api/v1/auth/signup").permitAll() // Public login/signup APIs
+                .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")                     // Admin endpoints
+                .anyRequest().authenticated()                                                  // Authenticated requests
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -1312,6 +1400,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
+// [@Service] Business Logic Service executing credential validation and issuing JWT Tokens
 @Service
 public class AuthService {
 
@@ -1324,21 +1413,23 @@ public class AuthService {
     }
 
     public JwtTokenResponseDto login(LoginRequestDto loginDto) {
-        // 1. Authenticate user credentials against Spring Security Provider
+        // 1. Wrap unauthenticated username and password into Spring Security token object
         UsernamePasswordAuthenticationToken authenticationToken =
             new UsernamePasswordAuthenticationToken(loginDto.getUsername(), loginDto.getPassword());
 
+        // 2. Delegate authentication check to AuthenticationManager (Triggers CustomUserDetailsService + BCrypt)
         Authentication authentication = authenticationManager.authenticate(authenticationToken);
 
-        // 2. Generate Access & Refresh Tokens upon successful authentication
+        // 3. Generate Access Token and Refresh Token upon successful authentication
         String accessToken = tokenProvider.createAccessToken(authentication.getName(), "USER");
         String refreshToken = tokenProvider.createRefreshToken(authentication.getName());
 
+        // 4. Return formatted JwtTokenResponseDto
         return JwtTokenResponseDto.builder()
             .grantType("Bearer")
             .accessToken(accessToken)
             .refreshToken(refreshToken)
-            .accessTokenExpiresIn(1800000L) // 30 minutes
+            .accessTokenExpiresIn(1800000L) // 30 minutes expiration
             .build();
     }
 }</code></pre>
@@ -1353,6 +1444,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+// [@RestController & @RequestMapping] User Login REST Endpoint Controller
 @RestController
 @RequestMapping("/api/v1/auth")
 public class AuthController {
@@ -1363,6 +1455,7 @@ public class AuthController {
         this.authService = authService;
     }
 
+    // [POST /api/v1/auth/login] Validates Request DTO and executes user login authentication
     @PostMapping("/login")
     public ResponseEntity<JwtTokenResponseDto> login(@Valid @RequestBody LoginRequestDto loginDto) {
         JwtTokenResponseDto tokenResponse = authService.login(loginDto);
@@ -1388,13 +1481,16 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+// [@Getter & @NoArgsConstructor] 클라이언트 로그인 요청 바디 데이터를 받는 요청 DTO
 @Getter
 @NoArgsConstructor
 public class LoginRequestDto {
 
+    // [@NotBlank] 아이디 입력 필수 검증 (null, 빈문자열, 공백만 있는 문자열 차단)
     @NotBlank(message = "아이디를 입력해주세요.")
     private String username;
 
+    // [@NotBlank] 비밀번호 입력 필수 검증
     @NotBlank(message = "비밀번호를 입력해주세요.")
     private String password;
 
@@ -1410,13 +1506,14 @@ public class LoginRequestDto {
 import lombok.Builder;
 import lombok.Getter;
 
+// [@Getter & @Builder] 인증 성공 시 클라이언트에 전달되는 무상태(Stateless) JWT 토큰 응답 DTO
 @Getter
 @Builder
 public class JwtTokenResponseDto {
-    private String grantType;     // "Bearer"
-    private String accessToken;
-    private String refreshToken;
-    private long accessTokenExpiresIn; // 만료 시간 (밀리초)
+    private String grantType;           // 인증 헤더 타입 (예: "Bearer")
+    private String accessToken;         // API 요청 인증용 Access Token 문자열
+    private String refreshToken;        // Access Token 재발급용 Refresh Token 문자열
+    private long accessTokenExpiresIn;   // Access Token 만료 유효시간 (밀리초 단위, 1,800,000 = 30분)
 }</code></pre>
 
                 <h2>2단계: Custom UserDetails 및 UserDetailsService 구현</h2>
@@ -1433,6 +1530,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+// [@Service] DB의 사용자 계정 정보를 조회하여 Spring Security 표준 UserDetails로 변환하는 서비스
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
@@ -1442,13 +1540,14 @@ public class CustomUserDetailsService implements UserDetailsService {
         this.userRepository = userRepository;
     }
 
+    // AuthenticationProvider에서 비밀번호 검증 시 호출하여 DB 사용자 객체를 가져옴
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return userRepository.findByUsername(username)
             .map(user -> new User(
-                user.getUsername(),
-                user.getPassword(),
-                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole()))
+                user.getUsername(),                                                 // 사용자 로그인 ID
+                user.getPassword(),                                                 // DB에 저장된 BCrypt 암호화 비밀번호
+                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole()))      // Spring Security 권한 (ROLE_USER, ROLE_ADMIN)
             ))
             .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다: " + username));
     }
@@ -1471,6 +1570,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+// [@Configuration & @EnableWebSecurity] Spring Security 6 람다 DSL 구성 빈 클래스
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -1481,25 +1581,28 @@ public class SecurityConfig {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
+    // [@Bean PasswordEncoder] 비밀번호 해시 암호화에 BCrypt 알고리즘 사용 빈 등록
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    // [@Bean AuthenticationManager] 사용자 로그인 인증 처리의 핵심 컴포넌트를 Spring Bean으로 노출
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
     }
 
+    // [@Bean SecurityFilterChain] HTTP 보안 정책, 무상태 세션 및 URL 인가 규칙 정의
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
+            .csrf(csrf -> csrf.disable()) // REST API 무상태 환경이므로 CSRF 보안 비활성화
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/auth/login", "/api/v1/auth/signup").permitAll()
-                .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                .anyRequest().authenticated()
+                .requestMatchers("/api/v1/auth/login", "/api/v1/auth/signup").permitAll() // 로그인/회원가입은 누구나 허용
+                .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")                     // 관리자 전용 경로
+                .anyRequest().authenticated()                                                  // 나머지는 인증 필수
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -1519,6 +1622,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
+// [@Service] 로그인 요청 인증 검증 및 JWT Access/Refresh 토큰 생성 비즈니스 서비스
 @Service
 public class AuthService {
 
@@ -1531,22 +1635,23 @@ public class AuthService {
     }
 
     public JwtTokenResponseDto login(LoginRequestDto loginDto) {
-        // 1. 사용자 ID/PW로 Spring Security 인증 토큰 생성
+        // 1. 미인증 상태의 Username과 Password를 담은 AuthenticationToken 생성
         UsernamePasswordAuthenticationToken authenticationToken =
             new UsernamePasswordAuthenticationToken(loginDto.getUsername(), loginDto.getPassword());
 
-        // 2. 인증 수행 (CustomUserDetailsService.loadUserByUsername 호출 및 BCrypt 검증)
+        // 2. AuthenticationManager에게 인증 위임 (CustomUserDetailsService.loadUserByUsername + BCrypt 비밀번호 비교)
         Authentication authentication = authenticationManager.authenticate(authenticationToken);
 
-        // 3. 인증 성공 시 Access Token & Refresh Token 생성
+        // 3. 인증 성공 시 사용자 ID 정보 기반으로 Access Token & Refresh Token 생성
         String accessToken = tokenProvider.createAccessToken(authentication.getName(), "USER");
         String refreshToken = tokenProvider.createRefreshToken(authentication.getName());
 
+        // 4. DTO 빌더 형태로 토큰 응답 구성하여 반환
         return JwtTokenResponseDto.builder()
             .grantType("Bearer")
             .accessToken(accessToken)
             .refreshToken(refreshToken)
-            .accessTokenExpiresIn(1800000L) // 30분
+            .accessTokenExpiresIn(1800000L) // 30분 유효기간
             .build();
     }
 }</code></pre>
@@ -1561,6 +1666,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+// [@RestController & @RequestMapping] 로그인 REST API 요청 처리 컨트롤러
 @RestController
 @RequestMapping("/api/v1/auth")
 public class AuthController {
@@ -1571,6 +1677,7 @@ public class AuthController {
         this.authService = authService;
     }
 
+    // [POST /api/v1/auth/login] LoginRequestDto를 검증하고 AuthService.login 호출하여 토큰 반환
     @PostMapping("/login")
     public ResponseEntity<JwtTokenResponseDto> login(@Valid @RequestBody LoginRequestDto loginDto) {
         JwtTokenResponseDto tokenResponse = authService.login(loginDto);
