@@ -1,88 +1,32 @@
 <section id="diff-view" class="view">
     <header class="view-header">
         <h1 data-i18n="diff_h1">Intelligent Text &amp; Code Diff Checker</h1>
-        <p data-i18n="diff_p">Perform line-by-line and character-by-character comparisons of code versions, API payloads, configuration manifests, or text documents. Highlights additions, deletions, and modifications with high visual precision.</p>
-        <div class="tool-description">
-            <p><strong>Operation Guide:</strong> Paste your baseline text into the 'Original' panel and your updated version into the 'Modified' panel. The visual difference engine will analyze structural deltas line-by-line, highlighting inserted lines in green and deleted lines in red.</p>
-        </div>
+        <p data-i18n="diff_p">Perform line-by-line and character-by-character comparisons of code versions, API payloads, or text documents.</p>
     </header>
-
     <div class="diff-input-container">
         <div class="diff-input-side">
             <div class="input-header">
-                <label>Original Source (Baseline)</label>
+                <label data-i18n="label_original_source">Original Source (Baseline)</label>
                 <button id="btn-diff-clear-original" class="btn-small danger-btn" data-i18n="btn_clear">Clear Baseline</button>
             </div>
             <textarea id="diff-input-original" data-i18n="placeholder_diff_orig" placeholder="Original content..."></textarea>
         </div>
         <div class="diff-input-side">
             <div class="input-header">
-                <label>Modified Version (Comparison)</label>
+                <label data-i18n="label_modified_source">Modified Version (Comparison)</label>
                 <button id="btn-diff-clear-modified" class="btn-small danger-btn" data-i18n="btn_clear">Clear Comparison</button>
             </div>
             <textarea id="diff-input-modified" data-i18n="placeholder_diff_mod" placeholder="Modified content..."></textarea>
         </div>
     </div>
-
     <div class="diff-result-section">
         <div class="input-header">
-            <label>Structural Delta Analysis</label>
+            <label data-i18n="label_diff_analysis">Structural Delta Analysis</label>
             <button class="copy-btn btn-small" data-target="diff-output-raw" data-i18n="btn_copy">Copy Diff Summary</button>
         </div>
         <div id="diff-output" class="diff-output-display">
             <p class="placeholder-text">Awaiting input in both panels to perform delta analysis...</p>
         </div>
         <textarea id="diff-output-raw" style="display:none;"></textarea>
-    </div>
-
-    <!-- Educational Content & Technical Details -->
-    <div class="tech-details-section">
-        <h2>Developer Guide: Diff Algorithms, Git Unified Diffs &amp; Code Review</h2>
-        <p>Delta computation (finding differences between two sequences of symbols) is a cornerstone of version control systems like <strong>Git</strong>, <strong>Mercurial</strong>, and modern code review platforms.</p>
-
-        <div class="details-grid">
-            <div class="details-card">
-                <h3>1. The LCS &amp; Myers Diff Algorithm</h3>
-                <p>Diff tools rely on calculating the <strong>Longest Common Subsequence (LCS)</strong> between two inputs. Eugene Myers' algorithm (Myers Diff) solves this problem in $O(ND)$ time complexity, finding the shortest edit script that transforms sequence $A$ into sequence $B$ using insertions and deletions.</p>
-            </div>
-            <div class="details-card">
-                <h3>2. Git Unified Diff Format</h3>
-                <p>Standard Git patch files use the Unified Diff format (<code>git diff</code>), which groups changes into unified chunks prefixed by <code>@@ -start,count +start,count @@</code> headers. Added lines are prefixed with <code>+</code> and deleted lines with <code>-</code>.</p>
-            </div>
-            <div class="details-card">
-                <h3>3. Debugging API Payloads &amp; Config Regressions</h3>
-                <p>Comparing raw JSON API responses directly can be noisy due to variable key ordering. Sorting keys first (using our JSON Sort tool) before executing a diff isolates true semantic changes from superficial formatting variations.</p>
-            </div>
-        </div>
-
-        <div class="code-examples-card">
-            <h3>Generating Diffs Programmatically</h3>
-            <pre><code># Shell / Git Command Line
-# Compare two files side-by-side
-diff -u file_original.json file_modified.json
-
-# Git diff ignoring whitespace
-git diff -w branch1 branch2 -- path/to/file.js
-
-// Node.js (diff npm package)
-const Diff = require('diff');
-const diff = Diff.diffLines('baseline text', 'modified text');
-diff.forEach((part) => {
-  const color = part.added ? 'green' : part.removed ? 'red' : 'grey';
-  console.log(`%c${part.value}`, `color: ${color}`);
-});</code></pre>
-        </div>
-
-        <div class="faq-card">
-            <h3>Diff Checker FAQ</h3>
-            <div class="faq-item">
-                <h4>Q: Is my source code uploaded to any server during comparison?</h4>
-                <p><strong>A: No.</strong> The entire diff computation runs inside your browser using client-side JavaScript. Proprietary code and private data never leave your computer.</p>
-            </div>
-            <div class="faq-item">
-                <h4>Q: How does this tool handle whitespace differences?</h4>
-                <p><strong>A:</strong> The algorithm compares exact characters per line, making it easy to identify leading indentation changes, trailing spaces, or missing line breaks.</p>
-            </div>
-        </div>
     </div>
 </section>

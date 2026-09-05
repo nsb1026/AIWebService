@@ -2,9 +2,6 @@
     <header class="view-header">
         <h1 data-i18n="status_h1">HTTP Status Codes Reference &amp; Troubleshooting Guide</h1>
         <p data-i18n="status_p">A comprehensive developer reference of 1xx, 2xx, 3xx, 4xx, and 5xx HTTP response status codes with detailed root-cause diagnostics and frontend/backend remediation steps.</p>
-        <div class="tool-description">
-            <p><strong>Technical Overview:</strong> HTTP status codes communicate the result of client requests to servers as standardized 3-digit integers defined by <strong>RFC 9110</strong> (HTTP Semantics). Understanding status code semantics is essential for API integration, microservices debugging, and network error handling.</p>
-        </div>
     </header>
 
     <!-- Search / Filter -->
@@ -21,8 +18,8 @@
             <h3>2xx Success (Request Successfully Received &amp; Processed)</h3>
             <ul class="glossary-list">
                 <li><strong>200 OK:</strong> Standard response for successful HTTP requests. Body contains payload.</li>
-                <li><strong>201 Created:</strong> Request succeeded and a new resource was created (commonly returned by POST requests).</li>
-                <li><strong>204 No Content:</strong> Server successfully processed request, but intentionally returns no response body (commonly returned by DELETE requests).</li>
+                <li><strong>201 Created:</strong> Request succeeded and a new resource was created.</li>
+                <li><strong>204 No Content:</strong> Server successfully processed request, but intentionally returns no response body.</li>
             </ul>
         </div>
 
@@ -30,9 +27,9 @@
         <div class="details-card" style="margin-bottom: 20px; border-left: 4px solid #3498db;">
             <h3>3xx Redirection (Further Action Required)</h3>
             <ul class="glossary-list">
-                <li><strong>301 Moved Permanently:</strong> Target resource has been permanently assigned a new URI. Search engines transfer SEO authority.</li>
+                <li><strong>301 Moved Permanently:</strong> Target resource has been permanently assigned a new URI.</li>
                 <li><strong>302 Found (Temporary Redirect):</strong> Target resource resides temporarily under a different URI.</li>
-                <li><strong>304 Not Modified:</strong> Indicates resource has not been modified since last fetch. Client uses browser cached version.</li>
+                <li><strong>304 Not Modified:</strong> Indicates resource has not been modified since last fetch.</li>
             </ul>
         </div>
 
@@ -40,12 +37,12 @@
         <div class="details-card" style="margin-bottom: 20px; border-left: 4px solid #e67e22;">
             <h3>4xx Client Errors (Malformed Request or Invalid Authentication)</h3>
             <ul class="glossary-list">
-                <li><strong>400 Bad Request:</strong> Server cannot process request due to client error (e.g. malformed JSON syntax, invalid query parameter).</li>
-                <li><strong>401 Unauthorized:</strong> Request requires user authentication. Missing or invalid Bearer token or credentials.</li>
+                <li><strong>400 Bad Request:</strong> Server cannot process request due to client error.</li>
+                <li><strong>401 Unauthorized:</strong> Request requires user authentication. Missing or invalid Bearer token.</li>
                 <li><strong>403 Forbidden:</strong> Client is authenticated, but lacks permissions to access requested resource.</li>
                 <li><strong>404 Not Found:</strong> Server cannot locate requested URI route.</li>
                 <li><strong>405 Method Not Allowed:</strong> Request method (e.g. POST) is not supported for target URI.</li>
-                <li><strong>409 Conflict:</strong> Request conflicts with current state of resource (e.g. duplicate user registration email).</li>
+                <li><strong>409 Conflict:</strong> Request conflicts with current state of resource.</li>
                 <li><strong>422 Unprocessable Entity:</strong> Request syntax is valid JSON, but contains semantic validation errors.</li>
                 <li><strong>429 Too Many Requests:</strong> Client has sent too many requests in a given time window (Rate Limiting).</li>
             </ul>
@@ -55,23 +52,11 @@
         <div class="details-card" style="margin-bottom: 20px; border-left: 4px solid #e74c3c;">
             <h3>5xx Server Errors (Server Failed to Process Request)</h3>
             <ul class="glossary-list">
-                <li><strong>500 Internal Server Error:</strong> Generic error message indicating server crashed or encountered unhandled exception.</li>
-                <li><strong>502 Bad Gateway:</strong> Server acting as gateway/proxy received invalid response from upstream application server (e.g. Nginx to Node.js / Gunicorn).</li>
-                <li><strong>503 Service Unavailable:</strong> Server is currently unable to handle request due to temporary overload or maintenance.</li>
-                <li><strong>504 Gateway Timeout:</strong> Server acting as gateway did not receive timely response from upstream server (Database or microservice timeout).</li>
+                <li><strong>500 Internal Server Error:</strong> Generic error message indicating server crashed.</li>
+                <li><strong>502 Bad Gateway:</strong> Server acting as gateway received invalid response from upstream server.</li>
+                <li><strong>503 Service Unavailable:</strong> Server is currently unable to handle request due to overload.</li>
+                <li><strong>504 Gateway Timeout:</strong> Server acting as gateway did not receive timely response from upstream server.</li>
             </ul>
-        </div>
-
-        <div class="faq-card">
-            <h3>HTTP Status Code FAQ</h3>
-            <div class="faq-item">
-                <h4>Q: What is the difference between 401 Unauthorized and 403 Forbidden?</h4>
-                <p><strong>A:</strong> <code>401 Unauthorized</code> means you are not authenticated (missing or invalid login token). <code>403 Forbidden</code> means you are logged in, but your account role does not have permission to view or edit the resource.</p>
-            </div>
-            <div class="faq-item">
-                <h4>Q: How do I fix a 502 Bad Gateway error?</h4>
-                <p><strong>A:</strong> Check if your backend app process (Node.js, Python, Java) has crashed or stopped listening on its assigned port behind Nginx/Apache proxy.</p>
-            </div>
         </div>
     </div>
 </section>

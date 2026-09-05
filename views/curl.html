@@ -2,24 +2,21 @@
     <header class="view-header">
         <h1 data-i18n="curl_h1">cURL Command to Code Converter</h1>
         <p data-i18n="curl_p">Parse raw cURL commands from browser DevTools, Postman, or terminal into clean executable code snippets for JavaScript, Python, Go, and PHP.</p>
-        <div class="tool-description">
-            <p><strong>Technical Overview:</strong> Testing REST APIs often begins with a cURL command. Translating cURL headers, request methods, query params, and JSON bodies into application code can lead to syntax mistakes. Our client-side cURL parser extracts HTTP flags (<code>-X</code>, <code>-H</code>, <code>-d</code>, <code>--data-raw</code>) instantly and converts them into production-ready code.</p>
-        </div>
     </header>
 
     <div class="parser-container">
         <div class="parser-input-side">
             <div class="input-header">
-                <label>Raw cURL Command</label>
+                <label data-i18n="label_curl_input">Raw cURL Command</label>
                 <div id="curl-status" class="json-status"></div>
-                <button id="btn-curl-clear" class="btn-small danger-btn" data-i18n="btn_clear">Clear Input</button>
+                <button id="btn-curl-clear" class="btn-small danger-btn" data-i18n="btn_clear_input">Clear Input</button>
             </div>
-            <textarea id="curl-input" data-i18n="placeholder_curl" placeholder="Paste your cURL command here (e.g. curl -X POST 'https://api.example.com/v1/users' -H 'Content-Type: application/json' -H 'Authorization: Bearer token123' -d '{&quot;name&quot;:&quot;John&quot;}')..."></textarea>
+            <textarea id="curl-input" data-i18n="placeholder_curl" placeholder="Paste your cURL command here..."></textarea>
         </div>
 
         <div class="parser-output-side">
             <div class="input-header">
-                <label>Target Language Code</label>
+                <label data-i18n="label_target_code">Target Language Code</label>
                 <div class="language-tabs">
                     <button class="tab-btn active" data-lang="js-fetch">JS (fetch)</button>
                     <button class="tab-btn" data-lang="js-axios">JS (axios)</button>
@@ -29,45 +26,6 @@
                 <button class="copy-btn btn-small" data-target="curl-output" data-i18n="btn_copy">Copy Code</button>
             </div>
             <textarea id="curl-output" readonly placeholder="Converted code snippet will appear here..."></textarea>
-        </div>
-    </div>
-
-    <!-- Educational & Technical Documentation -->
-    <div class="tech-details-section">
-        <h2>Developer Guide: Understanding cURL Command Anatomy &amp; API Debugging</h2>
-        <p>cURL (Client URL) is an open-source command-line tool and library for transferring data using network protocols. It is the de-facto standard for documenting REST APIs across software engineering teams.</p>
-
-        <div class="details-grid">
-            <div class="details-card">
-                <h3>1. Key cURL Flags &amp; Syntax</h3>
-                <ul>
-                    <li><code>-X, --request</code>: Specifies custom HTTP method (<code>GET</code>, <code>POST</code>, <code>PUT</code>, <code>DELETE</code>, <code>PATCH</code>).</li>
-                    <li><code>-H, --header</code>: Adds extra HTTP headers (e.g. <code>Content-Type: application/json</code>).</li>
-                    <li><code>-d, --data, --data-raw</code>: Sends HTTP POST data payload to the server.</li>
-                    <li><code>-u, --user</code>: Specifies server authentication credentials (<code>user:password</code>).</li>
-                    <li><code>-k, --insecure</code>: Allows insecure SSL/TLS server connections (bypasses certificate checks).</li>
-                </ul>
-            </div>
-            <div class="details-card">
-                <h3>2. Exporting cURL from Browser DevTools</h3>
-                <p>In Chrome, Firefox, or Edge DevTools, open the <strong>Network tab</strong>, right-click any HTTP request, select <strong>Copy -> Copy as cURL</strong>, and paste it directly into this tool for instant code generation.</p>
-            </div>
-            <div class="details-card">
-                <h3>3. Privacy &amp; Security</h3>
-                <p>cURL commands often contain sensitive Bearer tokens, cookies, or private API keys. Our converter runs 100% locally in your browser memory—no remote logging or server processing is performed.</p>
-            </div>
-        </div>
-
-        <div class="faq-card">
-            <h3>cURL Converter FAQ</h3>
-            <div class="faq-item">
-                <h4>Q: Does this converter support multi-line cURL commands with backslashes (\)?</h4>
-                <p><strong>A: Yes.</strong> The parser automatically strips line-continuation backslashes and normalizes double and single quotes.</p>
-            </div>
-            <div class="faq-item">
-                <h4>Q: Is my API token transmitted over the network?</h4>
-                <p><strong>A: No.</strong> Parse Utils executes all string parsing logic locally inside your browser's V8 engine.</p>
-            </div>
         </div>
     </div>
 </section>

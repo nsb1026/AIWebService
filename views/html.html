@@ -1,16 +1,12 @@
 <section id="html-view" class="view">
     <header class="view-header">
         <h1 data-i18n="html_h1">Semantic HTML Formatter &amp; Document Optimizer</h1>
-        <p data-i18n="html_p">Cleanse, indent, and validate your HTML markup. Prettify for code review readability or minify to strip comments and whitespace for faster web rendering and superior Core Web Vitals performance.</p>
-        <div class="tool-description">
-            <p><strong>Technical Overview:</strong> HTML5 markup forms the structural skeleton of every web application. Poorly formatted HTML with invalid nesting, unclosed tags, or inline styling clutter impairs search engine crawler indexing and screen reader accessibility. Our client-side HTML formatter standardizes element indentation and optimizes markup offline.</p>
-        </div>
+        <p data-i18n="html_p">Cleanse, indent, and validate your HTML markup for better SEO, accessibility, and Core Web Vitals performance.</p>
     </header>
-
     <div class="parser-container">
         <div class="parser-input-side">
             <div class="input-header">
-                <label>Raw Markup Source</label>
+                <label data-i18n="label_raw_markup">Raw Markup Source</label>
                 <div id="html-status" class="json-status"></div>
                 <button id="btn-html-clear" class="btn-small danger-btn" data-i18n="btn_clear">Clear Workspace</button>
             </div>
@@ -23,66 +19,10 @@
         </div>
         <div class="parser-output-side">
             <div class="input-header">
-                <label>Standardized Output</label>
+                <label data-i18n="label_standardized_markup">Standardized Output</label>
                 <button class="copy-btn btn-small" data-target="html-output" data-i18n="btn_copy">Copy Result</button>
             </div>
             <textarea id="html-output" readonly placeholder="Cleaned markup will appear here..."></textarea>
-        </div>
-    </div>
-
-    <!-- Educational & Security Documentation -->
-    <div class="tech-details-section">
-        <h2>Developer Guide: Semantic HTML5, Accessibility (a11y) &amp; DOM Sanitization</h2>
-        <p>HTML5 is the standard markup language for documents designed to be displayed in web browsers, specified by the <strong>WHATWG HTML Living Standard</strong> and <strong>W3C Recommendation</strong>.</p>
-
-        <div class="details-grid">
-            <div class="details-card">
-                <h3>1. Semantic Structure vs. Generic Div Containers</h3>
-                <p>Modern web standards mandate semantic elements over non-semantic <code>&lt;div&gt;</code> tags:</p>
-                <ul>
-                    <li><code>&lt;main&gt;</code>: Primary unique content area of the document (single instance per page).</li>
-                    <li><code>&lt;article&gt;</code>: Self-contained, independently distributable composition.</li>
-                    <li><code>&lt;section&gt;</code>: Standalone section of content grouped around a common topic with a heading.</li>
-                    <li><code>&lt;nav&gt;</code>: Navigation link container.</li>
-                </ul>
-            </div>
-            <div class="details-card">
-                <h3>2. Web Accessibility (WCAG 2.2 &amp; WAI-ARIA)</h3>
-                <p>Accessible HTML ensures users with visual or physical impairments can navigate using screen readers and keyboards:</p>
-                <ul>
-                    <li>Every interactive element (button, link, form control) must have an accessible name via text content or <code>aria-label</code>.</li>
-                    <li>Images must include descriptive <code>alt</code> text unless purely decorative.</li>
-                    <li>Logical heading hierarchy (<code>&lt;h1&gt;</code> through <code>&lt;h6&gt;</code>) without skipping levels.</li>
-                </ul>
-            </div>
-            <div class="details-card">
-                <h3>3. DOM-Based XSS &amp; HTML Sanitization APIs</h3>
-                <p>Rendering un-sanitized user HTML via <code>innerHTML</code> enables DOM-based XSS attacks. Modern browsers provide the <code>Sanitizer API</code> (or libraries like DOMPurify) to safely strip script tags and inline event handlers before DOM insertion.</p>
-            </div>
-        </div>
-
-        <div class="code-examples-card">
-            <h3>Safe HTML Rendering Code Snippet</h3>
-            <pre><code>// JavaScript (DOMPurify HTML Sanitization)
-import DOMPurify from 'dompurify';
-
-const rawDirtyHtml = `&lt;p&gt;Hello &lt;script&gt;alert('xss')&lt;/script&gt;&lt;img src=x onerror=alert(1)&gt;&lt;/p&gt;`;
-const cleanHtml = DOMPurify.sanitize(rawDirtyHtml);
-// Result: "&lt;p&gt;Hello &lt;img src=\"x\"&gt;&lt;/p&gt;"
-
-document.getElementById('content').innerHTML = cleanHtml;</code></pre>
-        </div>
-
-        <div class="faq-card">
-            <h3>HTML Formatter FAQ</h3>
-            <div class="faq-item">
-                <h4>Q: Why is having a single &lt;h1&gt; tag recommended for SEO?</h4>
-                <p><strong>A:</strong> Search engine crawlers inspect the primary <code>&lt;h1&gt;</code> tag to understand the core subject matter of the page. Having multiple or missing <code>&lt;h1&gt;</code> tags degrades SEO heading hierarchy.</p>
-            </div>
-            <div class="faq-item">
-                <h4>Q: What are void elements in HTML5?</h4>
-                <p><strong>A:</strong> Void elements (e.g. <code>&lt;img&gt;</code>, <code>&lt;br&gt;</code>, <code>&lt;hr&gt;</code>, <code>&lt;input&gt;</code>, <code>&lt;meta&gt;</code>, <code>&lt;link&gt;</code>) cannot have child nodes and do not require closing tags in HTML5.</p>
-            </div>
         </div>
     </div>
 </section>

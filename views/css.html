@@ -1,18 +1,15 @@
 <section id="css-view" class="view">
     <header class="view-header">
         <h1 data-i18n="css_h1">Modern CSS Formatter &amp; Stylesheet Minifier</h1>
-        <p data-i18n="css_p">Format, structure, and optimize your Cascading Style Sheets (CSS). Prettify for seamless code reviews or minify to compress asset delivery for high Core Web Vitals performance.</p>
-        <div class="tool-description">
-            <p><strong>Technical Overview:</strong> Unformatted CSS with irregular indentation and redundant whitespace increases file size and makes debugging specificity conflicts tedious. Our client-side CSS utility formats selector blocks, normalizes properties, and supports modern CSS features like CSS Grid, Flexbox, Custom Properties (variables), Nesting, and Container Queries.</p>
-        </div>
+        <p data-i18n="css_p">Format, structure, and optimize your Cascading Style Sheets (CSS). Prettify for seamless code reviews or minify to compress asset delivery.</p>
     </header>
     <div class="parser-container">
         <div class="parser-input-side">
             <div class="input-header">
-                <label>Raw CSS Input</label>
+                <label data-i18n="label_raw_css">Raw CSS Input</label>
                 <div id="css-status" class="json-status"></div>
             </div>
-            <textarea id="css-input" data-i18n="placeholder_css" placeholder="Paste your raw CSS here (e.g. .card{display:flex;padding:1rem;color:#333;})..."></textarea>
+            <textarea id="css-input" data-i18n="placeholder_css" placeholder="Paste your raw CSS here..."></textarea>
         </div>
         <div class="parser-controls">
             <button id="btn-css-prettify" class="primary-btn" data-i18n="btn_prettify">Prettify CSS</button>
@@ -20,76 +17,10 @@
         </div>
         <div class="parser-output-side">
             <div class="input-header">
-                <label>Optimized CSS Output</label>
+                <label data-i18n="label_optimized_css">Optimized CSS Output</label>
                 <button class="copy-btn btn-small" data-target="css-output" data-i18n="btn_copy">Copy Result</button>
             </div>
             <textarea id="css-output" readonly placeholder="Your formatted or minified CSS will appear here..."></textarea>
-        </div>
-    </div>
-
-    <!-- Educational & Technical Content -->
-    <div class="tech-details-section">
-        <h2>Developer Guide: Modern CSS Best Practices &amp; Performance Optimization</h2>
-        <p>Cascading Style Sheets (CSS) have evolved into a sophisticated styling engine for modern web applications. Utilizing modern CSS features allows developers to write modular, performant, and maintainable user interfaces.</p>
-
-        <div class="details-grid">
-            <div class="details-card">
-                <h3>1. Modern CSS Baseline Features</h3>
-                <ul>
-                    <li><strong>Cascade Layers (<code>@layer</code>):</strong> Manage CSS specificity explicitly across base resets, component libraries, and utility overrides without using <code>!important</code>.</li>
-                    <li><strong>Container Queries (<code>@container</code>):</strong> Apply styles based on parent container width rather than viewport width for truly modular component design.</li>
-                    <li><strong>The <code>:has()</code> Parent Selector:</strong> Style parent elements conditionally depending on child element states without JavaScript DOM queries.</li>
-                    <li><strong>Perceptually Uniform Colors (<code>oklch()</code>):</strong> Access wider color gamuts with smooth gradient transitions in modern browsers.</li>
-                </ul>
-            </div>
-            <div class="details-card">
-                <h3>2. CSS Minification &amp; Core Web Vitals</h3>
-                <p>CSS is a render-blocking resource. Before the browser can render a single pixel on screen, it must download and parse all linked stylesheets to construct the CSSOM (CSS Object Model).</p>
-                <p>Minifying production CSS removes comments, whitespace, and optional trailing semicolons, lowering First Contentful Paint (FCP) and Largest Contentful Paint (LCP) loading metrics.</p>
-            </div>
-            <div class="details-card">
-                <h3>3. Logical Properties for Internationalization</h3>
-                <p>Using logical properties like <code>margin-inline-start</code> and <code>padding-block-end</code> instead of physical properties (<code>margin-left</code>, <code>padding-bottom</code>) guarantees automatic layout adaptation for Right-To-Left (RTL) languages like Arabic and Hebrew.</p>
-            </div>
-        </div>
-
-        <div class="code-examples-card">
-            <h3>Modern CSS Architecture Code Examples</h3>
-            <pre><code>/* Cascade Layers &amp; Container Queries Example */
-@layer reset, components, utilities;
-
-@layer components {
-    .card-container {
-        container-type: inline-size;
-        container-name: card;
-    }
-
-    .card {
-        display: flex;
-        flex-direction: column;
-        padding: var(--spacing-md, 1rem);
-        background: oklch(0.98 0.01 240);
-    }
-
-    /* Container query adjustment */
-    @container card (min-width: 480px) {
-        .card {
-            flex-direction: row;
-        }
-    }
-}</code></pre>
-        </div>
-
-        <div class="faq-card">
-            <h3>CSS Optimization FAQ</h3>
-            <div class="faq-item">
-                <h4>Q: Does CSS minification alter layout behavior?</h4>
-                <p><strong>A: No.</strong> Minification only removes safe structural whitespace, comments, and redundant formatting characters without altering rules, selectors, or computed styles.</p>
-            </div>
-            <div class="faq-item">
-                <h4>Q: Why are CSS custom properties preferable to SCSS variables?</h4>
-                <p><strong>A:</strong> CSS custom properties exist dynamically in the runtime browser DOM, allowing real-time theme switching (dark/light mode) and JavaScript dynamic updates without re-compiling stylesheets.</p>
-            </div>
         </div>
     </div>
 </section>

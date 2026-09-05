@@ -10,7 +10,7 @@
     <div class="parser-container">
         <div class="parser-input-side">
             <div class="input-header">
-                <label>Raw JSON Payload</label>
+                <label data-i18n="label_raw_json">Raw JSON Payload</label>
                 <div id="json-status" class="json-status"></div>
                 <button id="btn-json-clear" class="btn-small danger-btn" data-i18n="btn_clear_panel">Clear Panel</button>
             </div>
@@ -24,64 +24,48 @@
         </div>
         <div class="parser-output-side">
             <div class="input-header">
-                <label>Restructured Output</label>
+                <label data-i18n="label_output_json">Restructured Output</label>
                 <button class="copy-btn btn-small" data-target="json-output" data-i18n="btn_copy">Copy Formatted</button>
             </div>
             <textarea id="json-output" readonly placeholder="Your optimized JSON will appear here..."></textarea>
         </div>
     </div>
 
-    <!-- Extensive Educational Content & Documentation for AdSense Compliance -->
+    <!-- Educational Content -->
     <div class="tech-details-section">
         <h2>Developer Guide: Deep Dive into JSON Standards &amp; Data Manipulation</h2>
-        <p>JavaScript Object Notation (JSON) is the universal standard for structured data serialization on the web, defined by <strong>RFC 8259</strong> and <strong>ECMA-404</strong>. Used primarily in REST APIs, GraphQL, and configuration files, JSON provides a lightweight, human-readable format that maps directly to core data structures in almost every programming language.</p>
+        <p>JavaScript Object Notation (JSON) is the universal standard for structured data serialization on the web, defined by <strong>RFC 8259</strong> and <strong>ECMA-404</strong>.</p>
 
         <div class="details-grid">
             <div class="details-card">
                 <h3>1. RFC 8259 Compliance &amp; Strict Syntax Rules</h3>
-                <p>Although JSON syntax resembles JavaScript object literal notation, RFC 8259 enforces strict formatting requirements:</p>
                 <ul>
                     <li><strong>Double Quotes Mandatory:</strong> Strings and object key names must use double quotes (<code>"key"</code>). Single quotes cause a syntax error.</li>
                     <li><strong>No Trailing Commas:</strong> Commas after the last key-value pair or array element are prohibited in standard JSON.</li>
-                    <li><strong>Strict Literals:</strong> Allowed primitive values are string, number, object, array, <code>true</code>, <code>false</code>, and <code>null</code>. Functions, <code>undefined</code>, and NaN are not permitted.</li>
+                    <li><strong>Strict Literals:</strong> Allowed primitive values are string, number, object, array, <code>true</code>, <code>false</code>, and <code>null</code>.</li>
                 </ul>
             </div>
             <div class="details-card">
                 <h3>2. Key Sorting &amp; Canonical Serialization</h3>
-                <p>Deterministic JSON requires key-value pairs to be sorted alphabetically. Sorting keys is essential in microservices architecture for cryptographic signing, HMAC generation, and HTTP payload caching, ensuring identical objects yield identical SHA-256 hashes.</p>
+                <p>Sorting keys is essential in microservices architecture for cryptographic signing, HMAC generation, and HTTP payload caching.</p>
             </div>
             <div class="details-card">
                 <h3>3. Minification vs. Prettification</h3>
-                <p>Minification strips all structural whitespace, tabs, and newlines from a JSON payload. This reduces network payload size by 20% to 40% prior to gzip/brotli compression. Prettification, by contrast, adds uniform 2-space or 4-space indentation for developer debugging.</p>
+                <p>Minification strips all structural whitespace, tabs, and newlines from a JSON payload, reducing network payload size by 20% to 40% prior to gzip compression.</p>
             </div>
         </div>
 
         <div class="code-examples-card">
-            <h3>JSON Parsing &amp; Handling Code Snippets</h3>
+            <h3>JSON Parsing Code Snippets</h3>
             <pre><code>// JavaScript / Node.js
 const rawJson = '{"name":"Parse Utils","type":"utility","version":1}';
 const parsed = JSON.parse(rawJson);
 const prettified = JSON.stringify(parsed, null, 2);
-const minified = JSON.stringify(parsed);
 
 # Python 3
 import json
 data = json.loads(rawJson)
-pretty_str = json.dumps(data, indent=2, sort_keys=True)
-
-// Go (Golang)
-package main
-import (
-    "encoding/json"
-    "fmt"
-)
-type Config struct {
-    Name string `json:"name"`
-}
-func main() {
-    var cfg Config
-    json.Unmarshal([]byte(rawJson), &amp;cfg)
-}</code></pre>
+pretty_str = json.dumps(data, indent=2, sort_keys=True)</code></pre>
         </div>
 
         <div class="faq-card">
@@ -92,7 +76,7 @@ func main() {
             </div>
             <div class="faq-item">
                 <h4>Q: How does this tool handle large JSON files?</h4>
-                <p><strong>A:</strong> Parse Utils processes JSON using non-blocking browser V8 memory buffers, allowing instant formatting of payloads up to 10MB completely offline.</p>
+                <p><strong>A:</strong> Parse Utils processes JSON using non-blocking browser V8 memory buffers offline.</p>
             </div>
         </div>
     </div>

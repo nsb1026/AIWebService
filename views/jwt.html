@@ -3,89 +3,54 @@
         <h1 data-i18n="jwt_h1">Secure JWT Debugger &amp; Decoder</h1>
         <p data-i18n="jwt_p">Decode JSON Web Tokens locally. Inspect headers, payloads, and signatures without exposing your sensitive tokens to external servers.</p>
         <div class="tool-description">
-            <p><strong>Security Note:</strong> Unlike other online JWT decoders, Parse Utils performs all decoding operations in your browser's local environment. Your tokens are never transmitted to a server, ensuring that your authentication secrets and sensitive user data remain strictly private.</p>
+            <p><strong>Security Note:</strong> Parse Utils performs all decoding operations in your browser's local environment. Your tokens are never transmitted to a server.</p>
         </div>
     </header>
     <div class="parser-container">
         <div class="parser-input-side">
             <div class="input-header">
-                <label>JWT Token</label>
+                <label data-i18n="label_jwt_token">JWT Token</label>
                 <div id="jwt-status" class="json-status"></div>
             </div>
             <textarea id="jwt-input" data-i18n="placeholder_jwt" placeholder="Paste your JWT here..."></textarea>
         </div>
         <div class="parser-controls">
-            <button id="btn-jwt-decode" class="primary-btn">Decode Token</button>
+            <button id="btn-jwt-decode" class="primary-btn" data-i18n="btn_decode">Decode Token</button>
         </div>
         <div class="parser-output-side">
             <div class="input-header">
-                <label>Decoded Contents</label>
+                <label data-i18n="label_decoded_content">Decoded Contents</label>
                 <button class="copy-btn btn-small" data-target="jwt-output" data-i18n="btn_copy">Copy Result</button>
             </div>
             <textarea id="jwt-output" readonly placeholder="Decoded header and payload will appear here..."></textarea>
         </div>
     </div>
 
-    <!-- Educational & Security Documentation -->
+    <!-- Educational Content -->
     <div class="tech-details-section">
         <h2>Developer Guide: Understanding JSON Web Tokens (RFC 7519)</h2>
-        <p>JSON Web Token (JWT) is an open standard (RFC 7519) defining a compact, self-contained method for securely transmitting claims between parties as a JSON object. Signed using cryptographic secrets (HMAC) or public/private key pairs (RSA, ECDSA), JWTs serve as the foundation of modern OAuth 2.0 and OpenID Connect (OIDC) authentication frameworks.</p>
+        <p>JSON Web Token (JWT) is an open standard (RFC 7519) defining a compact, self-contained method for securely transmitting claims between parties as a JSON object.</p>
 
         <div class="details-grid">
             <div class="details-card">
-                <h3>1. JWT Anatomy &amp; Base64Url Encoding</h3>
-                <p>A JWT string consists of three distinct components joined by periods (<code>Header.Payload.Signature</code>):</p>
-                <ul>
-                    <li><strong>Header:</strong> Specifies token type (<code>"typ": "JWT"</code>) and signing algorithm (e.g. <code>HS256</code> or <code>RS256</code>).</li>
-                    <li><strong>Payload:</strong> Contains standard registered claims (<code>sub</code>, <code>iss</code>, <code>exp</code>, <code>nbf</code>, <code>iat</code>) and custom user claims.</li>
-                    <li><strong>Signature:</strong> Cryptographic hash created by signing <code>base64Url(Header) + "." + base64Url(Payload)</code> using a secret key or private key.</li>
-                </ul>
+                <h3>1. JWT Anatomy</h3>
+                <p>A JWT string consists of three distinct components joined by periods (<code>Header.Payload.Signature</code>).</p>
             </div>
             <div class="details-card">
-                <h3>2. Symmetric (HS256) vs. Asymmetric (RS256/ES256)</h3>
-                <p><strong>HS256 (HMAC with SHA-256):</strong> Uses a single secret key shared between auth server and resource server. Ideal for monolithic applications.</p>
-                <p><strong>RS256 (RSA Signature with SHA-256):</strong> Uses an asymmetric RSA key pair. The auth server signs tokens using the private key, while microservices verify tokens using the public key (published via JWKS endpoints).</p>
+                <h3>2. Symmetric (HS256) vs. Asymmetric (RS256)</h3>
+                <p>HS256 uses a shared secret key. RS256 uses asymmetric RSA public/private key pairs.</p>
             </div>
             <div class="details-card">
-                <h3>3. Critical JWT Vulnerabilities to Avoid</h3>
-                <ul>
-                    <li><strong>The "none" Algorithm Attack:</strong> Attackers alter token headers to <code>"alg": "none"</code> to bypass signature verification if server checks are missing.</li>
-                    <li><strong>Secret Leakage in Payloads:</strong> Payloads are only Base64Url encoded, NOT encrypted. Never place passwords or credit card numbers in a JWT.</li>
-                    <li><strong>Missing Expiration (exp):</strong> Tokens without expiration persist indefinitely if compromised. Always set reasonable lifetimes (e.g., 15–60 minutes).</li>
-                </ul>
+                <h3>3. Critical JWT Security Best Practices</h3>
+                <p>Never store raw passwords or secrets in JWT payloads, as Base64Url is plain text encoding, not encryption.</p>
             </div>
-        </div>
-
-        <div class="code-examples-card">
-            <h3>JWT Verification in Backend Languages</h3>
-            <pre><code>// Node.js (jsonwebtoken)
-const jwt = require('jsonwebtoken');
-const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
-try {
-    const decoded = jwt.verify(token, 'your-256-bit-secret');
-    console.log(decoded.sub);
-} catch(err) {
-    console.error('Invalid token verification:', err.message);
-}
-
-# Python (PyJWT)
-import jwt
-try:
-    payload = jwt.decode(token, "your-256-bit-secret", algorithms=["HS256"])
-    print(payload["sub"])
-except jwt.ExpiredSignatureError:
-    print("Token has expired")</code></pre>
         </div>
 
         <div class="faq-card">
             <h3>JWT Security FAQ</h3>
             <div class="faq-item">
                 <h4>Q: Is Base64Url decoding the same as decrypting?</h4>
-                <p><strong>A: No.</strong> Base64Url is plain text encoding for URL transport. Anyone with access to the token string can decode and read the payload unless JWE (JSON Web Encryption) is used.</p>
-            </div>
-            <div class="faq-item">
-                <h4>Q: Why is offline client-side JWT decoding safer?</h4>
-                <p><strong>A:</strong> Public online decoders that log tokens on remote servers pose significant session hijack risks. Parse Utils executes 100% locally in your browser memory.</p>
+                <p><strong>A: No.</strong> Base64Url is plain text encoding for URL transport.</p>
             </div>
         </div>
     </div>

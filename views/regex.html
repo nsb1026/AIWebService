@@ -2,15 +2,12 @@
     <header class="view-header">
         <h1 data-i18n="regex_h1">Regex (Regular Expression) Tester &amp; Cheatsheet</h1>
         <p data-i18n="regex_p">Test and debug regular expressions in real-time with pattern matching, capture group analysis, flag toggles, and common regex template presets.</p>
-        <div class="tool-description">
-            <p><strong>Technical Overview:</strong> Regular Expressions (RegEx) define search patterns for string matching, input validation, and text extraction across all major programming languages. Testing regex patterns locally prevents catastrophic backtracking ($O(2^n)$ performance degradation) and input validation bugs.</p>
-        </div>
     </header>
 
     <div class="parser-container">
         <div class="parser-input-side">
             <div class="input-header">
-                <label>Regex Pattern &amp; Flags</label>
+                <label data-i18n="label_regex_pattern">Regex Pattern &amp; Flags</label>
                 <div id="regex-status" class="json-status"></div>
             </div>
             
@@ -29,7 +26,7 @@
             </div>
 
             <div class="input-header">
-                <label>Test String / Sample Text</label>
+                <label data-i18n="label_sample_text">Test String / Sample Text</label>
                 <button id="btn-regex-clear" class="btn-small danger-btn" data-i18n="btn_clear">Clear Text</button>
             </div>
             <textarea id="regex-test-text" data-i18n="placeholder_regex_test" style="height: 140px;" placeholder="Paste sample text to test regular expression matching...">Contact us at support@parseutils.com or dev.team@company.co.kr for inquiries. Admin email: admin@test.org.</textarea>
@@ -37,60 +34,14 @@
 
         <div class="parser-output-side">
             <div class="input-header">
-                <label>Match Results &amp; Capture Groups</label>
+                <label data-i18n="label_match_results">Match Results &amp; Capture Groups</label>
             </div>
             <div id="regex-highlight-box" style="padding: 15px; background: var(--input-bg); border-radius: 8px; border: 1px solid var(--border-color); min-height: 120px; font-family: 'JetBrains Mono', monospace; line-height: 1.6; white-space: pre-wrap; word-break: break-all;"></div>
             
             <div class="input-header" style="margin-top: 15px;">
-                <label>Matches Summary (JSON)</label>
+                <label data-i18n="label_matches_summary">Matches Summary (JSON)</label>
             </div>
             <textarea id="regex-matches-json" readonly style="height: 120px; font-family: 'JetBrains Mono', monospace;"></textarea>
-        </div>
-    </div>
-
-    <!-- Educational & Technical Content -->
-    <div class="tech-details-section">
-        <h2>Developer Guide: Regular Expression Tokens, Flags &amp; ReDoS Security</h2>
-        <p>Regular expressions (RegEx) use a formal syntax of meta-characters and quantifiers to describe text search patterns.</p>
-
-        <div class="details-grid">
-            <div class="details-card">
-                <h3>1. Common Regex Token Cheatsheet</h3>
-                <ul>
-                    <li><code>\d</code>: Any digit (0-9). <code>\D</code>: Any non-digit.</li>
-                    <li><code>\w</code>: Word character (alphanumeric + underscore). <code>\W</code>: Non-word character.</li>
-                    <li><code>\s</code>: Whitespace (space, tab, newline). <code>\S</code>: Non-whitespace.</li>
-                    <li><code>^</code>: Start of line. <code>$</code>: End of line.</li>
-                    <li><code>+</code>: 1 or more repetitions (greedy). <code>*</code>: 0 or more repetitions.</li>
-                    <li><code>?</code>: 0 or 1 repetition (or makes quantifier non-greedy).</li>
-                </ul>
-            </div>
-            <div class="details-card">
-                <h3>2. Standard Regex Flags</h3>
-                <ul>
-                    <li><code>g</code> (Global): Find all matches rather than stopping after the first match.</li>
-                    <li><code>i</code> (Ignore Case): Case-insensitive matching.</li>
-                    <li><code>m</code> (Multiline): <code>^</code> and <code>$</code> match start/end of each line.</li>
-                    <li><code>u</code> (Unicode): Enable full Unicode pattern matching.</li>
-                </ul>
-            </div>
-            <div class="details-card">
-                <h3>3. ReDoS (Regular Expression Denial of Service)</h3>
-                <p>ReDoS occurs when nested quantifiers (e.g. <code>(a+)+$</code>) cause catastrophic backtracking on non-matching strings, causing CPU usage to hit 100% and freezing server event loops.</p>
-                <p><strong>Prevention:</strong> Avoid overlapping nested quantifiers and set execution timeouts on regex operations.</p>
-            </div>
-        </div>
-
-        <div class="faq-card">
-            <h3>Regex Tester FAQ</h3>
-            <div class="faq-item">
-                <h4>Q: Why does my regex match only the first occurrence?</h4>
-                <p><strong>A:</strong> Add the global flag <code>g</code> to the flags field (e.g. <code>g</code> or <code>gi</code>) to instruct the engine to scan the entire string.</p>
-            </div>
-            <div class="faq-item">
-                <h4>Q: Is my test text sent to a remote server?</h4>
-                <p><strong>A: No.</strong> Regular expression evaluation uses native JavaScript <code>RegExp</code> engine execution offline.</p>
-            </div>
         </div>
     </div>
 </section>

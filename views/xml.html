@@ -1,16 +1,12 @@
 <section id="xml-view" class="view">
     <header class="view-header">
         <h1 data-i18n="xml_h1">Professional XML Formatter &amp; Beautifier</h1>
-        <p data-i18n="xml_p">Transform cluttered XML documents, SVG vector graphics, SOAP web service payloads, and RSS/Atom feeds into clean, standardized hierarchical structures.</p>
-        <div class="tool-description">
-            <p><strong>Technical Overview:</strong> Extensible Markup Language (XML) remains a foundational data interchange standard in enterprise systems, legacy SOAP APIs, Android layout manifests, and vector graphics. Reading unindented XML with deep tag nesting can be difficult. Our browser-based XML utility formats elements, normalizes attributes, and minifies markup securely in local browser memory.</p>
-        </div>
+        <p data-i18n="xml_p">Transform cluttered XML documents, SVG vector graphics, and RSS feeds into clean hierarchical structures.</p>
     </header>
-
     <div class="parser-container">
         <div class="parser-input-side">
             <div class="input-header">
-                <label>Raw XML / SVG Source</label>
+                <label data-i18n="label_raw_xml">Raw XML / SVG Source</label>
                 <div id="xml-status" class="json-status"></div>
                 <button id="btn-xml-clear" class="btn-small danger-btn" data-i18n="btn_clear_panel">Clear Panel</button>
             </div>
@@ -23,70 +19,10 @@
         </div>
         <div class="parser-output-side">
             <div class="input-header">
-                <label>Beautified XML</label>
+                <label data-i18n="label_beautified_xml">Beautified XML</label>
                 <button class="copy-btn btn-small" data-target="xml-output" data-i18n="btn_copy">Copy Result</button>
             </div>
             <textarea id="xml-output" readonly placeholder="Your structured XML will appear here..."></textarea>
-        </div>
-    </div>
-
-    <!-- Comprehensive Educational & Security Content -->
-    <div class="tech-details-section">
-        <h2>Developer Guide: XML Specifications, SVG &amp; XXE Security</h2>
-        <p>Defined by the <strong>W3C XML 1.0 Recommendation</strong>, XML is a self-describing markup language engineered to store and transport structured data. XML forms the architectural foundation for major open formats including SVG, RSS, MathML, EPUB, and Office Open XML (.docx/.xlsx).</p>
-
-        <div class="details-grid">
-            <div class="details-card">
-                <h3>1. Well-Formedness vs. Schema Validation</h3>
-                <p>An XML document is considered <em>well-formed</em> if it satisfies strict syntax rules:</p>
-                <ul>
-                    <li>Single root element wrapping all child elements.</li>
-                    <li>Properly nested closing tags in strict order.</li>
-                    <li>Case sensitivity: <code>&lt;Item&gt;</code> and <code>&lt;item&gt;</code> are distinct tags.</li>
-                    <li>Attribute values wrapped in double or single quotes.</li>
-                </ul>
-            </div>
-            <div class="details-card">
-                <h3>2. Preventing XML External Entity (XXE) Attacks</h3>
-                <p>XML External Entity (XXE) vulnerabilities occur when insecure XML parsers evaluate external entity references inside <code>&lt;!DOCTYPE&gt;</code> declarations, allowing attackers to exfiltrate local server files or launch SSRF attacks.</p>
-                <p><strong>Remediation:</strong> Always disable DTD (Document Type Definition) resolution and external entity processing in backend XML parsers.</p>
-            </div>
-            <div class="details-card">
-                <h3>3. SVG Vector Optimization</h3>
-                <p>Scalable Vector Graphics (SVG) files are XML documents. Minifying SVG files by stripping unused metadata, editor namespaces, and whitespace dramatically reduces web graphic file sizes without loss of image quality.</p>
-            </div>
-        </div>
-
-        <div class="code-examples-card">
-            <h3>XML Parsing in Modern Languages</h3>
-            <pre><code>// JavaScript Browser DOMParser
-const xmlString = `&lt;root&gt;&lt;user id="1"&gt;Alice&lt;/user&gt;&lt;/root&gt;`;
-const parser = new DOMParser();
-const xmlDoc = parser.parseFromString(xmlString, "application/xml");
-console.log(xmlDoc.getElementsByTagName("user")[0].textContent); // "Alice"
-
-# Python 3 (ElementTree)
-import xml.etree.ElementTree as ET
-root = ET.fromstring(xmlString)
-print(root.find('user').text)
-
-// Java (DocumentBuilder with Safe DTD Settings)
-DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-DocumentBuilder db = dbf.newDocumentBuilder();
-Document doc = db.parse(new InputSource(new StringReader(xmlString)));</code></pre>
-        </div>
-
-        <div class="faq-card">
-            <h3>XML Formatter FAQ</h3>
-            <div class="faq-item">
-                <h4>Q: Can this tool format complex SVG vector files?</h4>
-                <p><strong>A: Yes.</strong> SVG markup is valid XML. The tool correctly formats SVG elements, paths, and attributes while maintaining graphic structure.</p>
-            </div>
-            <div class="faq-item">
-                <h4>Q: How does XML compare to JSON for API data exchange?</h4>
-                <p><strong>A:</strong> XML provides advanced namespace support, attributes, and Schema validation (XSD), making it common in enterprise banking and SOAP services, whereas JSON is lightweight and easier to consume in JavaScript web apps.</p>
-            </div>
         </div>
     </div>
 </section>

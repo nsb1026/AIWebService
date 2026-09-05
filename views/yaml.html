@@ -1,20 +1,16 @@
 <section id="yaml-view" class="view">
     <header class="view-header">
         <h1 data-i18n="yaml_h1">Professional YAML Parser &amp; JSON Converter</h1>
-        <p data-i18n="yaml_p">Validate, format, and convert YAML data to JSON. Perfect for debugging Kubernetes manifests, Docker Compose files, GitHub Actions pipelines, and cloud application settings.</p>
-        <div class="tool-description">
-            <p><strong>Technical Overview:</strong> YAML (YAML Ain't Markup Language) is the dominant human-friendly data serialization standard used across modern DevOps and cloud infrastructure. Because YAML relies on strict indentation, minor spacing errors or hidden tabs break deployments. Our browser utility parses YAML using <code>js-yaml</code>, highlights syntax errors, and converts configs to JSON seamlessly.</p>
-        </div>
+        <p data-i18n="yaml_p">Validate, format, and convert YAML data to JSON. Perfect for debugging Kubernetes configs and CI/CD pipelines.</p>
     </header>
-
     <div class="parser-container">
         <div class="parser-input-side">
             <div class="input-header">
-                <label>Source YAML</label>
+                <label data-i18n="label_source_yaml">Source YAML</label>
                 <div id="yaml-status" class="json-status"></div>
                 <button id="btn-yaml-clear" class="btn-small danger-btn" data-i18n="btn_clear_panel">Clear Panel</button>
             </div>
-            <textarea id="yaml-input" data-i18n="placeholder_yaml" placeholder="Paste your YAML here (e.g. apiVersion: v1, kind: Pod...)..."></textarea>
+            <textarea id="yaml-input" data-i18n="placeholder_yaml" placeholder="Paste your YAML here..."></textarea>
         </div>
         <div class="parser-controls">
             <button id="btn-yaml-prettify" class="primary-btn" data-i18n="btn_prettify">Validate &amp; Prettify</button>
@@ -23,70 +19,10 @@
         </div>
         <div class="parser-output-side">
             <div class="input-header">
-                <label>Processed Output</label>
+                <label data-i18n="label_processed_output">Processed Output</label>
                 <button class="copy-btn btn-small" data-target="yaml-output" data-i18n="btn_copy">Copy Result</button>
             </div>
             <textarea id="yaml-output" readonly placeholder="Your structured YAML or JSON will appear here..."></textarea>
-        </div>
-    </div>
-
-    <!-- Educational & Security Content -->
-    <div class="tech-details-section">
-        <h2>Developer Guide: YAML 1.2 Standards, Kubernetes &amp; Security Best Practices</h2>
-        <p>Specified by the <strong>YAML 1.2 Standard</strong>, YAML is designed as a human-friendly data serialization language that supersedes JSON. YAML is a strict superset of JSON, meaning valid JSON is also valid YAML.</p>
-
-        <div class="details-grid">
-            <div class="details-card">
-                <h3>1. Core Syntax &amp; Indentation Rules</h3>
-                <ul>
-                    <li><strong>Spaces Only:</strong> YAML prohibits tab characters (<code>\t</code>) for indentation. Always use 2 spaces per indentation level.</li>
-                    <li><strong>Norway Problem (Booleans):</strong> Unquoted scalar <code>NO</code>, <code>OFF</code>, <code>FALSE</code>, <code>N</code> were parsed as boolean <code>false</code> in YAML 1.1 (the country code <code>NO</code> for Norway turned into false!). Always wrap string country codes in quotes.</li>
-                    <li><strong>Anchors and Aliases:</strong> Re-use data blocks across configs using <code>&amp;anchor_name</code> to define and <code>*anchor_name</code> to reference.</li>
-                </ul>
-            </div>
-            <div class="details-card">
-                <h3>2. Preventing Unsafe YAML Parsing Vulnerabilities</h3>
-                <p>Legacy YAML parsers (like Python's <code>yaml.load()</code>) allowed arbitrary object instantiation, leading to Remote Code Execution (RCE) when processing untrusted YAML input.</p>
-                <p><strong>Security Rule:</strong> Always use safe loading methods such as <code>yaml.safe_load()</code> in Python or <code>js-yaml</code> default safe parsing in JavaScript.</p>
-            </div>
-            <div class="details-card">
-                <h3>3. Kubernetes &amp; CI/CD Pipeline Validation</h3>
-                <p>In Kubernetes manifests (Deployment, Service, Ingress), a misplaced space under <code>spec.containers</code> leads to silent failures or deployment rejections. Converting YAML to JSON verifies structural integrity before <code>kubectl apply</code>.</p>
-            </div>
-        </div>
-
-        <div class="code-examples-card">
-            <h3>Safe YAML Parsing Code Snippets</h3>
-            <pre><code>// JavaScript (js-yaml)
-const yaml = require('js-yaml');
-const fs   = require('fs');
-try {
-  const doc = yaml.load(fs.readFileSync('/path/to/config.yaml', 'utf8'));
-  console.log(doc.apiVersion);
-} catch (e) {
-  console.error(e);
-}
-
-# Python 3 (PyYAML - Safe Load)
-import yaml
-with open("config.yaml", "r") as stream:
-    try:
-        config = yaml.safe_load(stream)
-        print(config["metadata"]["name"])
-    except yaml.YAMLError as exc:
-        print(exc)</code></pre>
-        </div>
-
-        <div class="faq-card">
-            <h3>YAML Parser FAQ</h3>
-            <div class="faq-item">
-                <h4>Q: Is every JSON file valid YAML?</h4>
-                <p><strong>A: Yes.</strong> Under the YAML 1.2 specification, JSON syntax is a formal subset of YAML. You can paste any valid JSON directly into a YAML parser.</p>
-            </div>
-            <div class="faq-item">
-                <h4>Q: Why does my YAML fail with "found character '\t' that cannot start any token"?</h4>
-                <p><strong>A:</strong> The YAML specification strictly forbids tab characters for indentation. Replace tabs with 2 spaces to fix the error.</p>
-            </div>
         </div>
     </div>
 </section>

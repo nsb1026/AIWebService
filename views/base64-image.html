@@ -1,24 +1,19 @@
 <section id="base64-image-view" class="view">
     <header class="view-header">
         <h1 data-i18n="base64_h1">Advanced Base64 to Image Reconstruction Tool</h1>
-        <p data-i18n="base64_p">Instantly decode and render binary Base64 strings into visual image assets. Supports PNG, JPEG, GIF, SVG, WebP, and ICO graphics using your browser's native rendering pipeline.</p>
-        <div class="tool-description">
-            <p><strong>Operational Guide:</strong> Paste your Base64 string or Data URI into the input panel. The tool automatically extracts MIME types, verifies magic bytes, renders an instant canvas preview, displays pixel dimensions, and allows direct file downloading.</p>
-        </div>
+        <p data-i18n="base64_p">Instantly decode and render binary Base64 strings into visual image assets (PNG, JPEG, SVG, WebP).</p>
     </header>
-
     <div class="converter-container">
         <div class="input-section">
             <div class="input-header">
-                <label>Base64 Data Stream</label>
-                <button id="btn-b64-clear" class="btn-small danger-btn">Clear Workspace</button>
+                <label data-i18n="label_b64_stream">Base64 Data Stream</label>
+                <button id="btn-b64-clear" class="btn-small danger-btn" data-i18n="btn_clear">Clear Workspace</button>
             </div>
-            <textarea id="b64-input" data-i18n="placeholder_base64" placeholder="Paste raw Base64 string or Data URI (e.g. data:image/png;base64,iVBORw0KGgo...)..."></textarea>
+            <textarea id="b64-input" data-i18n="placeholder_base64" placeholder="Paste raw Base64 string or Data URI..."></textarea>
         </div>
-
         <div class="preview-section">
             <div class="input-header">
-                <label>Visual Reconstruction</label>
+                <label data-i18n="label_visual_reconstruct">Visual Reconstruction</label>
                 <div id="b64-status" class="json-status"></div>
             </div>
             <div id="b64-preview-container" class="image-preview-box">
@@ -26,66 +21,6 @@
             </div>
             <div class="preview-controls">
                 <button id="btn-b64-download" class="primary-btn" data-i18n="btn_download" disabled>Export Reconstructed Image</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Technical Specification & Educational Content -->
-    <div class="tech-details-section">
-        <h2>Developer Guide: Data URIs (RFC 2397), Base64 Magic Bytes &amp; Performance</h2>
-        <p>Defined by <strong>RFC 2397</strong>, the <code>data:</code> URI scheme allows resource creators to embed small files inline in HTML, CSS, or JSON payloads instead of initiating separate HTTP fetch requests.</p>
-
-        <div class="details-grid">
-            <div class="details-card">
-                <h3>1. Data URI Structure &amp; Syntax</h3>
-                <p>A standard Data URI follows this format:</p>
-                <pre><code>data:[&lt;mediatype&gt;][;base64],&lt;data&gt;</code></pre>
-                <p>Example for a PNG image: <code>data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==</code></p>
-            </div>
-            <div class="details-card">
-                <h3>2. Base64 Magic Byte Fingerprinting</h3>
-                <p>Image formats can be identified by the opening characters of their Base64 encoded payload ("Magic Bytes"):</p>
-                <ul>
-                    <li><strong>PNG:</strong> Starts with <code>iVBORw0KGgo...</code> (Header <code>\x89PNG\r\n\x1a\n</code>)</li>
-                    <li><strong>JPEG:</strong> Starts with <code>/9j/4...</code> (Header <code>\xFF\xD8\xFF</code>)</li>
-                    <li><strong>GIF:</strong> Starts with <code>R0lGODlh...</code> or <code>R0lGODlh...</code> (Header <code>GIF87a</code> or <code>GIF89a</code>)</li>
-                    <li><strong>WebP:</strong> Starts with <code>UklGR...</code> (Header <code>RIFF....WEBP</code>)</li>
-                </ul>
-            </div>
-            <div class="details-card">
-                <h3>3. Performance &amp; Payload Size Trade-Offs</h3>
-                <p>Base64 encoding translates every 3 bytes of binary data into 4 ASCII characters, incurring an inherent <strong>~33% size overhead</strong>. While ideal for tiny UI icons under 10KB (reducing HTTP round-trip latency), larger images should be served as separate static assets with HTTP caching headers.</p>
-            </div>
-        </div>
-
-        <div class="code-examples-card">
-            <h3>Converting Files to Base64 in Code</h3>
-            <pre><code>// JavaScript Browser FileReader API
-function fileToBase64(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = error => reject(error);
-    });
-}
-
-# Python 3
-import base64
-with open("icon.png", "rb") as image_file:
-    b64_bytes = base64.b64encode(image_file.read())
-    data_uri = f"data:image/png;base64,{b64_bytes.decode('utf-8')}"</code></pre>
-        </div>
-
-        <div class="faq-card">
-            <h3>Base64 Image FAQ</h3>
-            <div class="faq-item">
-                <h4>Q: Can Base64 images be cached by the browser?</h4>
-                <p><strong>A:</strong> When embedded inline inside HTML or CSS, Base64 images are cached as part of that parent file. They cannot be cached independently like standalone static image URLs.</p>
-            </div>
-            <div class="faq-item">
-                <h4>Q: Is my image data uploaded to external servers?</h4>
-                <p><strong>A: No.</strong> Base64 decoding and rendering occur using browser V8 memory and HTML Canvas APIs completely offline.</p>
             </div>
         </div>
     </div>
