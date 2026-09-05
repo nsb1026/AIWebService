@@ -1150,3 +1150,54 @@ button:disabled { cursor: not-allowed; opacity: 0.6; }
     background: #45475a;
 }
 
+/* IDE Code Syntax Highlighting Tokens (VS Code Dark+ Palette) */
+.code-wrapper pre code.hljs {
+    background: transparent !important;
+    padding: 0 !important;
+    color: #d4d4d4;
+}
+
+.hljs-keyword, .hljs-selector-tag, .hljs-subst {
+    color: #569cd6 !important; /* VS Code Blue for keywords (class, public, return, new, import) */
+    font-weight: 600;
+}
+
+.hljs-meta, .hljs-annotation, .hljs-decorator {
+    color: #e5c07b !important; /* Gold/Yellow for Spring Annotations (@RestController, @Bean) */
+    font-weight: 500;
+}
+
+.hljs-string, .hljs-doctag {
+    color: #ce9178 !important; /* Coral/Orange for String literals */
+}
+
+.hljs-comment, .hljs-quote {
+    color: #6a9955 !important; /* Soft Green for Comments */
+    font-style: italic;
+}
+
+.hljs-number, .hljs-literal {
+    color: #b5cea8 !important; /* Light Mint Green for numbers */
+}
+
+.hljs-title.class_, .hljs-class .hljs-title, .hljs-type {
+    color: #4ec9b0 !important; /* Teal for Class Names and Type declarations */
+    font-weight: 600;
+}
+
+.hljs-title.function_, .hljs-function .hljs-title {
+    color: #dcdcaa !important; /* Soft Yellow/Gold for Method & Function names */
+}
+
+.hljs-attr, .hljs-attribute, .hljs-symbol {
+    color: #9cdcfe !important; /* Sky Blue for YAML keys & Gradle attributes */
+}
+
+.hljs-variable, .hljs-params {
+    color: #9cdcfe !important;
+}
+
+.hljs-property {
+    color: #d4d4d4 !important;
+}
+

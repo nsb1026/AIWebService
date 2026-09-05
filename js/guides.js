@@ -1162,6 +1162,423 @@ public class AuthController {
 }</code></pre>
             `
         }
+    },
+    'spring-security-login': {
+        en: {
+            title: 'Spring Boot 3.3 + Spring Security 6: Complete User Authentication & Login REST API Integration',
+            content: `
+                <p>Learn how to connect Spring Security 6 authentication mechanisms with standard REST API login endpoints in Spring Boot 3.3.x and Java 21 LTS. This guide walks through <code>AuthenticationManager</code>, custom <code>UserDetailsService</code>, password hashing via <code>BCryptPasswordEncoder</code>, and JWT token issuance.</p>
+                
+                <div class="technical-note" style="background: rgba(99, 102, 241, 0.1); border-left: 4px solid #6366f1; padding: 1rem; margin: 1.5rem 0; border-radius: 4px;">
+                    <strong>Key Architecture Concept:</strong> Spring Security 6 handles authentication via <code>AuthenticationManager</code>, which delegates credential validation to a <code>DaoAuthenticationProvider</code>. If credentials match the hashed password, an <code>Authentication</code> object is returned and stored in the <code>SecurityContextHolder</code>.
+                </div>
+
+                <h2>1. Login Request & Token Response DTOs</h2>
+                <p>Define immutable Data Transfer Objects (DTOs) for receiving credentials and returning tokens:</p>
+                <pre><code class="language-java">package com.example.dto;
+
+import jakarta.validation.constraints.NotBlank;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Getter
+@NoArgsConstructor
+public class LoginRequestDto {
+
+    @NotBlank(message = "Username is required")
+    private String username;
+
+    @NotBlank(message = "Password is required")
+    private String password;
+
+    public LoginRequestDto(String username, String password) {
+        this.username = username;
+        this.password = password;
+    }
+}</code></pre>
+
+                <p>Token Response DTO:</p>
+                <pre><code class="language-java">package com.example.dto;
+
+import lombok.Builder;
+import lombok.Getter;
+
+@Getter
+@Builder
+public class JwtTokenResponseDto {
+    private String grantType;     // "Bearer"
+    private String accessToken;
+    private String refreshToken;
+    private long accessTokenExpiresIn; // Milliseconds
+}</code></pre>
+
+                <h2>2. Custom UserDetails & UserDetailsService</h2>
+                <p>Implement <code>UserDetailsService</code> to fetch user credentials and granted authorities from your Database or User Domain repository:</p>
+                <pre><code class="language-java">package com.example.security;
+
+import com.example.repository.UserRepository;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class CustomUserDetailsService implements UserDetailsService {
+
+    private final UserRepository userRepository;
+
+    public CustomUserDetailsService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        return userRepository.findByUsername(username)
+            .map(user -> new User(
+                user.getUsername(),
+                user.getPassword(),
+                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole()))
+            ))
+            .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+    }
+}</code></pre>
+
+                <h2>3. Security Config with AuthenticationManager (SecurityConfig.java)</h2>
+                <p>Configure password encoding and expose the <code>AuthenticationManager</code> bean for your REST login service in Spring Security 6.3:</p>
+                <pre><code class="language-java">package com.example.config;
+
+import com.example.config.jwt.JwtAuthenticationFilter;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+        return authConfig.getAuthenticationManager();
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf(csrf -> csrf.disable())
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/v1/auth/login", "/api/v1/auth/signup").permitAll()
+                .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                .anyRequest().authenticated()
+            )
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
+}</code></pre>
+
+                <h2>4. Login Service & REST Controller (AuthController.java)</h2>
+                <p>Execute authentication using <code>AuthenticationManager</code>, set the Security Context, and return JWT Tokens:</p>
+                <pre><code class="language-java">package com.example.service;
+
+import com.example.config.jwt.JwtTokenProvider;
+import com.example.dto.LoginRequestDto;
+import com.example.dto.JwtTokenResponseDto;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Service;
+
+@Service
+public class AuthService {
+
+    private final AuthenticationManager authenticationManager;
+    private final JwtTokenProvider tokenProvider;
+
+    public AuthService(AuthenticationManager authenticationManager, JwtTokenProvider tokenProvider) {
+        this.authenticationManager = authenticationManager;
+        this.tokenProvider = tokenProvider;
+    }
+
+    public JwtTokenResponseDto login(LoginRequestDto loginDto) {
+        // 1. Authenticate user credentials against Spring Security Provider
+        UsernamePasswordAuthenticationToken authenticationToken =
+            new UsernamePasswordAuthenticationToken(loginDto.getUsername(), loginDto.getPassword());
+
+        Authentication authentication = authenticationManager.authenticate(authenticationToken);
+
+        // 2. Generate Access & Refresh Tokens upon successful authentication
+        String accessToken = tokenProvider.createAccessToken(authentication.getName(), "USER");
+        String refreshToken = tokenProvider.createRefreshToken(authentication.getName());
+
+        return JwtTokenResponseDto.builder()
+            .grantType("Bearer")
+            .accessToken(accessToken)
+            .refreshToken(refreshToken)
+            .accessTokenExpiresIn(1800000L) // 30 minutes
+            .build();
+    }
+}</code></pre>
+
+                <p>Auth REST Controller Endpoint:</p>
+                <pre><code class="language-java">package com.example.controller;
+
+import com.example.dto.LoginRequestDto;
+import com.example.dto.JwtTokenResponseDto;
+import com.example.service.AuthService;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/v1/auth")
+public class AuthController {
+
+    private final AuthService authService;
+
+    public AuthController(AuthService authService) {
+        this.authService = authService;
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<JwtTokenResponseDto> login(@Valid @RequestBody LoginRequestDto loginDto) {
+        JwtTokenResponseDto tokenResponse = authService.login(loginDto);
+        return ResponseEntity.ok(tokenResponse);
+    }
+}</code></pre>
+            `
+        },
+        ko: {
+            title: 'Spring Boot 3.3 + Spring Security 6: 사용자 인증 연동 및 로그인(Login) REST API 완전 구현 가이드',
+            content: `
+                <p>Spring Boot 3.3.x 및 Java 21 LTS 환경에서 Spring Security 6 인증 프레임워크와 REST API 로그인 요청을 안전하게 연동하는 방법을 설명합니다. <code>AuthenticationManager</code>, 커스텀 <code>UserDetailsService</code>, <code>BCryptPasswordEncoder</code> 비밀번호 암호화 및 JWT 토큰 발급까지 실전 코드 위주로 학습합니다.</p>
+                
+                <div class="technical-note" style="background: rgba(99, 102, 241, 0.1); border-left: 4px solid #6366f1; padding: 1rem; margin: 1.5rem 0; border-radius: 4px;">
+                    <strong>핵심 아키텍처 개념:</strong> Spring Security 6에서 로그인 요청이 들어오면 <code>AuthenticationManager</code>가 <code>DaoAuthenticationProvider</code>를 통해 사용자 정보(Username)와 비밀번호(Hashed Password)를 검증합니다. 검증이 성공하면 인증 객체(<code>Authentication</code>)가 생성되며, 이를 기반으로 무상태(Stateless) JWT 토큰을 생성하여 클라이언트에 응답합니다.
+                </div>
+
+                <h2>1단계: 로그인 요청 및 토큰 응답 DTO 정의</h2>
+                <p>클라이언트 로그인 요청 데이터 검증 및 토큰 응답을 위한 DTO 클래스 작성:</p>
+                <pre><code class="language-java">package com.example.dto;
+
+import jakarta.validation.constraints.NotBlank;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Getter
+@NoArgsConstructor
+public class LoginRequestDto {
+
+    @NotBlank(message = "아이디를 입력해주세요.")
+    private String username;
+
+    @NotBlank(message = "비밀번호를 입력해주세요.")
+    private String password;
+
+    public LoginRequestDto(String username, String password) {
+        this.username = username;
+        this.password = password;
+    }
+}</code></pre>
+
+                <p>JWT 토큰 응답 DTO:</p>
+                <pre><code class="language-java">package com.example.dto;
+
+import lombok.Builder;
+import lombok.Getter;
+
+@Getter
+@Builder
+public class JwtTokenResponseDto {
+    private String grantType;     // "Bearer"
+    private String accessToken;
+    private String refreshToken;
+    private long accessTokenExpiresIn; // 만료 시간 (밀리초)
+}</code></pre>
+
+                <h2>2단계: Custom UserDetails 및 UserDetailsService 구현</h2>
+                <p>데이터베이스의 사용자 엔티티를 조회하여 Spring Security 인증 시스템과 연결하는 <code>UserDetailsService</code> 구현:</p>
+                <pre><code class="language-java">package com.example.security;
+
+import com.example.repository.UserRepository;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class CustomUserDetailsService implements UserDetailsService {
+
+    private final UserRepository userRepository;
+
+    public CustomUserDetailsService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        return userRepository.findByUsername(username)
+            .map(user -> new User(
+                user.getUsername(),
+                user.getPassword(),
+                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole()))
+            ))
+            .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다: " + username));
+    }
+}</code></pre>
+
+                <h2>3단계: PasswordEncoder 및 AuthenticationManager 설정 (SecurityConfig.java)</h2>
+                <p>Spring Security 6.3 Lambda DSL 설정 클래스에서 비밀번호 암호화 빈과 <code>AuthenticationManager</code> 빈을 등록합니다:</p>
+                <pre><code class="language-java">package com.example.config;
+
+import com.example.config.jwt.JwtAuthenticationFilter;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+        return authConfig.getAuthenticationManager();
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf(csrf -> csrf.disable())
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/v1/auth/login", "/api/v1/auth/signup").permitAll()
+                .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                .anyRequest().authenticated()
+            )
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
+}</code></pre>
+
+                <h2>4단계: 로그인 비즈니스 로직 및 REST Controller (AuthController.java)</h2>
+                <p><code>AuthenticationManager</code>로 인증 절차를 수행하고 JWT 토큰을 생성하여 반환합니다:</p>
+                <pre><code class="language-java">package com.example.service;
+
+import com.example.config.jwt.JwtTokenProvider;
+import com.example.dto.LoginRequestDto;
+import com.example.dto.JwtTokenResponseDto;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Service;
+
+@Service
+public class AuthService {
+
+    private final AuthenticationManager authenticationManager;
+    private final JwtTokenProvider tokenProvider;
+
+    public AuthService(AuthenticationManager authenticationManager, JwtTokenProvider tokenProvider) {
+        this.authenticationManager = authenticationManager;
+        this.tokenProvider = tokenProvider;
+    }
+
+    public JwtTokenResponseDto login(LoginRequestDto loginDto) {
+        // 1. 사용자 ID/PW로 Spring Security 인증 토큰 생성
+        UsernamePasswordAuthenticationToken authenticationToken =
+            new UsernamePasswordAuthenticationToken(loginDto.getUsername(), loginDto.getPassword());
+
+        // 2. 인증 수행 (CustomUserDetailsService.loadUserByUsername 호출 및 BCrypt 검증)
+        Authentication authentication = authenticationManager.authenticate(authenticationToken);
+
+        // 3. 인증 성공 시 Access Token & Refresh Token 생성
+        String accessToken = tokenProvider.createAccessToken(authentication.getName(), "USER");
+        String refreshToken = tokenProvider.createRefreshToken(authentication.getName());
+
+        return JwtTokenResponseDto.builder()
+            .grantType("Bearer")
+            .accessToken(accessToken)
+            .refreshToken(refreshToken)
+            .accessTokenExpiresIn(1800000L) // 30분
+            .build();
+    }
+}</code></pre>
+
+                <p>로그인 REST API 컨트롤러:</p>
+                <pre><code class="language-java">package com.example.controller;
+
+import com.example.dto.LoginRequestDto;
+import com.example.dto.JwtTokenResponseDto;
+import com.example.service.AuthService;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/v1/auth")
+public class AuthController {
+
+    private final AuthService authService;
+
+    public AuthController(AuthService authService) {
+        this.authService = authService;
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<JwtTokenResponseDto> login(@Valid @RequestBody LoginRequestDto loginDto) {
+        JwtTokenResponseDto tokenResponse = authService.login(loginDto);
+        return ResponseEntity.ok(tokenResponse);
+    }
+}</code></pre>
+            `
+        }
     }
 };
 

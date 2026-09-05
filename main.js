@@ -201,6 +201,15 @@ document.addEventListener('DOMContentLoaded', () => {
             pre.parentNode.insertBefore(wrapper, pre);
             wrapper.appendChild(header);
             wrapper.appendChild(pre);
+
+            // Apply IDE syntax highlighting with Highlight.js
+            if (window.hljs && code) {
+                try {
+                    hljs.highlightElement(code);
+                } catch (e) {
+                    console.warn('hljs error:', e);
+                }
+            }
         });
     }
 
