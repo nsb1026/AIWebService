@@ -1579,6 +1579,598 @@ public class AuthController {
 }</code></pre>
             `
         }
+    },
+    'spring-file-upload-download': {
+        en: {
+            title: 'Spring Boot 3.3 + JavaScript: File Upload & Download (Frontend & Backend) Implementation Guide',
+            content: `
+                <p>Complete end-to-end architecture guide for building secure, high-performance file upload and download systems in Spring Boot 3.3.x (Backend) and HTML5 / Vanilla JavaScript (Frontend). Includes drag-and-drop UI, upload progress bars, file sanitization, directory traversal protection, and Blob streaming downloads.</p>
+                
+                <div style="text-align: center; margin: 2rem 0;">
+                    <img src="/images/spring_file_upload_download_demo.png" alt="Spring File Upload & Download Interface Preview" style="max-width: 100%; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">[Visual Example Architecture &amp; UI Dashboard for File Upload / Download Systems]</p>
+                </div>
+
+                <div class="technical-note" style="background: rgba(14, 165, 233, 0.1); border-left: 4px solid #0ea5e9; padding: 1rem; margin: 1.5rem 0; border-radius: 4px;">
+                    <strong>Architecture Division:</strong>
+                    <br><strong>Backend:</strong> Handles multipart data parsing, storage directory initialization, path traversal sanitization, UUID filename allocation, and HTTP <code>Content-Disposition</code> attachment response headers.
+                    <br><strong>Frontend:</strong> Handles HTML5 drag-and-drop events, client-side size validation, asynchronous <code>FormData</code> AJAX upload, real-time progress events, and browser Blob URL triggering.
+                </div>
+
+                <h2>PART 1: Backend Implementation (Spring Boot 3.3.x & Java 21)</h2>
+
+                <h3>1-1. application.yml Multipart & Storage Directory Config</h3>
+                <pre><code class="language-yaml">spring:
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 50MB
+      max-request-size: 50MB
+      file-size-threshold: 2KB
+
+file:
+  upload-dir: ./uploads</code></pre>
+
+                <h3>1-2. FileUploadResponseDto.java</h3>
+                <pre><code class="language-java">package com.example.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class FileUploadResponseDto {
+    private String fileName;
+    private String fileDownloadUri;
+    private String fileType;
+    private long size;
+}</code></pre>
+
+                <h3>1-3. FileStorageService.java (Path Sanitization & Resource Loading)</h3>
+                <pre><code class="language-java">package com.example.service;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.nio.file.*;
+import java.util.UUID;
+
+@Service
+public class FileStorageService {
+
+    private final Path fileStorageLocation;
+
+    public FileStorageService(@Value("\${file.upload-dir:./uploads}") String uploadDir) {
+        this.fileStorageLocation = Paths.get(uploadDir).toAbsolutePath().normalize();
+        try {
+            Files.createDirectories(this.fileStorageLocation);
+        } catch (Exception ex) {
+            throw new RuntimeException("Could not create directory where uploaded files will be stored.", ex);
+        }
+    }
+
+    public String storeFile(MultipartFile file) {
+        String originalFileName = StringUtils.cleanPath(file.getOriginalFilename());
+
+        try {
+            // 1. Security Check: Block Path Traversal (e.g. filename containing '..')
+            if (originalFileName.contains("..")) {
+                throw new IllegalArgumentException("Filename contains invalid path sequence: " + originalFileName);
+            }
+
+            // 2. Generate Unique Filename to prevent overwriting
+            String extension = "";
+            int i = originalFileName.lastIndexOf('.');
+            if (i >= 0) {
+                extension = originalFileName.substring(i);
+            }
+            String storedFileName = UUID.randomUUID().toString() + extension;
+
+            // 3. Copy file to target location
+            Path targetLocation = this.fileStorageLocation.resolve(storedFileName);
+            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+
+            return storedFileName;
+        } catch (IOException ex) {
+            throw new RuntimeException("Could not store file " + originalFileName + ". Please try again!", ex);
+        }
+    }
+
+    public Resource loadFileAsResource(String fileName) {
+        try {
+            Path filePath = this.fileStorageLocation.resolve(fileName).normalize();
+            Resource resource = new UrlResource(filePath.toUri());
+            if (resource.exists() || resource.isReadable()) {
+                return resource;
+            } else {
+                throw new RuntimeException("File not found: " + fileName);
+            }
+        } catch (MalformedURLException ex) {
+            throw new RuntimeException("File not found: " + fileName, ex);
+        }
+    }
+}</code></pre>
+
+                <h3>1-4. FileController.java (Upload & Download REST Endpoints)</h3>
+                <pre><code class="language-java">package com.example.controller;
+
+import com.example.dto.FileUploadResponseDto;
+import com.example.service.FileStorageService;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import java.io.IOException;
+
+@RestController
+@RequestMapping("/api/v1/files")
+public class FileController {
+
+    private final FileStorageService fileStorageService;
+
+    public FileController(FileStorageService fileStorageService) {
+        this.fileStorageService = fileStorageService;
+    }
+
+    @PostMapping("/upload")
+    public ResponseEntity<FileUploadResponseDto> uploadFile(@RequestParam("file") MultipartFile file) {
+        String fileName = fileStorageService.storeFile(file);
+
+        String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/api/v1/files/download/")
+                .path(fileName)
+                .toUriString();
+
+        FileUploadResponseDto response = new FileUploadResponseDto(
+                fileName,
+                fileDownloadUri,
+                file.getContentType(),
+                file.getSize()
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/download/{fileName:.+}")
+    public ResponseEntity<Resource> downloadFile(@PathVariable String fileName, HttpServletRequest request) {
+        Resource resource = fileStorageService.loadFileAsResource(fileName);
+
+        String contentType = null;
+        try {
+            contentType = request.getServletContext().getMimeType(resource.getFile().getAbsolutePath());
+        } catch (IOException ex) {
+            contentType = "application/octet-stream";
+        }
+        if (contentType == null) {
+            contentType = "application/octet-stream";
+        }
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+                .body(resource);
+    }
+}</code></pre>
+
+                <h2>PART 2: Frontend Implementation (HTML5 Drag & Drop + Vanilla JS)</h2>
+
+                <h3>2-1. HTML5 Markup for Drag-and-Drop & Progress Bar</h3>
+                <pre><code class="language-html">&lt;div class="upload-container"&gt;
+    &lt;div id="drop-zone" class="drop-zone"&gt;
+        &lt;div class="drop-zone-content"&gt;
+            &lt;span class="upload-icon"&gt;📁&lt;/span&gt;
+            &lt;p&gt;Drag &amp; drop files here or &lt;span class="browse-btn"&gt;browse&lt;/span&gt;&lt;/p&gt;
+            &lt;input type="file" id="file-input" hidden&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;div id="progress-container" class="progress-container" style="display: none;"&gt;
+        &lt;div class="file-info"&gt;
+            &lt;span id="file-name"&gt;filename.pdf&lt;/span&gt;
+            &lt;span id="upload-percent"&gt;0%&lt;/span&gt;
+        &lt;/div&gt;
+        &lt;div class="progress-bar-bg"&gt;
+            &lt;div id="progress-bar-fill" class="progress-bar-fill" style="width: 0%;"&gt;&lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;div id="upload-result" class="upload-result" style="display: none;"&gt;&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+                <h3>2-2. JavaScript Upload & Blob Download Logic</h3>
+                <pre><code class="language-javascript">// 1. Handle Drag & Drop Events & File Input
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+
+dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('drag-active');
+});
+
+dropZone.addEventListener('dragleave', () => {
+    dropZone.classList.remove('drag-active');
+});
+
+dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-active');
+    if (e.dataTransfer.files.length > 0) {
+        uploadFile(e.dataTransfer.files[0]);
+    }
+});
+
+fileInput.addEventListener('change', () => {
+    if (fileInput.files.length > 0) {
+        uploadFile(fileInput.files[0]);
+    }
+});
+
+// 2. Upload File via XMLHttpRequest for progress tracking
+function uploadFile(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const xhr = new XMLHttpRequest();
+    const progressContainer = document.getElementById('progress-container');
+    const progressBarFill = document.getElementById('progress-bar-fill');
+    const uploadPercent = document.getElementById('upload-percent');
+
+    progressContainer.style.display = 'block';
+
+    xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+            const percent = Math.round((e.loaded / e.total) * 100);
+            progressBarFill.style.width = percent + '%';
+            uploadPercent.textContent = percent + '%';
+        }
+    });
+
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === XMLHttpRequest.DONE) {
+            if (xhr.status === 200) {
+                const response = JSON.parse(xhr.responseText);
+                renderUploadResult(response);
+            } else {
+                alert('Upload failed: ' + xhr.statusText);
+            }
+        }
+    };
+
+    xhr.open('POST', '/api/v1/files/upload', true);
+    xhr.send(formData);
+}
+
+// 3. Trigger Binary File Download in Frontend
+async function downloadFile(fileName) {
+    try {
+        const response = await fetch(\`/api/v1/files/download/\${fileName}\`);
+        if (!response.ok) throw new Error('Download failed');
+
+        const blob = await response.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(downloadUrl);
+    } catch (err) {
+        console.error('File download error:', err);
+    }
+}</code></pre>
+            `
+        },
+        ko: {
+            title: 'Spring Boot 3.3 + JavaScript: 파일 업로드 및 다운로드 (Frontend & Backend) 완전 구현 가이드',
+            content: `
+                <p>Spring Boot 3.3.x (백엔드)와 HTML5 Drag & Drop / JavaScript Fetch API (프론트엔드)를 활용한 보안성과 성능을 갖춘 파일 업로드 및 다운로드 시스템 구현 가이드입니다. 드래그앤드롭 UI, 실시간 업로드 프로그레스 바, 경로 이탈(Path Traversal) 방지 보안 및 바이너리 Blob 다운로드까지 전 과정을 설명합니다.</p>
+
+                <div style="text-align: center; margin: 2rem 0;">
+                    <img src="/images/spring_file_upload_download_demo.png" alt="스프링 파일 업로드 및 다운로드 UI 아키텍처 예시" style="max-width: 100%; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">[파일 업로드 / 다운로드 대시보드 UI 및 데이터 흐름 예시 이미지]</p>
+                </div>
+
+                <div class="technical-note" style="background: rgba(14, 165, 233, 0.1); border-left: 4px solid #0ea5e9; padding: 1rem; margin: 1.5rem 0; border-radius: 4px;">
+                    <strong>프론트엔드 및 백엔드역할 분담:</strong>
+                    <br><strong>백엔드 (Backend):</strong> Multipart 파싱, 저장 디렉토리 자동 생성, 파일명 정제 및 UUID 변환(중복 방지), 경로 이탈 보안 검증 및 <code>Content-Disposition</code> 스트리밍 다운로드 처리.
+                    <br><strong>프론트엔드 (Frontend):</strong> HTML5 드래그앤드롭 이벤트 처리, 비동기 <code>FormData</code> AJAX 전송, 실시간 진행률 프로그레스 바 표시 및 <code>URL.createObjectURL(blob)</code> 다운로드 트리거.
+                </div>
+
+                <h2>PART 1: 백엔드 구현 (Spring Boot 3.3.x & Java 21)</h2>
+
+                <h3>1-1. application.yml 파일 용량 및 저장 경로 설정</h3>
+                <pre><code class="language-yaml">spring:
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 50MB
+      max-request-size: 50MB
+      file-size-threshold: 2KB
+
+file:
+  upload-dir: ./uploads</code></pre>
+
+                <h3>1-2. FileUploadResponseDto.java (응답 DTO)</h3>
+                <pre><code class="language-java">package com.example.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class FileUploadResponseDto {
+    private String fileName;
+    private String fileDownloadUri;
+    private String fileType;
+    private long size;
+}</code></pre>
+
+                <h3>1-3. FileStorageService.java (보안 검증 및 파일 저장 서비스)</h3>
+                <pre><code class="language-java">package com.example.service;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.nio.file.*;
+import java.util.UUID;
+
+@Service
+public class FileStorageService {
+
+    private final Path fileStorageLocation;
+
+    public FileStorageService(@Value("\${file.upload-dir:./uploads}") String uploadDir) {
+        this.fileStorageLocation = Paths.get(uploadDir).toAbsolutePath().normalize();
+        try {
+            Files.createDirectories(this.fileStorageLocation);
+        } catch (Exception ex) {
+            throw new RuntimeException("업로드 디렉토리를 생성할 수 없습니다.", ex);
+        }
+    }
+
+    public String storeFile(MultipartFile file) {
+        String originalFileName = StringUtils.cleanPath(file.getOriginalFilename());
+
+        try {
+            // 1. 보안 검증: 경로 이탈(Path Traversal, '..') 시도 차단
+            if (originalFileName.contains("..")) {
+                throw new IllegalArgumentException("파일명에 부적절한 경로 문자가 포함되어 있습니다: " + originalFileName);
+            }
+
+            // 2. 파일명 중복 방지를 위한 UUID 고유 파일명 생성
+            String extension = "";
+            int i = originalFileName.lastIndexOf('.');
+            if (i >= 0) {
+                extension = originalFileName.substring(i);
+            }
+            String storedFileName = UUID.randomUUID().toString() + extension;
+
+            // 3. 디렉토리에 파일 저장
+            Path targetLocation = this.fileStorageLocation.resolve(storedFileName);
+            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+
+            return storedFileName;
+        } catch (IOException ex) {
+            throw new RuntimeException("파일 저장 중 오류가 발생했습니다: " + originalFileName, ex);
+        }
+    }
+
+    public Resource loadFileAsResource(String fileName) {
+        try {
+            Path filePath = this.fileStorageLocation.resolve(fileName).normalize();
+            Resource resource = new UrlResource(filePath.toUri());
+            if (resource.exists() || resource.isReadable()) {
+                return resource;
+            } else {
+                throw new RuntimeException("파일을 찾을 수 없거나 읽을 수 없습니다: " + fileName);
+            }
+        } catch (MalformedURLException ex) {
+            throw new RuntimeException("파일 경로 오류: " + fileName, ex);
+        }
+    }
+}</code></pre>
+
+                <h3>1-4. FileController.java (업로드 및 다운로드 REST API)</h3>
+                <pre><code class="language-java">package com.example.controller;
+
+import com.example.dto.FileUploadResponseDto;
+import com.example.service.FileStorageService;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import java.io.IOException;
+
+@RestController
+@RequestMapping("/api/v1/files")
+public class FileController {
+
+    private final FileStorageService fileStorageService;
+
+    public FileController(FileStorageService fileStorageService) {
+        this.fileStorageService = fileStorageService;
+    }
+
+    @PostMapping("/upload")
+    public ResponseEntity<FileUploadResponseDto> uploadFile(@RequestParam("file") MultipartFile file) {
+        String fileName = fileStorageService.storeFile(file);
+
+        String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/api/v1/files/download/")
+                .path(fileName)
+                .toUriString();
+
+        FileUploadResponseDto response = new FileUploadResponseDto(
+                fileName,
+                fileDownloadUri,
+                file.getContentType(),
+                file.getSize()
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/download/{fileName:.+}")
+    public ResponseEntity<Resource> downloadFile(@PathVariable String fileName, HttpServletRequest request) {
+        Resource resource = fileStorageService.loadFileAsResource(fileName);
+
+        String contentType = null;
+        try {
+            contentType = request.getServletContext().getMimeType(resource.getFile().getAbsolutePath());
+        } catch (IOException ex) {
+            contentType = "application/octet-stream";
+        }
+        if (contentType == null) {
+            contentType = "application/octet-stream";
+        }
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+                .body(resource);
+    }
+}</code></pre>
+
+                <h2>PART 2: 프론트엔드 구현 (HTML5 Drag & Drop + JavaScript)</h2>
+
+                <h3>2-1. HTML5 마크업 (드롭존 & 프로그레스 바)</h3>
+                <pre><code class="language-html">&lt;div class="upload-container"&gt;
+    &lt;div id="drop-zone" class="drop-zone"&gt;
+        &lt;div class="drop-zone-content"&gt;
+            &lt;span class="upload-icon"&gt;📁&lt;/span&gt;
+            &lt;p&gt;파일을 여기에 드래그하거나 &lt;span class="browse-btn"&gt;클릭하여 선택&lt;/span&gt;하세요&lt;/p&gt;
+            &lt;input type="file" id="file-input" hidden&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;div id="progress-container" class="progress-container" style="display: none;"&gt;
+        &lt;div class="file-info"&gt;
+            &lt;span id="file-name"&gt;filename.pdf&lt;/span&gt;
+            &lt;span id="upload-percent"&gt;0%&lt;/span&gt;
+        &lt;/div&gt;
+        &lt;div class="progress-bar-bg"&gt;
+            &lt;div id="progress-bar-fill" class="progress-bar-fill" style="width: 0%;"&gt;&lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;div id="upload-result" class="upload-result" style="display: none;"&gt;&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+                <h3>2-2. JavaScript 업로드 전송 & 다운로드 트리거 로직</h3>
+                <pre><code class="language-javascript">// 1. 드래그 앤 드롭 이벤트 핸들링
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+
+dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('drag-active');
+});
+
+dropZone.addEventListener('dragleave', () => {
+    dropZone.classList.remove('drag-active');
+});
+
+dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-active');
+    if (e.dataTransfer.files.length > 0) {
+        uploadFile(e.dataTransfer.files[0]);
+    }
+});
+
+fileInput.addEventListener('change', () => {
+    if (fileInput.files.length > 0) {
+        uploadFile(fileInput.files[0]);
+    }
+});
+
+// 2. 진행률(Progress) 추적 비동기 업로드 (XMLHttpRequest)
+function uploadFile(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const xhr = new XMLHttpRequest();
+    const progressContainer = document.getElementById('progress-container');
+    const progressBarFill = document.getElementById('progress-bar-fill');
+    const uploadPercent = document.getElementById('upload-percent');
+
+    progressContainer.style.display = 'block';
+
+    xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+            const percent = Math.round((e.loaded / e.total) * 100);
+            progressBarFill.style.width = percent + '%';
+            uploadPercent.textContent = percent + '%';
+        }
+    });
+
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === XMLHttpRequest.DONE) {
+            if (xhr.status === 200) {
+                const response = JSON.parse(xhr.responseText);
+                alert('파일 업로드 성공! 파일명: ' + response.fileName);
+            } else {
+                alert('업로드 실패: ' + xhr.statusText);
+            }
+        }
+    };
+
+    xhr.open('POST', '/api/v1/files/upload', true);
+    xhr.send(formData);
+}
+
+// 3. 바이너리 Blob 다운로드 트리거
+async function downloadFile(fileName) {
+    try {
+        const response = await fetch(\`/api/v1/files/download/\${fileName}\`);
+        if (!response.ok) throw new Error('다운로드 실패');
+
+        const blob = await response.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(downloadUrl);
+    } catch (err) {
+        console.error('파일 다운로드 오류:', err);
+    }
+}</code></pre>
+            `
+        }
     }
 };
 
