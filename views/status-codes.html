@@ -11,51 +11,51 @@
 
     <!-- Status Code Reference Grid -->
     <div class="tech-details-section">
-        <h2>HTTP Response Status Code Categories</h2>
+        <h2 data-i18n="status_categories_h2">HTTP Response Status Code Categories</h2>
         
         <!-- 2xx Success -->
         <div class="details-card" style="margin-bottom: 20px; border-left: 4px solid #2ecc71;">
-            <h3>2xx Success (Request Successfully Received &amp; Processed)</h3>
+            <h3 data-i18n="status_2xx_h3">2xx Success (Request Successfully Received &amp; Processed)</h3>
             <ul class="glossary-list">
-                <li><strong>200 OK:</strong> Standard response for successful HTTP requests. Body contains payload.</li>
-                <li><strong>201 Created:</strong> Request succeeded and a new resource was created.</li>
-                <li><strong>204 No Content:</strong> Server successfully processed request, but intentionally returns no response body.</li>
+                <li data-i18n="status_200"><strong>200 OK:</strong> Standard response for successful HTTP requests. Body contains payload.</li>
+                <li data-i18n="status_201"><strong>201 Created:</strong> Request succeeded and a new resource was created.</li>
+                <li data-i18n="status_204"><strong>204 No Content:</strong> Server successfully processed request, but intentionally returns no response body.</li>
             </ul>
         </div>
 
         <!-- 3xx Redirection -->
         <div class="details-card" style="margin-bottom: 20px; border-left: 4px solid #3498db;">
-            <h3>3xx Redirection (Further Action Required)</h3>
+            <h3 data-i18n="status_3xx_h3">3xx Redirection (Further Action Required)</h3>
             <ul class="glossary-list">
-                <li><strong>301 Moved Permanently:</strong> Target resource has been permanently assigned a new URI.</li>
-                <li><strong>302 Found (Temporary Redirect):</strong> Target resource resides temporarily under a different URI.</li>
-                <li><strong>304 Not Modified:</strong> Indicates resource has not been modified since last fetch.</li>
+                <li data-i18n="status_301"><strong>301 Moved Permanently:</strong> Target resource has been permanently assigned a new URI.</li>
+                <li data-i18n="status_302"><strong>302 Found (Temporary Redirect):</strong> Target resource resides temporarily under a different URI.</li>
+                <li data-i18n="status_304"><strong>304 Not Modified:</strong> Indicates resource has not been modified since last fetch.</li>
             </ul>
         </div>
 
         <!-- 4xx Client Errors -->
         <div class="details-card" style="margin-bottom: 20px; border-left: 4px solid #e67e22;">
-            <h3>4xx Client Errors (Malformed Request or Invalid Authentication)</h3>
+            <h3 data-i18n="status_4xx_h3">4xx Client Errors (Malformed Request or Invalid Authentication)</h3>
             <ul class="glossary-list">
-                <li><strong>400 Bad Request:</strong> Server cannot process request due to client error.</li>
-                <li><strong>401 Unauthorized:</strong> Request requires user authentication. Missing or invalid Bearer token.</li>
-                <li><strong>403 Forbidden:</strong> Client is authenticated, but lacks permissions to access requested resource.</li>
-                <li><strong>404 Not Found:</strong> Server cannot locate requested URI route.</li>
-                <li><strong>405 Method Not Allowed:</strong> Request method (e.g. POST) is not supported for target URI.</li>
-                <li><strong>409 Conflict:</strong> Request conflicts with current state of resource.</li>
-                <li><strong>422 Unprocessable Entity:</strong> Request syntax is valid JSON, but contains semantic validation errors.</li>
-                <li><strong>429 Too Many Requests:</strong> Client has sent too many requests in a given time window (Rate Limiting).</li>
+                <li data-i18n="status_400"><strong>400 Bad Request:</strong> Server cannot process request due to client error.</li>
+                <li data-i18n="status_401"><strong>401 Unauthorized:</strong> Request requires user authentication. Missing or invalid Bearer token.</li>
+                <li data-i18n="status_403"><strong>403 Forbidden:</strong> Client is authenticated, but lacks permissions to access requested resource.</li>
+                <li data-i18n="status_404"><strong>404 Not Found:</strong> Server cannot locate requested URI route.</li>
+                <li data-i18n="status_405"><strong>405 Method Not Allowed:</strong> Request method (e.g. POST) is not supported for target URI.</li>
+                <li data-i18n="status_409"><strong>409 Conflict:</strong> Request conflicts with current state of resource.</li>
+                <li data-i18n="status_422"><strong>422 Unprocessable Entity:</strong> Request syntax is valid JSON, but contains semantic validation errors.</li>
+                <li data-i18n="status_429"><strong>429 Too Many Requests:</strong> Client has sent too many requests in a given time window (Rate Limiting).</li>
             </ul>
         </div>
 
         <!-- 5xx Server Errors -->
         <div class="details-card" style="margin-bottom: 20px; border-left: 4px solid #e74c3c;">
-            <h3>5xx Server Errors (Server Failed to Process Request)</h3>
+            <h3 data-i18n="status_5xx_h3">5xx Server Errors (Server Failed to Process Request)</h3>
             <ul class="glossary-list">
-                <li><strong>500 Internal Server Error:</strong> Generic error message indicating server crashed.</li>
-                <li><strong>502 Bad Gateway:</strong> Server acting as gateway received invalid response from upstream server.</li>
-                <li><strong>503 Service Unavailable:</strong> Server is currently unable to handle request due to overload.</li>
-                <li><strong>504 Gateway Timeout:</strong> Server acting as gateway did not receive timely response from upstream server.</li>
+                <li data-i18n="status_500"><strong>500 Internal Server Error:</strong> Generic error message indicating server crashed.</li>
+                <li data-i18n="status_502"><strong>502 Bad Gateway:</strong> Server acting as gateway received invalid response from upstream server.</li>
+                <li data-i18n="status_503"><strong>503 Service Unavailable:</strong> Server is currently unable to handle request due to overload.</li>
+                <li data-i18n="status_504"><strong>504 Gateway Timeout:</strong> Server acting as gateway did not receive timely response from upstream server.</li>
             </ul>
         </div>
     </div>

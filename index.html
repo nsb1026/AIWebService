@@ -134,8 +134,8 @@
                 <h1 data-i18n="encoder_h1">Professional String Encoder &amp; Decoder</h1>
                 <p data-i18n="encoder_p">A multi-format transformation engine designed for secure, real-time data processing. Unlike server-side alternatives, all logic executes within your browser's V8 engine, ensuring that sensitive strings never leave your local environment.</p>
                 <div class="tool-description">
-                    <p><strong>Technical Overview:</strong> Parse Utils utilizes high-performance algorithms to handle character encoding and string manipulation. Whether you are dealing with <strong>Base64</strong> for data transmission, <strong>URL Encoding</strong> for API requests, or <strong>HTML Escaping</strong> for cross-site scripting (XSS) prevention, our tool provides a consolidated interface for all your needs. By processing data locally, we mitigate risks associated with data interception and server-side logging, making it the preferred choice for security-conscious developers.</p>
-                    <p><strong>How to use:</strong> Simply paste your target string into the main input. The application will instantly generate transformations across all supported categories. Use the 'Copy' buttons for rapid workflow integration. This tool is ideal for debugging API requests, sanitizing user input, or analyzing encoded payloads in various environments including Node.js, Python, and Go.</p>
+                    <p data-i18n="encoder_desc_p1"><strong>Technical Overview:</strong> Parse Utils utilizes high-performance algorithms to handle character encoding and string manipulation. Whether you are dealing with <strong>Base64</strong> for data transmission, <strong>URL Encoding</strong> for API requests, or <strong>HTML Escaping</strong> for cross-site scripting (XSS) prevention, our tool provides a consolidated interface for all your needs. By processing data locally, we mitigate risks associated with data interception and server-side logging, making it the preferred choice for security-conscious developers.</p>
+                    <p data-i18n="encoder_desc_p2"><strong>How to use:</strong> Simply paste your target string into the main input. The application will instantly generate transformations across all supported categories. Use the 'Copy' buttons for rapid workflow integration. This tool is ideal for debugging API requests, sanitizing user input, or analyzing encoded payloads in various environments including Node.js, Python, and Go.</p>
                 </div>
             </header>
 
@@ -156,23 +156,23 @@
             <div class="output-grid">
                 <!-- Web Encodings -->
                 <div class="output-group">
-                    <h3>Web &amp; Network Protocols</h3>
+                    <h3 data-i18n="group_web_protocols">Web &amp; Network Protocols</h3>
                     <div class="field">
-                        <label>RFC 3986 URL Encode</label>
+                        <label data-i18n="label_url_encode">RFC 3986 URL Encode</label>
                         <div class="input-with-button">
                             <input type="text" id="url-encode" readonly>
                             <button class="copy-btn" data-target="url-encode" data-i18n="btn_copy">Copy</button>
                         </div>
                     </div>
                     <div class="field">
-                        <label>HTML Entity Escape (XSS Protection)</label>
+                        <label data-i18n="label_html_escape">HTML Entity Escape (XSS Protection)</label>
                         <div class="input-with-button">
                             <input type="text" id="html-escape" readonly>
                             <button class="copy-btn" data-target="html-escape" data-i18n="btn_copy">Copy</button>
                         </div>
                     </div>
                     <div class="field">
-                        <label>Unicode / UTF-16 Escape</label>
+                        <label data-i18n="label_unicode_escape">Unicode / UTF-16 Escape</label>
                         <div class="input-with-button">
                             <input type="text" id="unicode-escape" readonly>
                             <button class="copy-btn" data-target="unicode-escape" data-i18n="btn_copy">Copy</button>
@@ -182,23 +182,23 @@
 
                 <!-- Data Representations -->
                 <div class="output-group">
-                    <h3>Binary &amp; Data Structures</h3>
+                    <h3 data-i18n="group_binary_data">Binary &amp; Data Structures</h3>
                     <div class="field">
-                        <label>Base64 (Standard RFC 4648)</label>
+                        <label data-i18n="label_base64_std">Base64 (Standard RFC 4648)</label>
                         <div class="input-with-button">
                             <input type="text" id="base64-encode" readonly>
                             <button class="copy-btn" data-target="base64-encode" data-i18n="btn_copy">Copy</button>
                         </div>
                     </div>
                     <div class="field">
-                        <label>Binary Stream (Space-separated)</label>
+                        <label data-i18n="label_binary_stream">Binary Stream (Space-separated)</label>
                         <div class="input-with-button">
                             <input type="text" id="binary-string" readonly>
                             <button class="copy-btn" data-target="binary-string" data-i18n="btn_copy">Copy</button>
                         </div>
                     </div>
                     <div class="field">
-                        <label>Hexadecimal (Hex Dump)</label>
+                        <label data-i18n="label_hex_dump">Hexadecimal (Hex Dump)</label>
                         <div class="input-with-button">
                             <input type="text" id="hex-encode" readonly>
                             <button class="copy-btn" data-target="hex-encode" data-i18n="btn_copy">Copy</button>
@@ -208,23 +208,23 @@
 
                 <!-- Ciphers & Transforms -->
                 <div class="output-group">
-                    <h3>Ciphers &amp; String Logic</h3>
+                    <h3 data-i18n="group_ciphers_logic">Ciphers &amp; String Logic</h3>
                     <div class="field">
-                        <label>ROT13 Obfuscation</label>
+                        <label data-i18n="label_rot13">ROT13 Obfuscation</label>
                         <div class="input-with-button">
                             <input type="text" id="rot13" readonly>
                             <button class="copy-btn" data-target="rot13" data-i18n="btn_copy">Copy</button>
                         </div>
                     </div>
                     <div class="field">
-                        <label>Atbash Substitution</label>
+                        <label data-i18n="label_atbash">Atbash Substitution</label>
                         <div class="input-with-button">
                             <input type="text" id="atbash" readonly>
                             <button class="copy-btn" data-target="atbash" data-i18n="btn_copy">Copy</button>
                         </div>
                     </div>
                     <div class="field">
-                        <label>Naming Conventions</label>
+                        <label data-i18n="label_naming_conv">Naming Conventions</label>
                         <div class="multi-output">
                             <input type="text" id="camel-case" readonly placeholder="camelCase">
                             <input type="text" id="snake-case" readonly placeholder="snake_case">
@@ -235,30 +235,30 @@
 
             <!-- In-depth Developer Guide & Technical Articles -->
             <div class="tech-details-section">
-                <h2>In-Depth Developer Technical Guide: String Encoding &amp; Data Integrity</h2>
-                <p>In modern web engineering, string encoding and decoding are fundamental tasks that ensure data integrity, protocol safety, and application security. Every time data moves across HTTP endpoints, database boundaries, or user interface components, it undergoes character transformation.</p>
+                <h2 data-i18n="guide_encoder_h2">In-Depth Developer Technical Guide: String Encoding &amp; Data Integrity</h2>
+                <p data-i18n="guide_encoder_intro">In modern web engineering, string encoding and decoding are fundamental tasks that ensure data integrity, protocol safety, and application security. Every time data moves across HTTP endpoints, database boundaries, or user interface components, it undergoes character transformation.</p>
 
                 <div class="details-grid">
                     <div class="details-card">
-                        <h3>1. Base64 Binary-to-Text Encoding (RFC 4648)</h3>
-                        <p>Base64 is a binary-to-text encoding scheme designed to represent binary data in an ASCII string format. It achieves this by translating 24 bits of binary data into four 6-bit Base64 digits. Base64 is widely used in MIME email attachments, embedding small raster images directly inside HTML Data URIs, and transmitting tokens in HTTP Authorization headers.</p>
-                        <p><strong>Security Note:</strong> Base64 is an encoding method, <em>not encryption</em>. It provides zero confidentiality or protection against unauthorized inspection. Always use AES-256 or TLS encryption for data privacy.</p>
+                        <h3 data-i18n="guide_encoder_c1_h3">1. Base64 Binary-to-Text Encoding (RFC 4648)</h3>
+                        <p data-i18n="guide_encoder_c1_p1">Base64 is a binary-to-text encoding scheme designed to represent binary data in an ASCII string format. It achieves this by translating 24 bits of binary data into four 6-bit Base64 digits. Base64 is widely used in MIME email attachments, embedding small raster images directly inside HTML Data URIs, and transmitting tokens in HTTP Authorization headers.</p>
+                        <p data-i18n="guide_encoder_c1_p2"><strong>Security Note:</strong> Base64 is an encoding method, <em>not encryption</em>. It provides zero confidentiality or protection against unauthorized inspection. Always use AES-256 or TLS encryption for data privacy.</p>
                     </div>
                     <div class="details-card">
-                        <h3>2. URL Percent-Encoding (RFC 3986)</h3>
-                        <p>Uniform Resource Identifiers (URIs) restrict valid characters to unreserved sets (alphanumerics, hyphen, period, underscore, tilde). All reserved characters—such as <code>?</code>, <code>&amp;</code>, <code>=</code>, <code>/</code>, and space—must be percent-encoded to avoid syntax collisions in URL query strings.</p>
-                        <p>For example, a space character converts to <code>%20</code> or <code>+</code>, while an ampersand converts to <code>%26</code>. Failing to percent-encode query parameters leads to malformed API requests and subtle parsing bugs.</p>
+                        <h3 data-i18n="guide_encoder_c2_h3">2. URL Percent-Encoding (RFC 3986)</h3>
+                        <p data-i18n="guide_encoder_c2_p1">Uniform Resource Identifiers (URIs) restrict valid characters to unreserved sets (alphanumerics, hyphen, period, underscore, tilde). All reserved characters—such as <code>?</code>, <code>&amp;</code>, <code>=</code>, <code>/</code>, and space—must be percent-encoded to avoid syntax collisions in URL query strings.</p>
+                        <p data-i18n="guide_encoder_c2_p2">For example, a space character converts to <code>%20</code> or <code>+</code>, while an ampersand converts to <code>%26</code>. Failing to percent-encode query parameters leads to malformed API requests and subtle parsing bugs.</p>
                     </div>
                     <div class="details-card">
-                        <h3>3. HTML Entity Escaping &amp; XSS Prevention</h3>
-                        <p>Cross-Site Scripting (XSS) occurs when untrusted user input is rendered directly into the HTML DOM. Attackers inject executable <code>&lt;script&gt;</code> tags or attribute handlers like <code>onload</code> to steal session tokens and cookies.</p>
-                        <p>HTML escaping converts dangerous characters into harmless HTML entity equivalents: <code>&lt;</code> becomes <code>&amp;lt;</code>, <code>&gt;</code> becomes <code>&amp;gt;</code>, <code>&amp;</code> becomes <code>&amp;amp;</code>, <code>"</code> becomes <code>&amp;quot;</code>, and <code>'</code> becomes <code>&amp;#39;</code>.</p>
+                        <h3 data-i18n="guide_encoder_c3_h3">3. HTML Entity Escaping &amp; XSS Prevention</h3>
+                        <p data-i18n="guide_encoder_c3_p1">Cross-Site Scripting (XSS) occurs when untrusted user input is rendered directly into the HTML DOM. Attackers inject executable <code>&lt;script&gt;</code> tags or attribute handlers like <code>onload</code> to steal session tokens and cookies.</p>
+                        <p data-i18n="guide_encoder_c3_p2">HTML escaping converts dangerous characters into harmless HTML entity equivalents: <code>&lt;</code> becomes <code>&amp;lt;</code>, <code>&gt;</code> becomes <code>&amp;gt;</code>, <code>&amp;</code> becomes <code>&amp;amp;</code>, <code>"</code> becomes <code>&amp;quot;</code>, and <code>'</code> becomes <code>&amp;#39;</code>.</p>
                     </div>
                 </div>
 
                 <div class="code-examples-card">
-                    <h3>Programmatic String Transformations in Backend Languages</h3>
-                    <p>Here is how to perform standard URL encoding and Base64 encoding in popular backend technologies:</p>
+                    <h3 data-i18n="guide_encoder_code_h3">Programmatic String Transformations in Backend Languages</h3>
+                    <p data-i18n="guide_encoder_code_p">Here is how to perform standard URL encoding and Base64 encoding in popular backend technologies:</p>
                     <pre><code>// JavaScript (Node.js &amp; Browser)
 const text = "Hello World &amp; Developers!";
 const base64 = btoa(text); // 'SGVsbG8gV29ybGQgJiBEZXZlbG9wZXJzIQ=='
@@ -284,18 +284,18 @@ func main() {
                 </div>
 
                 <div class="faq-card">
-                    <h3>Frequently Asked Questions (FAQ)</h3>
+                    <h3 data-i18n="res_faq_h3">Frequently Asked Questions (FAQ)</h3>
                     <div class="faq-item">
-                        <h4>Q: Is my data sent to any remote server when using Parse Utils?</h4>
-                        <p><strong>A: No.</strong> All processing occurs 100% on the client side in your web browser. Your inputs, keys, and strings are never transmitted over the network or logged to any external server.</p>
+                        <h4 data-i18n="res_faq1_q">Q: Is my data sent to any remote server when using Parse Utils?</h4>
+                        <p data-i18n="res_faq1_a"><strong>A: No.</strong> All processing occurs 100% on the client side in your web browser. Your inputs, keys, and strings are never transmitted over the network or logged to any external server.</p>
                     </div>
                     <div class="faq-item">
-                        <h4>Q: What is string entropy and why is it calculated?</h4>
-                        <p><strong>A:</strong> Shannon Entropy measures the randomness and predictability of characters in a string. High entropy strings indicate potential cryptographic keys, hashes, or high-randomness tokens, whereas low entropy indicates plain natural language text.</p>
+                        <h4 data-i18n="guide_faq_entropy_q">Q: What is string entropy and why is it calculated?</h4>
+                        <p data-i18n="guide_faq_entropy_a"><strong>A:</strong> Shannon Entropy measures the randomness and predictability of characters in a string. High entropy strings indicate potential cryptographic keys, hashes, or high-randomness tokens, whereas low entropy indicates plain natural language text.</p>
                     </div>
                     <div class="faq-item">
-                        <h4>Q: What is the difference between URL encoding and HTML escaping?</h4>
-                        <p><strong>A:</strong> URL encoding prepares strings for safe transmission inside HTTP GET query parameters and paths. HTML escaping sanitizes text so that HTML renderers display characters visually without treating them as executable tags or attributes.</p>
+                        <h4 data-i18n="guide_faq_url_vs_html_q">Q: What is the difference between URL encoding and HTML escaping?</h4>
+                        <p data-i18n="guide_faq_url_vs_html_a"><strong>A:</strong> URL encoding prepares strings for safe transmission inside HTTP GET query parameters and paths. HTML escaping sanitizes text so that HTML renderers display characters visually without treating them as executable tags or attributes.</p>
                     </div>
                 </div>
             </div>

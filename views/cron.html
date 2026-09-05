@@ -14,11 +14,11 @@
             <input type="text" id="cron-input" value="*/15 * * * *" data-i18n="placeholder_cron" placeholder="e.g. */15 * * * *" class="text-input" style="width: 100%; padding: 12px; font-size: 1.1rem; font-family: 'JetBrains Mono', monospace; border-radius: 6px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-color);">
 
             <div class="preset-buttons" style="margin-top: 15px; display: flex; gap: 8px; flex-wrap: wrap;">
-                <button class="preset-btn btn-small secondary-btn" data-cron="* * * * *">Every Minute (* * * * *)</button>
-                <button class="preset-btn btn-small secondary-btn" data-cron="*/15 * * * *">Every 15 Mins (*/15 * * * *)</button>
-                <button class="preset-btn btn-small secondary-btn" data-cron="0 * * * *">Hourly (0 * * * *)</button>
-                <button class="preset-btn btn-small secondary-btn" data-cron="0 0 * * *">Daily at Midnight (0 0 * * *)</button>
-                <button class="preset-btn btn-small secondary-btn" data-cron="0 9 * * 1">Every Mon 9AM (0 9 * * 1)</button>
+                <button class="preset-btn btn-small secondary-btn" data-cron="* * * * *" data-i18n="preset_every_min">Every Minute (* * * * *)</button>
+                <button class="preset-btn btn-small secondary-btn" data-cron="*/15 * * * *" data-i18n="preset_every_15min">Every 15 Mins (*/15 * * * *)</button>
+                <button class="preset-btn btn-small secondary-btn" data-cron="0 * * * *" data-i18n="preset_hourly">Hourly (0 * * * *)</button>
+                <button class="preset-btn btn-small secondary-btn" data-cron="0 0 * * *" data-i18n="preset_daily_midnight">Daily at Midnight (0 0 * * *)</button>
+                <button class="preset-btn btn-small secondary-btn" data-cron="0 9 * * 1" data-i18n="preset_mon_9am">Every Mon 9AM (0 9 * * 1)</button>
             </div>
         </div>
 
