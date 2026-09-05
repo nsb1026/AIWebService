@@ -738,8 +738,8 @@ public class JwtTokenProvider {
 
     // Constructor Injection: Read YAML configuration values and generate SecretKey
     public JwtTokenProvider(
-            @Value("${jwt.secret}") String secret,
-            @Value("${jwt.access-token-expiration}") long accessTokenExpiration) {
+            @Value("\\${jwt.secret}") String secret,
+            @Value("\\${jwt.access-token-expiration}") long accessTokenExpiration) {
         // Transform plain string secret into SecretKey object using Keys.hmacShaKeyFor
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.accessTokenExpiration = accessTokenExpiration;
@@ -1020,8 +1020,8 @@ public class JwtTokenProvider {
 
     // 생성자 주입: application.yml에서 암호키와 유효시간을 읽어와 SecretKey 객체 생성
     public JwtTokenProvider(
-            @Value("${jwt.secret}") String secret,
-            @Value("${jwt.access-token-expiration}") long accessTokenExpiration) {
+            @Value("\\${jwt.secret}") String secret,
+            @Value("\\${jwt.access-token-expiration}") long accessTokenExpiration) {
         // 문자열 키를 HMAC-SHA 비밀키 객체로 변환 (Keys.hmacShaKeyFor API)
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.accessTokenExpiration = accessTokenExpiration;
