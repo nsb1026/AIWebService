@@ -1898,11 +1898,12 @@ async function downloadFile(fileName) {
                 <pre><code class="language-yaml">spring:
   servlet:
     multipart:
-      enabled: true
-      max-file-size: 50MB
-      max-request-size: 50MB
-      file-size-threshold: 2KB
+      enabled: true            # [Multipart 활성화] HTTP POST multipart/form-data 요청 처리 허용
+      max-file-size: 50MB      # [단일 파일 최대 용량] 업로드 가능한 1개 파일의 최대 제한 크기 (50MB)
+      max-request-size: 50MB   # [요청 전체 최대 용량] 1회 HTTP 요청 시 포함될 수 있는 전체 파일 크기 합계 (50MB)
+      file-size-threshold: 2KB # [메모리 버퍼 임계값] 2KB를 초과하는 파일은 메모리 대신 디스크 임시 파일로 수용
 
+# [사용자 정의 저장 디렉토리] 파일이 실제로 저장될 서버 내부 상대/절대 경로
 file:
   upload-dir: ./uploads</code></pre>
 
@@ -1914,15 +1915,16 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+// [업로드 성공 응답 DTO] 업로드된 파일의 식별명, 다운로드 URL, MIME 타입, 파일 용량을 클라이언트에 반환
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class FileUploadResponseDto {
-    private String fileName;
-    private String fileDownloadUri;
-    private String fileType;
-    private long size;
+    private String fileName;        // DB/서버에 저장된 UUID 파일명
+    private String fileDownloadUri; // 클라이언트가 다운로드할 수 있는 API URL (예: /api/v1/files/download/uuid.png)
+    private String fileType;        // MIME 타입 (예: image/png, application/pdf)
+    private long size;              // 바이트(Byte) 단위 파일 크기
 }</code></pre>
 
                 <h3>1-3. FileStorageService.java (보안 검증 및 파일 저장 서비스)</h3>
@@ -1945,34 +1947,42 @@ public class FileStorageService {
 
     private final Path fileStorageLocation;
 
+    // [@Value] application.yml의 file.upload-dir 경로 주입 및 저장 디렉터리 자동 생성
     public FileStorageService(@Value("\${file.upload-dir:./uploads}") String uploadDir) {
+        // [Paths.get().toAbsolutePath().normalize()] 상대 경로를 서버 물리 절대 경로로 정규화
         this.fileStorageLocation = Paths.get(uploadDir).toAbsolutePath().normalize();
         try {
+            // [Files.createDirectories] 업로드 디렉토리가 존재하지 않는 경우 자동으로 폴더 생성
             Files.createDirectories(this.fileStorageLocation);
         } catch (Exception ex) {
             throw new RuntimeException("업로드 디렉토리를 생성할 수 없습니다.", ex);
         }
     }
 
+    // [파일 저장 핵심 메서드] 보안 검증, UUID 변환 및 파일 저장 처리
     public String storeFile(MultipartFile file) {
+        // [StringUtils.cleanPath] 경로 구분자(/, \) 정제 처리
         String originalFileName = StringUtils.cleanPath(file.getOriginalFilename());
 
         try {
-            // 1. 보안 검증: 경로 이탈(Path Traversal, '..') 시도 차단
+            // [1. 경로 이탈(Path Traversal) 보안 방어]
+            // '../' 등 상위 디렉터리 접근 시도를 차단하여 웹 셸 업로드 및 서버 파일 덮어쓰기 공격 방지
             if (originalFileName.contains("..")) {
                 throw new IllegalArgumentException("파일명에 부적절한 경로 문자가 포함되어 있습니다: " + originalFileName);
             }
 
-            // 2. 파일명 중복 방지를 위한 UUID 고유 파일명 생성
+            // [2. UUID 고유 파일명 생성]
+            // 파일명 중복으로 인한 기존 파일 덮어쓰기 방지 및 한글/특수문자 깨짐을 원천 차단
             String extension = "";
             int i = originalFileName.lastIndexOf('.');
             if (i >= 0) {
-                extension = originalFileName.substring(i);
+                extension = originalFileName.substring(i); // 확장자 추출 (.png, .pdf 등)
             }
-            String storedFileName = UUID.randomUUID().toString() + extension;
+            String storedFileName = UUID.randomUUID().toString() + extension; // 36자리 UUID + 확장자
 
-            // 3. 디렉토리에 파일 저장
+            // [3. 디렉토리에 파일 저장]
             Path targetLocation = this.fileStorageLocation.resolve(storedFileName);
+            // [StandardCopyOption.REPLACE_EXISTING] 동명 파일이 존재할 경우 덮어쓰기
             Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
 
             return storedFileName;
@@ -1981,9 +1991,11 @@ public class FileStorageService {
         }
     }
 
+    // [파일 다운로드용 Resource 로딩 메서드]
     public Resource loadFileAsResource(String fileName) {
         try {
             Path filePath = this.fileStorageLocation.resolve(fileName).normalize();
+            // [UrlResource] 물리 파일 경로를 Spring Resource 객체로 래핑하여 파일 스트리밍 반환
             Resource resource = new UrlResource(filePath.toUri());
             if (resource.exists() || resource.isReadable()) {
                 return resource;
@@ -2022,10 +2034,13 @@ public class FileController {
         this.fileStorageService = fileStorageService;
     }
 
+    // [단일 파일 업로드 API] POST /api/v1/files/upload
     @PostMapping("/upload")
     public ResponseEntity<FileUploadResponseDto> uploadFile(@RequestParam("file") MultipartFile file) {
         String fileName = fileStorageService.storeFile(file);
 
+        // [ServletUriComponentsBuilder] 현재 요청 도메인 기준 동적 다운로드 URL 조합
+        // 예: http://localhost:8080/api/v1/files/download/550e8400-e29b-41d4-a716-446655440000.png
         String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
                 .path("/api/v1/files/download/")
                 .path(fileName)
@@ -2041,10 +2056,12 @@ public class FileController {
         return ResponseEntity.ok(response);
     }
 
+    // [파일 다운로드 API] GET /api/v1/files/download/{fileName}
     @GetMapping("/download/{fileName:.+}")
     public ResponseEntity<Resource> downloadFile(@PathVariable String fileName, HttpServletRequest request) {
         Resource resource = fileStorageService.loadFileAsResource(fileName);
 
+        // [파일 MIME 타입 자동 감지]
         String contentType = null;
         try {
             contentType = request.getServletContext().getMimeType(resource.getFile().getAbsolutePath());
@@ -2052,11 +2069,12 @@ public class FileController {
             contentType = "application/octet-stream";
         }
         if (contentType == null) {
-            contentType = "application/octet-stream";
+            contentType = "application/octet-stream"; // 미감지 시 기본 범용 바이너리 타입 지정
         }
 
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(contentType))
+                // [Content-Disposition 헤더] attachment; filename="..." 설정으로 브라우저 다운로드 창 유발
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
                 .body(resource);
     }
@@ -2066,20 +2084,24 @@ public class FileController {
 
                 <h3>2-1. HTML5 마크업 (드롭존 & 프로그레스 바)</h3>
                 <pre><code class="language-html">&lt;div class="upload-container"&gt;
+    &lt;!-- [드래그 앤 드롭 영역] --&gt;
     &lt;div id="drop-zone" class="drop-zone"&gt;
         &lt;div class="drop-zone-content"&gt;
             &lt;span class="upload-icon"&gt;📁&lt;/span&gt;
             &lt;p&gt;파일을 여기에 드래그하거나 &lt;span class="browse-btn"&gt;클릭하여 선택&lt;/span&gt;하세요&lt;/p&gt;
+            &lt;!-- 실제 파일 선택 창을 띄울 숨겨진 file input --&gt;
             &lt;input type="file" id="file-input" hidden&gt;
         &lt;/div&gt;
     &lt;/div&gt;
 
+    &lt;!-- [실시간 업로드 진행률 프로그레스 바 레이아웃] --&gt;
     &lt;div id="progress-container" class="progress-container" style="display: none;"&gt;
         &lt;div class="file-info"&gt;
             &lt;span id="file-name"&gt;filename.pdf&lt;/span&gt;
             &lt;span id="upload-percent"&gt;0%&lt;/span&gt;
         &lt;/div&gt;
         &lt;div class="progress-bar-bg"&gt;
+            &lt;!-- width 스타일 프로퍼티로 퍼센트 진행률 시각화 --&gt;
             &lt;div id="progress-bar-fill" class="progress-bar-fill" style="width: 0%;"&gt;&lt;/div&gt;
         &lt;/div&gt;
     &lt;/div&gt;
@@ -2088,10 +2110,11 @@ public class FileController {
 &lt;/div&gt;</code></pre>
 
                 <h3>2-2. JavaScript 업로드 전송 & 다운로드 트리거 로직</h3>
-                <pre><code class="language-javascript">// 1. 드래그 앤 드롭 이벤트 핸들링
+                <pre><code class="language-javascript">// 1. 드래그 앤 드롭 및 파일 선택 이벤트 핸들링
 const dropZone = document.getElementById('drop-zone');
 const fileInput = document.getElementById('file-input');
 
+// [dragover] 마우스 드래그 중 기본 브라우저 동작(파일 직접 열기) 중단
 dropZone.addEventListener('dragover', (e) => {
     e.preventDefault();
     dropZone.classList.add('drag-active');
@@ -2101,6 +2124,7 @@ dropZone.addEventListener('dragleave', () => {
     dropZone.classList.remove('drag-active');
 });
 
+// [drop] 파일 드롭 시 드롭된 파일 가져오기
 dropZone.addEventListener('drop', (e) => {
     e.preventDefault();
     dropZone.classList.remove('drag-active');
@@ -2115,8 +2139,9 @@ fileInput.addEventListener('change', () => {
     }
 });
 
-// 2. 진행률(Progress) 추적 비동기 업로드 (XMLHttpRequest)
+// 2. XMLHttpRequest 기반 실시간 진행률 추적 비동기 업로드
 function uploadFile(file) {
+    // [FormData] multipart/form-data 규격 폼 데이터 생성
     const formData = new FormData();
     formData.append('file', file);
 
@@ -2127,8 +2152,10 @@ function uploadFile(file) {
 
     progressContainer.style.display = 'block';
 
+    // [xhr.upload.onprogress] 업로드 전송 이벤트 추적
     xhr.upload.addEventListener('progress', (e) => {
         if (e.lengthComputable) {
+            // [전송 퍼센트 산출] (현재 전송된 바이트 / 전체 파일 크기) * 100
             const percent = Math.round((e.loaded / e.total) * 100);
             progressBarFill.style.width = percent + '%';
             uploadPercent.textContent = percent + '%';
@@ -2139,7 +2166,7 @@ function uploadFile(file) {
         if (xhr.readyState === XMLHttpRequest.DONE) {
             if (xhr.status === 200) {
                 const response = JSON.parse(xhr.responseText);
-                alert('파일 업로드 성공! 파일명: ' + response.fileName);
+                alert('파일 업로드 성공! 서버 저장 파일명: ' + response.fileName);
             } else {
                 alert('업로드 실패: ' + xhr.statusText);
             }
@@ -2150,20 +2177,28 @@ function uploadFile(file) {
     xhr.send(formData);
 }
 
-// 3. 바이너리 Blob 다운로드 트리거
+// 3. 바이너리 Blob 가상 URL 생성 1-클릭 다운로드 트리거
 async function downloadFile(fileName) {
     try {
+        // [fetch API] 백엔드 다운로드 REST API 호출
         const response = await fetch(\`/api/v1/files/download/\${fileName}\`);
         if (!response.ok) throw new Error('다운로드 실패');
 
+        // [response.blob()] 바이너리 스트림 데이터를 Blob 객체로 수신
         const blob = await response.blob();
+        
+        // [window.URL.createObjectURL] 인메모리 Blob 데이터를 참조하는 임시 URL 생성
         const downloadUrl = window.URL.createObjectURL(blob);
+        
+        // 동적 <a> 태그를 생성하여 1-클릭 다운로드 실행 후 메모리 해제
         const a = document.createElement('a');
         a.href = downloadUrl;
         a.download = fileName;
         document.body.appendChild(a);
         a.click();
         a.remove();
+        
+        // [revokeObjectURL] 생성된 메모리 가상 URL 해제 (메모리 누수 방지)
         window.URL.revokeObjectURL(downloadUrl);
     } catch (err) {
         console.error('파일 다운로드 오류:', err);
@@ -2522,16 +2557,22 @@ fetchPosts();
                 <h2>1단계: 프로젝트 의존성 및 DB 접속 설정 (application.yml)</h2>
                 <p>Gradle 의존성 추가 (<code>build.gradle</code>):</p>
                 <pre><code class="language-groovy">dependencies {
-    // Spring Boot 스타터
+    // [Spring Boot 웹 스타터] RESTful API 구축 및 톰캣(Tomcat) 내장 서버 포함
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    
+    // [Spring Data JPA 스타터] ORM 기반 데이터베이스 객체 매핑 및 Repositories 기능 제공
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    
+    // [MyBatis 스타터] SQL Mapper 기반 데이터 영속성 계층 프레임워크 (Spring Boot 3.3 전용 3.0.3)
     implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.3'
 
-    // 데이터베이스 드라이버 (MariaDB & Oracle)
+    // [MariaDB JDBC 드라이버] MariaDB 데이터베이스 통신 드라이버
     runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
+    
+    // [Oracle DB JDBC 드라이버] Oracle 19c/21c 호환 ojdbc11 드라이버
     runtimeOnly 'com.oracle.database.jdbc:ojdbc11'
 
-    // Lombok 및 유틸리티
+    // [Lombok 라이브러리] @Getter, @Setter, @Builder 등 컴파일 시 보일러플레이트 코드 자동 생성
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 }</code></pre>
@@ -2539,35 +2580,57 @@ fetchPosts();
                 <h3>1-1. MariaDB 연동 설정 (application.yml)</h3>
                 <pre><code class="language-yaml">spring:
   datasource:
+    # [JDBC 드라이버] MariaDB 3.x 전용 공식 드라이버 클래스
     driver-class-name: org.mariadb.jdbc.Driver
+    
+    # [JDBC 접속 URL] 포트 3306, DB명 mydb, UTF-8 문자셋 및 UTC 타임존 강제 지정
     url: jdbc:mariadb://localhost:3306/mydb?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8
+    
+    # [DB 인증 계정 및 비밀번호]
     username: root
     password: mariadb_password
+    
+    # [HikariCP 고성능 커넥션 풀 설정]
     hikari:
-      maximum-pool-size: 10
-      minimum-idle: 5
-      idle-timeout: 300000
-      pool-name: MariaDB-HikariPool
+      maximum-pool-size: 10   # [최대 커넥션 개수] 동시에 동시 처리할 DB 커넥션 풀 최대 크기
+      minimum-idle: 5        # [최소 유휴 커넥션] 사용되지 않더라도 풀에 유지할 최소 커넥션 수
+      idle-timeout: 300000   # [유휴 타임아웃] 5분(300초) 동안 미사용 시 커넥션 반환
+      pool-name: MariaDB-HikariPool # [풀 식별 이름] 스레드 덤프 및 모니터링 시 표시될 이름
 
   jpa:
+    # [JPA 방언 설정] MariaDB 전용 SQL 쿼리(LIMIT, AUTO_INCREMENT 등) 생성 dialect 지정
     database-platform: org.hibernate.dialect.MariaDBDialect
+    
     hibernate:
+      # [DDL 자동 생성 전략] update: Entity 변경 시 테이블 자동 업데이트 (개발 환경 전용)
       ddl-auto: update
-    show-sql: true
+    
+    show-sql: true # [SQL 로깅] 실행되는 JPA SQL 쿼리를 콘솔에 출력
     properties:
-      hibernate.format_sql: true
+      hibernate.format_sql: true # [SQL 포맷팅] 콘솔 출력 SQL을 가독성 있게 들여쓰기 정렬
 
+# [MyBatis 프레임워크 설정]
 mybatis:
+  # [XML 매퍼 위치] src/main/resources/mappers 디렉터리 하위의 모든 .xml 매퍼 파일 자동 스캔
   mapper-locations: classpath:mappers/**/*.xml
+  
+  # [타입 별칭 패키지] XML에서 com.example.domain.Post 대신 Post 단축 클래스명 사용 허용
   type-aliases-package: com.example.domain</code></pre>
 
                 <h3>1-2. Oracle DB 연동 설정 (application.yml)</h3>
                 <pre><code class="language-yaml">spring:
   datasource:
+    # [Oracle JDBC 드라이버] Oracle 19c/21c ojdbc11 공식 드라이버 클래스
     driver-class-name: oracle.jdbc.OracleDriver
+    
+    # [Oracle Thin 접속 URL] 포트 1521, PDB(플러그러블 DB) 서비스명 XEPDB1 지정
     url: jdbc:oracle:thin:@localhost:1521/XEPDB1
+    
+    # [Oracle 인증 계정]
     username: myuser
     password: oracle_password
+    
+    # [HikariCP 커넥션 풀 설정]
     hikari:
       maximum-pool-size: 10
       minimum-idle: 5
@@ -2575,9 +2638,12 @@ mybatis:
       pool-name: Oracle-HikariPool
 
   jpa:
+    # [Oracle 전용 JPA 방언] Oracle SQL (FETCH FIRST n ROWS, Sequence 등) dialect 지정
     database-platform: org.hibernate.dialect.OracleDialect
+    
     hibernate:
-      ddl-auto: update
+      ddl-auto: update # 개발 환경 DDL 자동 업데이트
+    
     show-sql: true
     properties:
       hibernate.format_sql: true
@@ -2589,72 +2655,76 @@ mybatis:
                 <h2>2단계: 데이터베이스 테이블 생성 (DDL 스크립트)</h2>
                 
                 <h3>2-1. MariaDB DDL 스크립트</h3>
-                <pre><code class="language-sql">-- 사용자 테이블 (users)
+                <pre><code class="language-sql">-- [사용자 테이블 생성 DDL]
+-- AUTO_INCREMENT: 사용자 생성 시 user_id PK 값을 1씩 자동 증가
 CREATE TABLE users (
-    user_id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(50) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
-    email VARCHAR(100) NOT NULL,
-    role VARCHAR(20) DEFAULT 'ROLE_USER',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    user_id BIGINT AUTO_INCREMENT PRIMARY KEY, -- [기본키] 사용자 고유 식별자 ID
+    username VARCHAR(50) NOT NULL UNIQUE,       -- [로그인 ID] 중복 방지를 위한 UNIQUE 제약조건
+    password VARCHAR(255) NOT NULL,              -- [비밀번호] BCrypt 암호화 해시 문자열 저장
+    email VARCHAR(100) NOT NULL,                 -- [이메일 주소]
+    role VARCHAR(20) DEFAULT 'ROLE_USER',        -- [권한] 기본값 ROLE_USER (ROLE_ADMIN 등)
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP -- [가입일시] 레코드 생성 시 현재 시간 자동 입력
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 게시글 테이블 (posts)
+-- [게시글 테이블 생성 DDL]
 CREATE TABLE posts (
-    post_id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    user_id BIGINT NOT NULL,
-    title VARCHAR(200) NOT NULL,
-    content TEXT NOT NULL,
-    view_count INT DEFAULT 0,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    post_id BIGINT AUTO_INCREMENT PRIMARY KEY, -- [기본키] 게시글 고유 식별자 ID
+    user_id BIGINT NOT NULL,                    -- [외래키 참조] 작성자 users.user_id
+    title VARCHAR(200) NOT NULL,                -- [게시글 제목]
+    content TEXT NOT NULL,                      -- [게시글 본문 내용]
+    view_count INT DEFAULT 0,                   -- [조회수] 기본값 0
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP, -- [작성일시]
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, -- [수정일시] UPDATE 시 자동 갱신
+    -- [외래키 제약조건] ON DELETE CASCADE: 사용자 탈퇴/삭제 시 해당 작성자의 게시글 모두 자동 삭제
     CONSTRAINT fk_posts_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 첨부파일 테이블 (attachments)
+-- [첨부파일 테이블 생성 DDL]
 CREATE TABLE attachments (
-    attachment_id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    post_id BIGINT NOT NULL,
-    original_name VARCHAR(255) NOT NULL,
-    stored_name VARCHAR(255) NOT NULL,
-    file_path VARCHAR(500) NOT NULL,
-    file_size BIGINT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    attachment_id BIGINT AUTO_INCREMENT PRIMARY KEY, -- [기본키] 첨부파일 고유 ID
+    post_id BIGINT NOT NULL,                         -- [외래키 참조] 속한 게시글 posts.post_id
+    original_name VARCHAR(255) NOT NULL,             -- [원본 파일명] 사용자 업로드 시 파일명 (예: 보고서.pdf)
+    stored_name VARCHAR(255) NOT NULL,               -- [저장 파일명] UUID 기반 중복 방지 파일명
+    file_path VARCHAR(500) NOT NULL,                 -- [저장 경로] 서버 파일 시스템 물리 경로
+    file_size BIGINT NOT NULL,                       -- [파일 용량] 바이트(Byte) 단위 크기
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,    -- [업로드일시]
+    -- [외래키 제약조건] ON DELETE CASCADE: 게시글 삭제 시 속한 첨부파일 정보도 자동 삭제
     CONSTRAINT fk_attachments_post FOREIGN KEY (post_id) REFERENCES posts(post_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;</code></pre>
 
                 <h3>2-2. Oracle DB DDL 스크립트 (12c 이상 IDENTITY)</h3>
-                <pre><code class="language-sql">-- 사용자 테이블 (USERS)
+                <pre><code class="language-sql">-- [Oracle 사용자 테이블 DDL]
+-- GENERATED BY DEFAULT AS IDENTITY: Oracle 12c 이상에서 제공되는 자동 증가 PK 기능
 CREATE TABLE USERS (
-    USER_ID NUMBER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
-    USERNAME VARCHAR2(50) NOT NULL UNIQUE,
-    PASSWORD VARCHAR2(255) NOT NULL,
-    EMAIL VARCHAR2(100) NOT NULL,
-    ROLE VARCHAR2(20) DEFAULT 'ROLE_USER',
-    CREATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    USER_ID NUMBER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY, -- [PK] 사용자 ID
+    USERNAME VARCHAR2(50) NOT NULL UNIQUE,                       -- [UNIQUE] 아이디 중복 금지
+    PASSWORD VARCHAR2(255) NOT NULL,                              -- [암호화 비밀번호]
+    EMAIL VARCHAR2(100) NOT NULL,                                 -- [이메일]
+    ROLE VARCHAR2(20) DEFAULT 'ROLE_USER',                        -- [권한 기본값]
+    CREATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP                -- [생성일시]
 );
 
--- 게시글 테이블 (POSTS)
+-- [Oracle 게시글 테이블 DDL]
 CREATE TABLE POSTS (
-    POST_ID NUMBER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
-    USER_ID NUMBER NOT NULL,
-    TITLE VARCHAR2(200) NOT NULL,
-    CONTENT CLOB NOT NULL,
-    VIEW_COUNT NUMBER DEFAULT 0,
-    CREATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UPDATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    POST_ID NUMBER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY, -- [PK] 게시글 ID
+    USER_ID NUMBER NOT NULL,                                     -- [FK] 작성자 ID
+    TITLE VARCHAR2(200) NOT NULL,                                -- [제목]
+    CONTENT CLOB NOT NULL,                                       -- [대용량 본문] Oracle 대용량 텍스트 CLOB 사용
+    VIEW_COUNT NUMBER DEFAULT 0,                                 -- [조회수]
+    CREATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP,               -- [작성일]
+    UPDATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP,               -- [수정일]
     CONSTRAINT FK_POSTS_USER FOREIGN KEY (USER_ID) REFERENCES USERS(USER_ID) ON DELETE CASCADE
 );
 
--- 첨부파일 테이블 (ATTACHMENTS)
+-- [Oracle 첨부파일 테이블 DDL]
 CREATE TABLE ATTACHMENTS (
-    ATTACHMENT_ID NUMBER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
-    POST_ID NUMBER NOT NULL,
-    ORIGINAL_NAME VARCHAR2(255) NOT NULL,
-    STORED_NAME VARCHAR2(255) NOT NULL,
-    FILE_PATH VARCHAR2(500) NOT NULL,
-    FILE_SIZE NUMBER NOT NULL,
-    CREATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ATTACHMENT_ID NUMBER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY, -- [PK] 파일 ID
+    POST_ID NUMBER NOT NULL,                                           -- [FK] 게시글 ID
+    ORIGINAL_NAME VARCHAR2(255) NOT NULL,                           -- [원본 파일명]
+    STORED_NAME VARCHAR2(255) NOT NULL,                             -- [UUID 저장 파일명]
+    FILE_PATH VARCHAR2(500) NOT NULL,                               -- [물리 경로]
+    FILE_SIZE NUMBER NOT NULL,                                     -- [파일 크기]
+    CREATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP,                 -- [등록일시]
     CONSTRAINT FK_ATTACHMENTS_POST FOREIGN KEY (POST_ID) REFERENCES POSTS(POST_ID) ON DELETE CASCADE
 );</code></pre>
 
@@ -2669,19 +2739,25 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+// [@Entity] JPA가 관리하는 데이터베이스 테이블 매핑 클래스 선언
 @Entity
+// [@Table] 매핑될 DB 테이블 이름 지정
 @Table(name = "posts")
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor(access = AccessLevel.PROTECTED) // JPA 기본 생성자 생성 (외부 접근 제한)
 @AllArgsConstructor
 @Builder
 public class Post {
 
+    // [@Id] 테이블의 Primary Key(기본키) 필드 지정
     @Id
+    // [@GeneratedValue] DB의 AUTO_INCREMENT / IDENTITY 자동 증가 채번 사용
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "post_id")
     private Long id;
 
+    // [@ManyToOne] N:1 관계 매핑 (게시글 N개 : 사용자 1명)
+    // [FetchType.LAZY] 지연 로딩 설정: 필요할 때만 작성자 객체를 조회하여 N+1 쿼리 방지
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User author;
@@ -2699,15 +2775,21 @@ public class Post {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
+    // [@OneToMany] 1:N 연관관계 매핑 (게시글 1개 : 첨부파일 N개)
+    // [mappedBy = "post"] Attachment 엔티티의 post 필드에 의해 매핑됨을 명시
+    // [cascade = CascadeType.ALL] 게시글 저장/삭제 시 속한 첨부파일 엔티티도 함께 저장/삭제
+    // [orphanRemoval = true] 게시글에서 첨부파일 객체 제거 시 DB에서도 자동 삭제 (고아 객체 제거)
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Attachment> attachments = new ArrayList<>();
 
+    // [@PrePersist] JPA 엔티티가 최초로 DB에 저장(Persist)되기 직전에 현재 시간 자동 입력
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
 
+    // [양방향 연관관계 편의 메서드] 게시글과 첨부파일 연관관계를 양쪽 객체 모두에 안전하게 추가
     public void addAttachment(Attachment attachment) {
         attachments.add(attachment);
         attachment.setPost(this);
@@ -2724,8 +2806,11 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
+// [JpaRepository<엔티티, PK타입>] 기본 CRUD (save, findById, delete 등) 메서드 자동 생성
 public interface PostRepository extends JpaRepository<Post, Long> {
 
+    // [@Query JPQL & Fetch Join] N+1 조회 성능 문제를 방지하기 위해 
+    // 작성자(author) 및 첨부파일(attachments) 객체를 1번의 조인 쿼리로 한꺼번에 영속성 컨텍스트에 로드
     @Query("SELECT p FROM Post p JOIN FETCH p.author LEFT JOIN FETCH p.attachments WHERE p.id = :id")
     Optional<Post> findByIdWithDetails(@Param("id") Long id);
 }</code></pre>
@@ -2741,15 +2826,20 @@ import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
+// [@Mapper] MyBatis 매퍼 인터페이스임을 선언 (Spring이 구현체를 다이내믹 프록시로 자동 생성)
 @Mapper
 public interface PostMapper {
     
+    // [게시글 전체 목록 조회]
     List<PostDto> selectAllPosts();
     
+    // [특정 게시글 상세 및 첨부파일 조회] @Param으로 XML 매퍼 파라미터명 지정
     PostDto selectPostById(@Param("postId") Long postId);
     
+    // [신규 게시글 등록] 등록 후 생성된 PK(postId)가 postDto에 자동으로 저장됨
     int insertPost(PostDto postDto);
     
+    // [첨부파일 정보 등록]
     int insertAttachment(@Param("postId") Long postId, @Param("originalName") String originalName, 
                          @Param("storedName") String storedName, @Param("filePath") String filePath, 
                          @Param("fileSize") long fileSize);
@@ -2759,14 +2849,20 @@ public interface PostMapper {
                 <pre><code class="language-xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd"&gt;
 
+&lt;!-- [namespace] 연결될 Java 인터페이스의 풀 패키지 경로 지정 --&gt;
 &lt;mapper namespace="com.example.mapper.PostMapper"&gt;
 
+    &lt;!-- [<resultMap>] DB의 복잡한 JOIN 결과를 Java DTO 복합 객체 구조로 매핑 정의 --&gt;
     &lt;resultMap id="PostResultMap" type="com.example.dto.PostDto"&gt;
+        &lt;!-- <id>: PK 기본키 컬럼 매핑 --&gt;
         &lt;id property="postId" column="post_id"/&gt;
+        &lt;!-- <result>: 일반 DB 컬럼과 Java 객체 필드 매핑 --&gt;
         &lt;result property="title" column="title"/&gt;
         &lt;result property="content" column="content"/&gt;
         &lt;result property="authorName" column="username"/&gt;
         &lt;result property="createdAt" column="created_at"/&gt;
+        
+        &lt;!-- [<collection>] 1:N 쿼리 결과를 List<AttachmentDto> 리스트 필드에 자동으로 묶어서 바인딩 --&gt;
         &lt;collection property="attachments" ofType="com.example.dto.AttachmentDto"&gt;
             &lt;id property="attachmentId" column="attachment_id"/&gt;
             &lt;result property="originalName" column="original_name"/&gt;
@@ -2775,6 +2871,7 @@ public interface PostMapper {
         &lt;/collection&gt;
     &lt;/resultMap&gt;
 
+    &lt;!-- [게시글 및 첨부파일 JOIN 상세 조회 쿼리] --&gt;
     &lt;select id="selectPostById" resultMap="PostResultMap"&gt;
         SELECT 
             p.post_id, p.title, p.content, p.created_at,
@@ -2786,6 +2883,9 @@ public interface PostMapper {
         WHERE p.post_id = #{postId}
     &lt;/select&gt;
 
+    &lt;!-- [게시글 등록 쿼리] --&gt;
+    &lt;!-- useGeneratedKeys="true": DB에서 생성된 자동증가 PK 값을 가져옴 --&gt;
+    &lt;!-- keyProperty="postId": 가져온 PK 값을 postDto.setPostId()에 자동으로 설정 --&gt;
     &lt;insert id="insertPost" useGeneratedKeys="true" keyProperty="postId" keyColumn="post_id"&gt;
         INSERT INTO posts (user_id, title, content, view_count, created_at)
         VALUES (#{userId}, #{title}, #{content}, 0, CURRENT_TIMESTAMP)
@@ -2805,18 +2905,21 @@ public interface PostMapper {
         &lt;button type="submit" class="btn-submit"&gt;게시글 등록&lt;/button&gt;
     &lt;/form&gt;
 
-    &lt;!-- 게시글 목록 --&gt;
+    &lt;!-- 게시글 목록이 동적으로 삽입될 레이아웃 영역 --&gt;
     &lt;div id="posts-list" class="posts-list"&gt;
         &lt;div class="loading"&gt;데이터베이스에서 게시글을 조회 중입니다...&lt;/div&gt;
     &lt;/div&gt;
 &lt;/div&gt;
 
 &lt;script&gt;
+// [비동기 API 데이터 조회 메서드]
 async function fetchPosts() {
+    // 1. Spring REST Controller (/api/v1/posts) 호출하여 DB 조회 결과 수신
     const res = await fetch('/api/v1/posts');
     const posts = await res.json();
     const listEl = document.getElementById('posts-list');
     
+    // 2. JS Array.map()을 활용해 수신된 DB 쿼리 데이터를 동적 HTML 카드로 바인딩
     listEl.innerHTML = posts.map(p => \`
         &lt;div class="post-card"&gt;
             &lt;h3&gt;\${p.title} &lt;small&gt;작성자: \${p.authorName}&lt;/small&gt;&lt;/h3&gt;
@@ -2832,6 +2935,7 @@ async function fetchPosts() {
         &lt;/div&gt;
     \`).join('');
 }
+// 페이지 초기화 시 데이터 로드 실행
 fetchPosts();
 &lt;/script&gt;</code></pre>
             `
