@@ -48,3 +48,11 @@ Parse Utils is a high-performance, decentralized developer utility platform. It 
 6.  **[DONE] Tool Documentation:** Added detailed technical documentation to core tool views.
 7.  **[DONE] Glossary Expansion:** Increased technical glossary to 20+ comprehensive terms.
 8.  **[DONE] SEO & Compliance:** Added sitemap.xml and enhanced metadata for all views.
+
+## 7. Current Task Plan: Guides View Full Multilingual (i18n) Support
+*   **Problem:** 10 Spring Boot 3.3 technical guide cards in `views/guides.html` were missing translation keys (`guide_t_spring_*`, `guide_s_spring_*`) in `js/i18n.js`, and all 12 Spring Boot cards shared a single generic `badge_spring` tag. This caused titles, summaries, and badges to display only in English without switching to Korean when selecting Korean.
+*   **Action Plan:**
+    1. Define missing translation keys (`badge_spring_*`, `guide_t_spring_*`, `guide_s_spring_*`) for all 12 Spring Boot guides in both `translations.en` and `translations.ko` within `js/i18n.js`.
+    2. Update `views/guides.html` badge `data-i18n` attributes to use card-specific badge keys (`badge_spring_jwt`, `badge_spring_login`, etc.).
+    3. Test and verify bilingual rendering on language toggle (`KO` / `EN`).
+
