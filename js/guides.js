@@ -2171,6 +2171,671 @@ async function downloadFile(fileName) {
 }</code></pre>
             `
         }
+    },
+    'spring-db-jpa-mybatis': {
+        en: {
+            title: 'Spring Boot 3.3 + MariaDB & Oracle DB: Complete JPA & MyBatis Guide for Users, Posts & File Attachments',
+            content: `
+                <p>Learn how to connect Spring Boot 3.3.x to <strong>MariaDB</strong> and <strong>Oracle DB</strong>, implementing relational domain models for Users, Board Posts, and File Attachments using both <strong>Spring Data JPA</strong> and <strong>MyBatis 3</strong>. Easily switch databases by modifying configuration properties in <code>application.yml</code>.</p>
+                
+                <div style="text-align: center; margin: 2rem 0;">
+                    <img src="/images/spring_db_jpa_mybatis_demo.png" alt="Spring DB JPA & MyBatis ERD Diagram Preview" style="max-width: 100%; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">[Database Architecture, ERD Schema &amp; Spring Boot JPA / MyBatis Data Layer Diagram]</p>
+                </div>
+
+                <div class="technical-note" style="background: rgba(234, 88, 12, 0.1); border-left: 4px solid #ea580c; padding: 1rem; margin: 1.5rem 0; border-radius: 4px;">
+                    <strong>Database Portability Concept:</strong> Switching between MariaDB and Oracle DB requires only updating the <code>driver-class-name</code>, JDBC <code>url</code>, and Hibernate <code>dialect</code> in <code>application.yml</code>. The domain logic and REST API remain 100% reusable.
+                </div>
+
+                <h2>1. Dependencies & Connection Settings (application.yml)</h2>
+                <p>Gradle Dependencies (<code>build.gradle</code>):</p>
+                <pre><code class="language-groovy">dependencies {
+    // Spring Boot Starters
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.3'
+
+    // Database Drivers (MariaDB & Oracle)
+    runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
+    runtimeOnly 'com.oracle.database.jdbc:ojdbc11'
+
+    // Lombok & Utilities
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+}</code></pre>
+
+                <h3>1-1. MariaDB Connection Configuration (application.yml)</h3>
+                <pre><code class="language-yaml">spring:
+  datasource:
+    driver-class-name: org.mariadb.jdbc.Driver
+    url: jdbc:mariadb://localhost:3306/mydb?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8
+    username: root
+    password: mariadb_password
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 300000
+      pool-name: MariaDB-HikariPool
+
+  jpa:
+    database-platform: org.hibernate.dialect.MariaDBDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate.format_sql: true
+
+mybatis:
+  mapper-locations: classpath:mappers/**/*.xml
+  type-aliases-package: com.example.domain</code></pre>
+
+                <h3>1-2. Oracle DB Connection Configuration (application.yml)</h3>
+                <pre><code class="language-yaml">spring:
+  datasource:
+    driver-class-name: oracle.jdbc.OracleDriver
+    url: jdbc:oracle:thin:@localhost:1521/XEPDB1
+    username: myuser
+    password: oracle_password
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 300000
+      pool-name: Oracle-HikariPool
+
+  jpa:
+    database-platform: org.hibernate.dialect.OracleDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate.format_sql: true
+
+mybatis:
+  mapper-locations: classpath:mappers/**/*.xml
+  type-aliases-package: com.example.domain</code></pre>
+
+                <h2>2. Relational Database Schemas (DDL)</h2>
+                
+                <h3>2-1. MariaDB DDL Schema</h3>
+                <pre><code class="language-sql">-- Users Table
+CREATE TABLE users (
+    user_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    role VARCHAR(20) DEFAULT 'ROLE_USER',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Board Posts Table
+CREATE TABLE posts (
+    post_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    content TEXT NOT NULL,
+    view_count INT DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_posts_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- File Attachments Table
+CREATE TABLE attachments (
+    attachment_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    post_id BIGINT NOT NULL,
+    original_name VARCHAR(255) NOT NULL,
+    stored_name VARCHAR(255) NOT NULL,
+    file_path VARCHAR(500) NOT NULL,
+    file_size BIGINT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_attachments_post FOREIGN KEY (post_id) REFERENCES posts(post_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;</code></pre>
+
+                <h3>2-2. Oracle DB DDL Schema (12c+ Identity)</h3>
+                <pre><code class="language-sql">-- Users Table
+CREATE TABLE USERS (
+    USER_ID NUMBER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    USERNAME VARCHAR2(50) NOT NULL UNIQUE,
+    PASSWORD VARCHAR2(255) NOT NULL,
+    EMAIL VARCHAR2(100) NOT NULL,
+    ROLE VARCHAR2(20) DEFAULT 'ROLE_USER',
+    CREATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Board Posts Table
+CREATE TABLE POSTS (
+    POST_ID NUMBER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    USER_ID NUMBER NOT NULL,
+    TITLE VARCHAR2(200) NOT NULL,
+    CONTENT CLOB NOT NULL,
+    VIEW_COUNT NUMBER DEFAULT 0,
+    CREATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UPDATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT FK_POSTS_USER FOREIGN KEY (USER_ID) REFERENCES USERS(USER_ID) ON DELETE CASCADE
+);
+
+-- File Attachments Table
+CREATE TABLE ATTACHMENTS (
+    ATTACHMENT_ID NUMBER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    POST_ID NUMBER NOT NULL,
+    ORIGINAL_NAME VARCHAR2(255) NOT NULL,
+    STORED_NAME VARCHAR2(255) NOT NULL,
+    FILE_PATH VARCHAR2(500) NOT NULL,
+    FILE_SIZE NUMBER NOT NULL,
+    CREATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT FK_ATTACHMENTS_POST FOREIGN KEY (POST_ID) REFERENCES POSTS(POST_ID) ON DELETE CASCADE
+);</code></pre>
+
+                <h2>3. JPA Implementation (Entities, Repositories & Service)</h2>
+
+                <h3>3-1. JPA Entities</h3>
+                <pre><code class="language-java">package com.example.domain;
+
+import jakarta.persistence.*;
+import lombok.*;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Table(name = "posts")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
+public class Post {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "post_id")
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User author;
+
+    @Column(nullable = false, length = 200)
+    private String title;
+
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String content;
+
+    @Builder.Default
+    @Column(name = "view_count")
+    private Integer viewCount = 0;
+
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Attachment> attachments = new ArrayList<>();
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+
+    public void addAttachment(Attachment attachment) {
+        attachments.add(attachment);
+        attachment.setPost(this);
+    }
+}</code></pre>
+
+                <h3>3-2. Spring Data JPA Repositories & Service</h3>
+                <pre><code class="language-java">package com.example.repository;
+
+import com.example.domain.Post;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.util.Optional;
+
+public interface PostRepository extends JpaRepository<Post, Long> {
+    
+    @Query("SELECT p FROM Post p JOIN FETCH p.author LEFT JOIN FETCH p.attachments WHERE p.id = :id")
+    Optional<Post> findByIdWithDetails(@Param("id") Long id);
+}</code></pre>
+
+                <h2>4. MyBatis Implementation (Mapper XML & Java Interface)</h2>
+
+                <h3>4-1. PostMapper.java Interface</h3>
+                <pre><code class="language-java">package com.example.mapper;
+
+import com.example.dto.PostDto;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
+
+@Mapper
+public interface PostMapper {
+    
+    List<PostDto> selectAllPosts();
+    
+    PostDto selectPostById(@Param("postId") Long postId);
+    
+    int insertPost(PostDto postDto);
+    
+    int insertAttachment(@Param("postId") Long postId, @Param("originalName") String originalName, 
+                         @Param("storedName") String storedName, @Param("filePath") String filePath, 
+                         @Param("fileSize") long fileSize);
+}</code></pre>
+
+                <h3>4-2. PostMapper.xml (XML Mapper Query)</h3>
+                <pre><code class="language-xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd"&gt;
+
+&lt;mapper namespace="com.example.mapper.PostMapper"&gt;
+
+    &lt;resultMap id="PostResultMap" type="com.example.dto.PostDto"&gt;
+        &lt;id property="postId" column="post_id"/&gt;
+        &lt;result property="title" column="title"/&gt;
+        &lt;result property="content" column="content"/&gt;
+        &lt;result property="authorName" column="username"/&gt;
+        &lt;result property="createdAt" column="created_at"/&gt;
+        &lt;collection property="attachments" ofType="com.example.dto.AttachmentDto"&gt;
+            &lt;id property="attachmentId" column="attachment_id"/&gt;
+            &lt;result property="originalName" column="original_name"/&gt;
+            &lt;result property="storedName" column="stored_name"/&gt;
+            &lt;result property="fileSize" column="file_size"/&gt;
+        &lt;/collection&gt;
+    &lt;/resultMap&gt;
+
+    &lt;select id="selectPostById" resultMap="PostResultMap"&gt;
+        SELECT 
+            p.post_id, p.title, p.content, p.created_at,
+            u.username,
+            a.attachment_id, a.original_name, a.stored_name, a.file_size
+        FROM posts p
+        JOIN users u ON p.user_id = u.user_id
+        LEFT JOIN attachments a ON p.post_id = a.post_id
+        WHERE p.post_id = #{postId}
+    &lt;/select&gt;
+
+    &lt;insert id="insertPost" useGeneratedKeys="true" keyProperty="postId" keyColumn="post_id"&gt;
+        INSERT INTO posts (user_id, title, content, view_count, created_at)
+        VALUES (#{userId}, #{title}, #{content}, 0, CURRENT_TIMESTAMP)
+    &lt;/insert&gt;
+
+&lt;/mapper&gt;</code></pre>
+
+                <h2>5. Frontend UI Sample (HTML5 + JavaScript Board Dashboard)</h2>
+                <pre><code class="language-html">&lt;div class="board-container"&gt;
+    &lt;h2&gt;📋 Community Board &amp; File Attachments&lt;/h2&gt;
+
+    &lt;!-- Post Creation Form --&gt;
+    &lt;form id="post-form" class="card-form"&gt;
+        &lt;input type="text" id="post-title" placeholder="Post Title" required&gt;
+        &lt;textarea id="post-content" placeholder="Write your post content..." required&gt;&lt;/textarea&gt;
+        &lt;input type="file" id="post-file" multiple&gt;
+        &lt;button type="submit" class="btn-submit"&gt;Submit Post&lt;/button&gt;
+    &lt;/form&gt;
+
+    &lt;!-- Posts List --&gt;
+    &lt;div id="posts-list" class="posts-list"&gt;
+        &lt;div class="loading"&gt;Loading posts from Database...&lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+async function fetchPosts() {
+    const res = await fetch('/api/v1/posts');
+    const posts = await res.json();
+    const listEl = document.getElementById('posts-list');
+    
+    listEl.innerHTML = posts.map(p => \`
+        &lt;div class="post-card"&gt;
+            &lt;h3&gt;\${p.title} &lt;small&gt;by \${p.authorName}&lt;/small&gt;&lt;/h3&gt;
+            &lt;p&gt;\${p.content}&lt;/p&gt;
+            \${p.attachments.length ? \`
+                &lt;div class="attachments"&gt;
+                    📁 Attachments: 
+                    \${p.attachments.map(a => \`
+                        &lt;a href="/api/v1/files/download/\${a.storedName}" download&gt;\${a.originalName}&lt;/a&gt;
+                    \`).join(', ')}
+                &lt;/div&gt;
+            \` : ''}
+        &lt;/div&gt;
+    \`).join('');
+}
+fetchPosts();
+&lt;/script&gt;</code></pre>
+            `
+        },
+        ko: {
+            title: 'Spring Boot 3.3 + MariaDB & Oracle DB: 사용자, 게시판, 파일 첨부 완전 구현 가이드 (JPA & MyBatis)',
+            content: `
+                <p>Spring Boot 3.3.x 환경에서 대표적인 관계형 데이터베이스인 <strong>MariaDB</strong>와 <strong>Oracle DB</strong>를 연동하고, 사용자, 게시글, 파일 첨부 시스템을 <strong>Spring Data JPA</strong>와 <strong>MyBatis 3</strong> 두 가지 방식으로 완전 구현하는 가이드입니다. <code>application.yml</code> 설정 정보만 변경하면 DB를 즉시 전환하여 실행할 수 있습니다.</p>
+
+                <div style="text-align: center; margin: 2rem 0;">
+                    <img src="/images/spring_db_jpa_mybatis_demo.png" alt="Spring DB JPA & MyBatis ERD 및 아키텍처 다이어그램" style="max-width: 100%; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">[MariaDB / Oracle DB ERD 데이터 모델 및 JPA &amp; MyBatis 데이터 레이어 다이어그램]</p>
+                </div>
+
+                <div class="technical-note" style="background: rgba(234, 88, 12, 0.1); border-left: 4px solid #ea580c; padding: 1rem; margin: 1.5rem 0; border-radius: 4px;">
+                    <strong>데이터베이스 유연성 (DB Portability):</strong>
+                    스프링 부트의 추상화된 <code>DataSource</code> 구조 덕분에 <code>application.yml</code>에서 MariaDB와 Oracle의 <code>driver-class-name</code>, JDBC <code>url</code>, Hibernate <code>dialect</code> 정보만 스위칭하면 동일한 비즈니스 소스코드로 DB를 전환하여 실행할 수 있습니다.
+                </div>
+
+                <h2>1단계: 프로젝트 의존성 및 DB 접속 설정 (application.yml)</h2>
+                <p>Gradle 의존성 추가 (<code>build.gradle</code>):</p>
+                <pre><code class="language-groovy">dependencies {
+    // Spring Boot 스타터
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.3'
+
+    // 데이터베이스 드라이버 (MariaDB & Oracle)
+    runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
+    runtimeOnly 'com.oracle.database.jdbc:ojdbc11'
+
+    // Lombok 및 유틸리티
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+}</code></pre>
+
+                <h3>1-1. MariaDB 연동 설정 (application.yml)</h3>
+                <pre><code class="language-yaml">spring:
+  datasource:
+    driver-class-name: org.mariadb.jdbc.Driver
+    url: jdbc:mariadb://localhost:3306/mydb?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8
+    username: root
+    password: mariadb_password
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 300000
+      pool-name: MariaDB-HikariPool
+
+  jpa:
+    database-platform: org.hibernate.dialect.MariaDBDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate.format_sql: true
+
+mybatis:
+  mapper-locations: classpath:mappers/**/*.xml
+  type-aliases-package: com.example.domain</code></pre>
+
+                <h3>1-2. Oracle DB 연동 설정 (application.yml)</h3>
+                <pre><code class="language-yaml">spring:
+  datasource:
+    driver-class-name: oracle.jdbc.OracleDriver
+    url: jdbc:oracle:thin:@localhost:1521/XEPDB1
+    username: myuser
+    password: oracle_password
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 300000
+      pool-name: Oracle-HikariPool
+
+  jpa:
+    database-platform: org.hibernate.dialect.OracleDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate.format_sql: true
+
+mybatis:
+  mapper-locations: classpath:mappers/**/*.xml
+  type-aliases-package: com.example.domain</code></pre>
+
+                <h2>2단계: 데이터베이스 테이블 생성 (DDL 스크립트)</h2>
+                
+                <h3>2-1. MariaDB DDL 스크립트</h3>
+                <pre><code class="language-sql">-- 사용자 테이블 (users)
+CREATE TABLE users (
+    user_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    role VARCHAR(20) DEFAULT 'ROLE_USER',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 게시글 테이블 (posts)
+CREATE TABLE posts (
+    post_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    content TEXT NOT NULL,
+    view_count INT DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_posts_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 첨부파일 테이블 (attachments)
+CREATE TABLE attachments (
+    attachment_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    post_id BIGINT NOT NULL,
+    original_name VARCHAR(255) NOT NULL,
+    stored_name VARCHAR(255) NOT NULL,
+    file_path VARCHAR(500) NOT NULL,
+    file_size BIGINT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_attachments_post FOREIGN KEY (post_id) REFERENCES posts(post_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;</code></pre>
+
+                <h3>2-2. Oracle DB DDL 스크립트 (12c 이상 IDENTITY)</h3>
+                <pre><code class="language-sql">-- 사용자 테이블 (USERS)
+CREATE TABLE USERS (
+    USER_ID NUMBER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    USERNAME VARCHAR2(50) NOT NULL UNIQUE,
+    PASSWORD VARCHAR2(255) NOT NULL,
+    EMAIL VARCHAR2(100) NOT NULL,
+    ROLE VARCHAR2(20) DEFAULT 'ROLE_USER',
+    CREATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 게시글 테이블 (POSTS)
+CREATE TABLE POSTS (
+    POST_ID NUMBER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    USER_ID NUMBER NOT NULL,
+    TITLE VARCHAR2(200) NOT NULL,
+    CONTENT CLOB NOT NULL,
+    VIEW_COUNT NUMBER DEFAULT 0,
+    CREATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UPDATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT FK_POSTS_USER FOREIGN KEY (USER_ID) REFERENCES USERS(USER_ID) ON DELETE CASCADE
+);
+
+-- 첨부파일 테이블 (ATTACHMENTS)
+CREATE TABLE ATTACHMENTS (
+    ATTACHMENT_ID NUMBER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    POST_ID NUMBER NOT NULL,
+    ORIGINAL_NAME VARCHAR2(255) NOT NULL,
+    STORED_NAME VARCHAR2(255) NOT NULL,
+    FILE_PATH VARCHAR2(500) NOT NULL,
+    FILE_SIZE NUMBER NOT NULL,
+    CREATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT FK_ATTACHMENTS_POST FOREIGN KEY (POST_ID) REFERENCES POSTS(POST_ID) ON DELETE CASCADE
+);</code></pre>
+
+                <h2>3단계: Spring Data JPA 연동 구현</h2>
+
+                <h3>3-1. JPA Entity 클래스 작성</h3>
+                <pre><code class="language-java">package com.example.domain;
+
+import jakarta.persistence.*;
+import lombok.*;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Table(name = "posts")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
+public class Post {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "post_id")
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User author;
+
+    @Column(nullable = false, length = 200)
+    private String title;
+
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String content;
+
+    @Builder.Default
+    @Column(name = "view_count")
+    private Integer viewCount = 0;
+
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Attachment> attachments = new ArrayList<>();
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+
+    public void addAttachment(Attachment attachment) {
+        attachments.add(attachment);
+        attachment.setPost(this);
+    }
+}</code></pre>
+
+                <h3>3-2. Spring Data JPA Repository 인터페이스</h3>
+                <pre><code class="language-java">package com.example.repository;
+
+import com.example.domain.Post;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.util.Optional;
+
+public interface PostRepository extends JpaRepository<Post, Long> {
+
+    @Query("SELECT p FROM Post p JOIN FETCH p.author LEFT JOIN FETCH p.attachments WHERE p.id = :id")
+    Optional<Post> findByIdWithDetails(@Param("id") Long id);
+}</code></pre>
+
+                <h2>4단계: MyBatis 연동 구현 (Mapper XML & Java Interface)</h2>
+
+                <h3>4-1. PostMapper.java 인터페이스</h3>
+                <pre><code class="language-java">package com.example.mapper;
+
+import com.example.dto.PostDto;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
+
+@Mapper
+public interface PostMapper {
+    
+    List<PostDto> selectAllPosts();
+    
+    PostDto selectPostById(@Param("postId") Long postId);
+    
+    int insertPost(PostDto postDto);
+    
+    int insertAttachment(@Param("postId") Long postId, @Param("originalName") String originalName, 
+                         @Param("storedName") String storedName, @Param("filePath") String filePath, 
+                         @Param("fileSize") long fileSize);
+}</code></pre>
+
+                <h3>4-2. PostMapper.xml (SQL 매퍼 매핑 XML)</h3>
+                <pre><code class="language-xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd"&gt;
+
+&lt;mapper namespace="com.example.mapper.PostMapper"&gt;
+
+    &lt;resultMap id="PostResultMap" type="com.example.dto.PostDto"&gt;
+        &lt;id property="postId" column="post_id"/&gt;
+        &lt;result property="title" column="title"/&gt;
+        &lt;result property="content" column="content"/&gt;
+        &lt;result property="authorName" column="username"/&gt;
+        &lt;result property="createdAt" column="created_at"/&gt;
+        &lt;collection property="attachments" ofType="com.example.dto.AttachmentDto"&gt;
+            &lt;id property="attachmentId" column="attachment_id"/&gt;
+            &lt;result property="originalName" column="original_name"/&gt;
+            &lt;result property="storedName" column="stored_name"/&gt;
+            &lt;result property="fileSize" column="file_size"/&gt;
+        &lt;/collection&gt;
+    &lt;/resultMap&gt;
+
+    &lt;select id="selectPostById" resultMap="PostResultMap"&gt;
+        SELECT 
+            p.post_id, p.title, p.content, p.created_at,
+            u.username,
+            a.attachment_id, a.original_name, a.stored_name, a.file_size
+        FROM posts p
+        JOIN users u ON p.user_id = u.user_id
+        LEFT JOIN attachments a ON p.post_id = a.post_id
+        WHERE p.post_id = #{postId}
+    &lt;/select&gt;
+
+    &lt;insert id="insertPost" useGeneratedKeys="true" keyProperty="postId" keyColumn="post_id"&gt;
+        INSERT INTO posts (user_id, title, content, view_count, created_at)
+        VALUES (#{userId}, #{title}, #{content}, 0, CURRENT_TIMESTAMP)
+    &lt;/insert&gt;
+
+&lt;/mapper&gt;</code></pre>
+
+                <h2>5단계: 화면단 샘플 UI (HTML5 + JavaScript 대시보드)</h2>
+                <pre><code class="language-html">&lt;div class="board-container"&gt;
+    &lt;h2&gt;📋 게시판 &amp; 파일 첨부 샘플 화면&lt;/h2&gt;
+
+    &lt;!-- 게시글 작성 폼 --&gt;
+    &lt;form id="post-form" class="card-form"&gt;
+        &lt;input type="text" id="post-title" placeholder="게시글 제목을 입력하세요" required&gt;
+        &lt;textarea id="post-content" placeholder="게시글 내용을 작성하세요..." required&gt;&lt;/textarea&gt;
+        &lt;input type="file" id="post-file" multiple&gt;
+        &lt;button type="submit" class="btn-submit"&gt;게시글 등록&lt;/button&gt;
+    &lt;/form&gt;
+
+    &lt;!-- 게시글 목록 --&gt;
+    &lt;div id="posts-list" class="posts-list"&gt;
+        &lt;div class="loading"&gt;데이터베이스에서 게시글을 조회 중입니다...&lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+async function fetchPosts() {
+    const res = await fetch('/api/v1/posts');
+    const posts = await res.json();
+    const listEl = document.getElementById('posts-list');
+    
+    listEl.innerHTML = posts.map(p => \`
+        &lt;div class="post-card"&gt;
+            &lt;h3&gt;\${p.title} &lt;small&gt;작성자: \${p.authorName}&lt;/small&gt;&lt;/h3&gt;
+            &lt;p&gt;\${p.content}&lt;/p&gt;
+            \${p.attachments.length ? \`
+                &lt;div class="attachments"&gt;
+                    📁 첨부파일: 
+                    \${p.attachments.map(a => \`
+                        &lt;a href="/api/v1/files/download/\${a.storedName}" download&gt;\${a.originalName}&lt;/a&gt;
+                    \`).join(', ')}
+                &lt;/div&gt;
+            \` : ''}
+        &lt;/div&gt;
+    \`).join('');
+}
+fetchPosts();
+&lt;/script&gt;</code></pre>
+            `
+        }
     }
 };
 
