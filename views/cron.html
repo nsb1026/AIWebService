@@ -1,0 +1,89 @@
+<section id="cron-view" class="view">
+    <header class="view-header">
+        <h1 data-i18n="cron_h1">Cron Expression Explainer &amp; Generator</h1>
+        <p data-i18n="cron_p">Parse 5-part standard Cron expressions into plain human-readable sentences and calculate future execution timelines.</p>
+        <div class="tool-description">
+            <p><strong>Technical Overview:</strong> Cron expressions schedule automated background tasks, database backups, and queue jobs in Linux/Unix servers and cloud schedulers (Kubernetes CronJobs, AWS EventBridge, GitHub Actions). Minor syntax errors can lead to missed jobs or runaway execution loops. Our parser translates cron syntax into plain language instantly.</p>
+        </div>
+    </header>
+
+    <div class="parser-container">
+        <div class="parser-input-side">
+            <div class="input-header">
+                <label>Cron Expression (5 Fields: Minute Hour Day Month Weekday)</label>
+                <div id="cron-status" class="json-status"></div>
+                <button id="btn-cron-clear" class="btn-small danger-btn">Reset</button>
+            </div>
+            <input type="text" id="cron-input" value="*/15 * * * *" placeholder="e.g. 0 0 * * *" class="text-input" style="width: 100%; padding: 12px; font-size: 1.1rem; font-family: 'JetBrains Mono', monospace; border-radius: 6px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-color);">
+
+            <div class="preset-buttons" style="margin-top: 15px; display: flex; gap: 8px; flex-wrap: wrap;">
+                <button class="preset-btn btn-small secondary-btn" data-cron="* * * * *">Every Minute (* * * * *)</button>
+                <button class="preset-btn btn-small secondary-btn" data-cron="*/15 * * * *">Every 15 Mins (*/15 * * * *)</button>
+                <button class="preset-btn btn-small secondary-btn" data-cron="0 * * * *">Hourly (0 * * * *)</button>
+                <button class="preset-btn btn-small secondary-btn" data-cron="0 0 * * *">Daily at Midnight (0 0 * * *)</button>
+                <button class="preset-btn btn-small secondary-btn" data-cron="0 9 * * 1">Every Mon 9AM (0 9 * * 1)</button>
+            </div>
+        </div>
+
+        <div class="parser-output-side">
+            <div class="input-header">
+                <label>Human-Readable Schedule Explanation</label>
+                <button class="copy-btn btn-small" data-target="cron-explanation" data-i18n="btn_copy">Copy Sentence</button>
+            </div>
+            <textarea id="cron-explanation" readonly style="font-size: 1.1rem; height: 100px; color: var(--accent-color); font-weight: 600;"></textarea>
+
+            <div class="input-header" style="margin-top: 15px;">
+                <label>Next 5 Scheduled Executions</label>
+            </div>
+            <textarea id="cron-schedule" readonly style="height: 120px; font-family: 'JetBrains Mono', monospace;"></textarea>
+        </div>
+    </div>
+
+    <!-- Educational & Technical Content -->
+    <div class="tech-details-section">
+        <h2>Developer Guide: Standard 5-Field Cron Syntax Breakdown</h2>
+        <p>A standard Unix cron expression consists of 5 space-separated fields representing time units:</p>
+
+        <div class="code-examples-card" style="margin-bottom: 20px;">
+            <pre><code>┌───────────── minute (0 - 59)
+│ ┌───────────── hour (0 - 23)
+│ │ ┌───────────── day of the month (1 - 31)
+│ │ │ ┌───────────── month (1 - 12)
+│ │ │ │ ┌───────────── day of the week (0 - 6) (Sunday to Saturday)
+│ │ │ │ │
+* * * * *</code></pre>
+        </div>
+
+        <div class="details-grid">
+            <div class="details-card">
+                <h3>1. Special Characters Reference</h3>
+                <ul>
+                    <li><code>*</code> (Asterisk): Matches any value (e.g. <code>*</code> in month means every month).</li>
+                    <li><code>,</code> (Comma): Specifies value list (e.g. <code>1,15,30</code> in minute field).</li>
+                    <li><code>-</code> (Hyphen): Defines value range (e.g. <code>1-5</code> in day-of-week for Mon-Fri).</li>
+                    <li><code>/</code> (Slash): Specifies step increments (e.g. <code>*/10</code> in minute means every 10 minutes).</li>
+                </ul>
+            </div>
+            <div class="details-card">
+                <h3>2. Server Timezone Caution</h3>
+                <p>Cron schedules execute according to the host system's local server time or UTC setting. Always confirm whether your cloud provider (AWS, GCP, Vercel) runs on UTC or local server time when configuring scheduled jobs.</p>
+            </div>
+            <div class="details-card">
+                <h3>3. Kubernetes &amp; CI/CD Pipelines</h3>
+                <p>Kubernetes <code>CronJob</code> manifests and GitHub Actions <code>on.schedule.cron</code> use 5-part cron syntax. GitHub Actions enforces a minimum interval of 5 minutes to prevent job queue congestion.</p>
+            </div>
+        </div>
+
+        <div class="faq-card">
+            <h3>Cron Explainer FAQ</h3>
+            <div class="faq-item">
+                <h4>Q: Is day 0 Sunday or Monday in Cron?</h4>
+                <p><strong>A:</strong> Day 0 (and Day 7 in extended cron) represents <strong>Sunday</strong>. 1 represents Monday, 2 Tuesday, through 6 Saturday.</p>
+            </div>
+            <div class="faq-item">
+                <h4>Q: How do I run a task every 5 minutes?</h4>
+                <p><strong>A:</strong> Use <code>*/5 * * * *</code>. The <code>*/5</code> in the minute position specifies a step value of 5.</p>
+            </div>
+        </div>
+    </div>
+</section>

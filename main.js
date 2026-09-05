@@ -16,6 +16,12 @@ import { setupBase64ImageTool } from './js/base64-image.js';
 import { setupGuides, getArticleData, injectArticle } from './js/guides.js';
 import { updateLanguage } from './js/i18n.js';
 
+import { setupCurlConverter } from './js/curl.js';
+import { setupHashGenerator } from './js/hash.js';
+import { setupCronExplainer } from './js/cron.js';
+import { setupTimestampConverter } from './js/timestamp.js';
+import { setupRegexTester } from './js/regex.js';
+
 document.addEventListener('DOMContentLoaded', () => {
     const navLinks = document.querySelectorAll('.nav-link, .footer-link');
     const appContent = document.getElementById('app-content');
@@ -41,6 +47,12 @@ document.addEventListener('DOMContentLoaded', () => {
         'html-view': setupHtmlFormatter,
         'diff-view': setupDiffChecker,
         'base64-image-view': setupBase64ImageTool,
+        'curl-view': setupCurlConverter,
+        'hash-view': setupHashGenerator,
+        'cron-view': setupCronExplainer,
+        'timestamp-view': setupTimestampConverter,
+        'regex-view': setupRegexTester,
+        'status-codes-view': setupStatusCodeFilter,
         'guides-view': setupGuides,
         'article-view': setupGuides,
         'resources-view': null,
@@ -51,6 +63,19 @@ document.addEventListener('DOMContentLoaded', () => {
         'news-view': null,
         'glossary-view': setupGlossaryFilter
     };
+
+    function setupStatusCodeFilter() {
+        const filterInput = document.getElementById('status-code-filter');
+        const items = document.querySelectorAll('.details-card li');
+        if (filterInput) {
+            filterInput.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                items.forEach(item => {
+                    item.style.display = item.textContent.toLowerCase().includes(term) ? 'list-item' : 'none';
+                });
+            });
+        }
+    }
 
     function setupGlossaryFilter() {
         const filterInput = document.getElementById('glossary-filter');
@@ -159,6 +184,12 @@ document.addEventListener('DOMContentLoaded', () => {
             'xml-view': { en: 'Professional XML Formatter & Beautifier | Parse Utils', ko: '전문적인 XML 포맷터 및 뷰티파이어 | 파스 유틸' },
             'yaml-view': { en: 'Professional YAML Parser & Converter | Parse Utils', ko: '전문적인 YAML 파서 및 변환기 | 파스 유틸' },
             'base64-image-view': { en: 'Advanced Base64 to Image Reconstruction | Parse Utils', ko: '고급 Base64 이미지 재구성 | 파스 유틸' },
+            'curl-view': { en: 'cURL Command to Code Converter | Parse Utils', ko: 'cURL 명령어 소스코드 변환기 | 파스 유틸' },
+            'hash-view': { en: 'Cryptographic Hash & HMAC Generator | Parse Utils', ko: '암호화 해시 및 HMAC 생성기 | 파스 유틸' },
+            'cron-view': { en: 'Cron Expression Explainer & Generator | Parse Utils', ko: 'Cron 표현식 해석기 및 생성기 | 파스 유틸' },
+            'timestamp-view': { en: 'Unix Timestamp & Epoch Converter | Parse Utils', ko: 'Unix 타임스탬프 및 타임존 변환기 | 파스 유틸' },
+            'regex-view': { en: 'Regex Tester & Cheatsheet | Parse Utils', ko: '정규표현식 검증기 및 치트시트 | 파스 유틸' },
+            'status-codes-view': { en: 'HTTP Status Codes Reference & Guide | Parse Utils', ko: 'HTTP 상태 코드 백과사전 | 파스 유틸' },
             'html-view': { en: 'Semantic HTML Formatter & Optimizer | Parse Utils', ko: '시맨틱 HTML 포맷터 및 최적화 도구 | 파스 유틸' },
             'diff-view': { en: 'Intelligent Text & Code Diff Checker | Parse Utils', ko: '지능형 텍스트 및 코드 차이점 분석기 | 파스 유틸' },
             'guides-view': { en: 'Developer Guides & Technical Articles | Parse Utils', ko: '개발자 가이드 및 기술 아티클 | 파스 유틸' },

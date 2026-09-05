@@ -1,0 +1,122 @@
+<section id="timestamp-view" class="view">
+    <header class="view-header">
+        <h1 data-i18n="timestamp_h1">Unix Timestamp &amp; Epoch Timezone Converter</h1>
+        <p data-i18n="timestamp_p">Convert Unix Epoch timestamps (seconds &amp; milliseconds) into human-readable ISO 8601, UTC, and KST (Korea Standard Time) formats with real-time live clock feed.</p>
+        <div class="tool-description">
+            <p><strong>Technical Overview:</strong> Unix Epoch time tracks time as the total number of elapsed seconds since <code>00:00:00 UTC, Thursday, 1 January 1970</code>. In distributed systems, database logs, and API payloads, timestamps are stored in integer Epoch format to eliminate timezone ambiguity.</p>
+        </div>
+    </header>
+
+    <div class="parser-container">
+        <div class="parser-input-side">
+            <div class="input-header">
+                <label>Current Live Unix Epoch Clock</label>
+                <div id="clock-live-status" class="json-status success">LIVE</div>
+            </div>
+            <div style="background: var(--input-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); text-align: center; margin-bottom: 20px;">
+                <span id="live-epoch" style="font-size: 2rem; font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--accent-color);">0</span>
+                <p style="margin-top: 5px; color: var(--text-muted); font-size: 0.9rem;">Seconds since Jan 01 1970 (UTC)</p>
+            </div>
+
+            <div class="input-header">
+                <label>Convert Timestamp / Date Input</label>
+                <button id="btn-ts-now" class="btn-small primary-btn">Set to Current Time</button>
+            </div>
+            <input type="text" id="ts-input" placeholder="Paste Unix timestamp in seconds (e.g. 1772668800) or milliseconds..." class="text-input" style="width: 100%; padding: 12px; font-size: 1.1rem; font-family: 'JetBrains Mono', monospace; border-radius: 6px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-color);">
+        </div>
+
+        <div class="parser-output-side">
+            <div class="input-header">
+                <label>Converted Time Formats</label>
+            </div>
+            <div class="output-group">
+                <div class="field">
+                    <label>ISO 8601 Standard String</label>
+                    <div class="input-with-button">
+                        <input type="text" id="ts-iso" readonly>
+                        <button class="copy-btn" data-target="ts-iso" data-i18n="btn_copy">Copy</button>
+                    </div>
+                </div>
+                <div class="field">
+                    <label>UTC GMT String</label>
+                    <div class="input-with-button">
+                        <input type="text" id="ts-utc" readonly>
+                        <button class="copy-btn" data-target="ts-utc" data-i18n="btn_copy">Copy</button>
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Korea Standard Time (KST / UTC+9)</label>
+                    <div class="input-with-button">
+                        <input type="text" id="ts-kst" readonly>
+                        <button class="copy-btn" data-target="ts-kst" data-i18n="btn_copy">Copy</button>
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Relative Time Elapsed</label>
+                    <div class="input-with-button">
+                        <input type="text" id="ts-relative" readonly>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Educational & Technical Content -->
+    <div class="tech-details-section">
+        <h2>Developer Guide: Unix Epoch Time, 2038 Problem &amp; Timezone Handling</h2>
+        <p>Epoch time (POSIX time) provides an unambiguous, integer representation of time independent of Daylight Saving Time (DST) or geographical timezone shifts.</p>
+
+        <div class="details-grid">
+            <div class="details-card">
+                <h3>1. Seconds vs. Milliseconds in Web APIs</h3>
+                <p><strong>Unix Seconds (10 digits):</strong> Standard in Linux kernel, C, Python, Go, and database timestamps (e.g. <code>1772668800</code>).</p>
+                <p><strong>JavaScript Milliseconds (13 digits):</strong> JS <code>Date.now()</code> and Java <code>System.currentTimeMillis()</code> use 13-digit epoch values (e.g. <code>1772668800000</code>).</p>
+            </div>
+            <div class="details-card">
+                <h3>2. The Year 2038 Problem (Y2K38)</h3>
+                <p>On <strong>19 January 2038 at 03:14:07 UTC</strong>, 32-bit signed integer Unix timestamps will overflow into negative values, resetting clocks to 1901. Modern 64-bit operating systems resolve this issue completely.</p>
+            </div>
+            <div class="details-card">
+                <h3>3. Timezone Storage Rule of Thumb</h3>
+                <p>Always store timestamps in UTC or integer Epoch seconds in backend databases (PostgreSQL <code>TIMESTAMPTZ</code>). Format to local timezone (e.g. KST, EST, PST) only at the front-end rendering layer.</p>
+            </div>
+        </div>
+
+        <div class="code-examples-card">
+            <h3>Getting Epoch Timestamps in Modern Languages</h3>
+            <pre><code>// JavaScript / Node.js
+const epochSec = Math.floor(Date.now() / 1000); // 10 digits
+const epochMs = Date.now(); // 13 digits
+const isoStr = new Date().toISOString();
+
+# Python 3
+import time, datetime
+epoch_sec = int(time.time())
+utc_dt = datetime.datetime.now(datetime.timezone.utc)
+
+// Go (Golang)
+package main
+import (
+    "fmt"
+    "time"
+)
+func main() {
+    epochSec := time.Now().Unix()
+    epochMs := time.Now().UnixMilli()
+    fmt.Println(epochSec, epochMs)
+}</code></pre>
+        </div>
+
+        <div class="faq-card">
+            <h3>Timestamp Converter FAQ</h3>
+            <div class="faq-item">
+                <h4>Q: How does this tool detect if input is in seconds or milliseconds?</h4>
+                <p><strong>A:</strong> Timestamps under $10^{11}$ (~year 5138) are parsed as seconds, while timestamps greater than $10^{11}$ are parsed as milliseconds.</p>
+            </div>
+            <div class="faq-item">
+                <h4>Q: Does Daylight Saving Time (DST) affect Epoch timestamps?</h4>
+                <p><strong>A: No.</strong> Epoch time measures absolute seconds elapsed since 1970 UTC regardless of DST rules.</p>
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,115 @@
+<section id="hash-view" class="view">
+    <header class="view-header">
+        <h1 data-i18n="hash_h1">Cryptographic Hash &amp; HMAC Generator</h1>
+        <p data-i18n="hash_p">Generate cryptographic hashes (SHA-256, SHA-512, SHA-1, MD5) and Hash-based Message Authentication Codes (HMAC) locally in your browser memory using the Web Crypto API.</p>
+        <div class="tool-description">
+            <p><strong>Technical Overview:</strong> One-way cryptographic hash functions map arbitrary data strings to fixed-size bit digests. They are fundamental for data integrity verification, password hashing, digital signatures, and HMAC API authentication. Our client-side hash generator processes inputs offline without exposing secret keys.</p>
+        </div>
+    </header>
+
+    <div class="parser-container">
+        <div class="parser-input-side">
+            <div class="input-header">
+                <label>Input Message / Payload</label>
+                <button id="btn-hash-clear" class="btn-small danger-btn">Clear Workspace</button>
+            </div>
+            <textarea id="hash-input" placeholder="Type or paste text to compute cryptographic hashes..."></textarea>
+            
+            <div class="input-header" style="margin-top: 15px;">
+                <label>Optional HMAC Secret Key</label>
+            </div>
+            <input type="text" id="hmac-key" placeholder="Enter secret key to compute HMAC (leave empty for plain hash)..." class="text-input" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-color);">
+        </div>
+
+        <div class="parser-output-side">
+            <div class="input-header">
+                <label>Computed Hashes &amp; Digests</label>
+            </div>
+            <div class="output-group">
+                <div class="field">
+                    <label>SHA-256 (256-bit Digest)</label>
+                    <div class="input-with-button">
+                        <input type="text" id="hash-sha256" readonly>
+                        <button class="copy-btn" data-target="hash-sha256" data-i18n="btn_copy">Copy</button>
+                    </div>
+                </div>
+                <div class="field">
+                    <label>SHA-512 (512-bit Digest)</label>
+                    <div class="input-with-button">
+                        <input type="text" id="hash-sha512" readonly>
+                        <button class="copy-btn" data-target="hash-sha512" data-i18n="btn_copy">Copy</button>
+                    </div>
+                </div>
+                <div class="field">
+                    <label>SHA-1 (160-bit Digest - Legacy)</label>
+                    <div class="input-with-button">
+                        <input type="text" id="hash-sha1" readonly>
+                        <button class="copy-btn" data-target="hash-sha1" data-i18n="btn_copy">Copy</button>
+                    </div>
+                </div>
+                <div class="field">
+                    <label>MD5 (128-bit Checksum - Legacy)</label>
+                    <div class="input-with-button">
+                        <input type="text" id="hash-md5" readonly>
+                        <button class="copy-btn" data-target="hash-md5" data-i18n="btn_copy">Copy</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Educational & Technical Content -->
+    <div class="tech-details-section">
+        <h2>Developer Guide: One-Way Hashing, HMAC &amp; Password Security</h2>
+        <p>A cryptographic hash function is a mathematical algorithm that transforms arbitrary data into a fixed-length string of hexadecimal characters. Hash functions are irreversible (one-way) and deterministic (the same input always produces the exact same hash output).</p>
+
+        <div class="details-grid">
+            <div class="details-card">
+                <h3>1. One-Way Hashing vs. Symmetric Encryption</h3>
+                <p><strong>Hashing (SHA-256):</strong> One-way data reduction. Original text cannot be decrypted back from the hash. Used for verifying file integrity and message signatures.</p>
+                <p><strong>Encryption (AES-256):</strong> Two-way transformation. Ciphertext can be decrypted back to plain text using a secret key. Used for confidential data storage and transport.</p>
+            </div>
+            <div class="details-card">
+                <h3>2. What is HMAC (Hash-based Message Authentication Code)?</h3>
+                <p>HMAC combines a secret cryptographic key with a hash function (e.g. HMAC-SHA256). It verifies both <strong>data integrity</strong> and <strong>authenticity</strong>, preventing attackers from tampering with API payloads during transmission over public networks.</p>
+            </div>
+            <div class="details-card">
+                <h3>3. Password Storage &amp; Salting Rules</h3>
+                <p>Never hash passwords using plain SHA-256 or MD5 due to vulnerability to pre-computed Rainbow Table attacks. Always use key-derivation algorithms with random salts like <strong>Bcrypt</strong>, <strong>Argon2id</strong>, or <strong>PBKDF2</strong>.</p>
+            </div>
+        </div>
+
+        <div class="code-examples-card">
+            <h3>Generating Hashes &amp; HMAC in Backend Languages</h3>
+            <pre><code>// JavaScript (Web Crypto API)
+async function sha256(message) {
+    const msgUint8 = new TextEncoder().encode(message);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+# Python 3 (hashlib & hmac)
+import hashlib, hmac
+
+# Plain SHA-256
+hash_val = hashlib.sha256("Hello World".encode('utf-8')).hexdigest()
+
+# HMAC-SHA256
+secret_key = b"secret_key_123"
+hmac_val = hmac.new(secret_key, "Hello World".encode('utf-8'), hashlib.sha256).hexdigest()</code></pre>
+        </div>
+
+        <div class="faq-card">
+            <h3>Cryptographic Hash FAQ</h3>
+            <div class="faq-item">
+                <h4>Q: Is MD5 or SHA-1 safe for cryptographic security?</h4>
+                <p><strong>A: No.</strong> MD5 and SHA-1 have known collision vulnerabilities. Use SHA-256, SHA-512, or SHA-3 for modern security implementations.</p>
+            </div>
+            <div class="faq-item">
+                <h4>Q: Is my secret key sent to any server when generating HMAC?</h4>
+                <p><strong>A: No.</strong> All computation utilizes the native browser Web Crypto API (<code>window.crypto.subtle</code>) locally.</p>
+            </div>
+        </div>
+    </div>
+</section>
