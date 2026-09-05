@@ -1,7 +1,10 @@
 <section id="sql-view" class="view">
     <header class="view-header">
-        <h1 data-i18n="sql_h1">Semantic SQL Formatter</h1>
-        <p data-i18n="sql_p">Transform messy SQL queries into readable, structured statements.</p>
+        <h1 data-i18n="sql_h1">Semantic SQL Formatter &amp; Query Prettifier</h1>
+        <p data-i18n="sql_p">Transform complex SQL queries into clean, standardized, and readable statements. Optimized for PostgreSQL, MySQL, SQLite, Oracle, and SQL Server.</p>
+        <div class="tool-description">
+            <p><strong>Technical Overview:</strong> Database query maintainability directly impacts code review speed and system performance. Unformatted SQL strings embedded in application logs or codebases make debugging execution plans difficult. Our client-side SQL formatter enforces consistent keyword capitalization, clause line breaks, and nested subquery indentations without sending your queries to any remote server.</p>
+        </div>
     </header>
     <div class="parser-container">
         <div class="parser-input-side">
@@ -9,7 +12,7 @@
                 <label>Raw SQL Query</label>
                 <div id="sql-status" class="json-status"></div>
             </div>
-            <textarea id="sql-input" data-i18n="placeholder_sql" placeholder="Paste your SQL here..."></textarea>
+            <textarea id="sql-input" data-i18n="placeholder_sql" placeholder="Paste your unformatted SQL query here (e.g. SELECT u.id, u.name, o.total FROM users u JOIN orders o ON u.id = o.user_where o.status = 'active'...)..."></textarea>
         </div>
         <div class="parser-controls">
             <button id="btn-sql-prettify" class="primary-btn" data-i18n="btn_prettify">Prettify SQL</button>
@@ -20,6 +23,68 @@
                 <button class="copy-btn btn-small" data-target="sql-output" data-i18n="btn_copy">Copy SQL</button>
             </div>
             <textarea id="sql-output" readonly placeholder="Your formatted SQL will appear here..."></textarea>
+        </div>
+    </div>
+
+    <!-- Educational & Security Documentation -->
+    <div class="tech-details-section">
+        <h2>Developer Guide: ANSI SQL Formatting &amp; Security Standards</h2>
+        <p>SQL (Structured Query Language) is the domain-specific language used for managing relational database management systems (RDBMS). Writing clean, formatted SQL is essential for collaborative engineering, query optimization, and static code security analysis.</p>
+
+        <div class="details-grid">
+            <div class="details-card">
+                <h3>1. Standard SQL Formatting Conventions</h3>
+                <p>Consistent SQL formatting follows industry standards:</p>
+                <ul>
+                    <li><strong>Uppercase Reserved Keywords:</strong> SQL keywords (<code>SELECT</code>, <code>FROM</code>, <code>WHERE</code>, <code>JOIN</code>, <code>GROUP BY</code>, <code>ORDER BY</code>, <code>HAVING</code>) should always be capitalized.</li>
+                    <li><strong>Clause Isolation:</strong> Place major clauses on new lines to improve visual scanning during EXPLAIN ANALYZE reviews.</li>
+                    <li><strong>Indented Joins &amp; Subqueries:</strong> Align <code>ON</code> conditions under their respective <code>JOIN</code> blocks to clarify table relationships.</li>
+                </ul>
+            </div>
+            <div class="details-card">
+                <h3>2. SQL Injection Prevention &amp; Prepared Statements</h3>
+                <p>SQL Injection (SQLi) remains one of the top OWASP Web Application Security risks. SQLi occurs when untrusted user input is directly concatenated into SQL query strings.</p>
+                <p><strong>Rule #1:</strong> Never concatenate raw input into SQL queries. Always use parameterized queries (prepared statements) provided by database drivers.</p>
+            </div>
+            <div class="details-card">
+                <h3>3. CTEs (Common Table Expressions) vs. Subqueries</h3>
+                <p>Using <code>WITH cte_name AS (...)</code> statements improves query readability over deeply nested subqueries. Formatted CTEs allow complex multi-stage analytical queries to be broken down into modular logical units.</p>
+            </div>
+        </div>
+
+        <div class="code-examples-card">
+            <h3>Parameterized Query Snippets in Modern Languages</h3>
+            <pre><code>// Node.js (pg / PostgreSQL driver)
+const { Client } = require('pg');
+const client = new Client();
+const userId = req.params.id;
+
+// SECURE: Parameterized Query
+const query = `
+    SELECT id, email, created_at
+    FROM users
+    WHERE id = $1 AND status = $2;
+`;
+const res = await client.query(query, [userId, 'active']);
+
+# Python (psycopg2)
+cursor.execute("""
+    SELECT id, username, total_orders
+    FROM user_summaries
+    WHERE country = %s AND registration_date >= %s;
+""", (country_code, min_date))</code></pre>
+        </div>
+
+        <div class="faq-card">
+            <h3>SQL Formatter FAQ</h3>
+            <div class="faq-item">
+                <h4>Q: Does this SQL formatter support dialect-specific extensions?</h4>
+                <p><strong>A: Yes.</strong> The tool handles standard ANSI SQL as well as dialect-specific syntax for PostgreSQL (JSONB operators), MySQL, SQLite, SQL Server, and Oracle.</p>
+            </div>
+            <div class="faq-item">
+                <h4>Q: Is my database query sent to a remote server?</h4>
+                <p><strong>A: No.</strong> Formatted entirely inside your browser, sensitive table structures and query logic remain 100% private.</p>
+            </div>
         </div>
     </div>
 </section>

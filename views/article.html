@@ -1,6 +1,39 @@
 <section id="article-view" class="view">
     <button id="btn-back-to-guides" class="btn-small secondary-btn" data-i18n="btn_back_guides">&larr; Back to Guides</button>
+    
     <article id="full-article-content" class="full-article">
-        <!-- Content will be injected via JS -->
+        <h1>Understanding Base64 Encoding: Deep Dive &amp; Best Practices</h1>
+        <p>Base64 is a binary-to-text encoding scheme that represents binary data in an ASCII string format. It's one of the most common ways to transmit binary data over protocols that are designed to handle text, such as HTTP, SMTP, or even embedding data directly into HTML and CSS.</p>
+        
+        <h2>How Base64 Works Internally</h2>
+        <p>The term "Base64" comes from the fact that it uses a set of 64 unique characters to represent data. These characters typically include:</p>
+        <ul>
+            <li>Uppercase letters (A-Z)</li>
+            <li>Lowercase letters (a-z)</li>
+            <li>Numbers (0-9)</li>
+            <li>Two additional symbols (usually + and /)</li>
+            <li>The = character is used for padding at the end of the string</li>
+        </ul>
+        <p>Every three bytes of binary data (24 bits) are divided into four 6-bit chunks. Each 6-bit chunk is then mapped to one of the 64 characters in the Base64 alphabet. This process ensures that binary data can be handled by systems that might otherwise interpret certain binary sequences as control characters.</p>
+
+        <div class="technical-note">
+            <strong>Developer Tip:</strong> The padding character (=) is used when the input data is not a multiple of 3 bytes. This allows the decoder to know exactly how many bits of data are trailing.
+        </div>
+
+        <blockquote>
+            Important: Base64 is <strong>NOT encryption</strong>. It is a form of encoding. Anyone can easily decode a Base64 string back to its original binary form using standard tools. Never use it to secure sensitive information like passwords or API keys.
+        </blockquote>
+
+        <h2>Common Use Cases in Modern Web Development</h2>
+        <ol>
+            <li><strong>Data URIs:</strong> Embedding small images or fonts directly into HTML or CSS using <code>data:image/png;base64,...</code>. This reduces the number of HTTP requests, which can improve performance for sites with many small assets.</li>
+            <li><strong>Basic Authentication:</strong> Transmitting credentials in HTTP headers. While standard, this should always be done over encrypted HTTPS connections to prevent interception.</li>
+            <li><strong>Email Attachments:</strong> Legacy email systems often handle only 7-bit ASCII, so binary attachments must be encoded to pass through these systems safely.</li>
+            <li><strong>JSON &amp; XML Payloads:</strong> Including binary data (like a small profile picture or a document) inside a JSON object or XML file where raw binary would break the structure.</li>
+        </ol>
+
+        <h2>Performance and Security Trade-offs</h2>
+        <p>While Base64 is convenient, it comes with a significant cost. Encoding data into Base64 increases the file size by approximately <strong>33%</strong>. For large files, this overhead can significantly impact load times, memory usage, and bandwidth costs. As a rule of thumb, only use Base64 for very small assets (under 10KB) or when necessary for protocol compatibility.</p>
+        <p>From a security perspective, always remember that Base64 is transparent. If you see a string starting with <code>eyJ</code>, it's almost certainly a Base64-encoded JSON object (like a JWT). Security through obscurity (like Base64 encoding a secret) is no security at all.</p>
     </article>
 </section>

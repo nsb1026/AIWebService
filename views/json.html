@@ -1,6 +1,6 @@
 <section id="json-view" class="view">
     <header class="view-header">
-        <h1 data-i18n="json_h1">High-Performance JSON Analytics & Formatting</h1>
+        <h1 data-i18n="json_h1">High-Performance JSON Analytics &amp; Formatting</h1>
         <p data-i18n="json_p">Validate, restructure, and optimize your JavaScript Object Notation payloads. Designed for handling large-scale API responses with millisecond latency.</p>
         <div class="tool-description">
             <p><strong>Usage Guide:</strong> Paste your raw JSON into the left panel. Use 'Prettify' for human readability or 'Sort Keys' to normalize objects for comparison. The 'Minify' option is recommended for reducing payload size before production deployment. Errors are caught in real-time with specific line-number feedback.</p>
@@ -31,30 +31,69 @@
         </div>
     </div>
 
-    <footer class="view-footer-content">
-        <div class="content-card">
-            <h2>Technical Documentation & JSON Standards</h2>
-            <p>JSON (JavaScript Object Notation) is a lightweight data-interchange format that is easy for humans to read and write and easy for machines to parse and generate. It is based on a subset of the JavaScript Programming Language Standard (ECMA-262 3rd Edition). JSON is a text format that is completely language independent but uses conventions that are familiar to programmers of the C-family of languages, including C, C++, C#, Java, JavaScript, Perl, Python, and many others.</p>
-            
-            <h3>Core Structural Rules</h3>
-            <ul>
-                <li><strong>Data is in name/value pairs:</strong> A name/value pair consists of a field name (in double quotes), followed by a colon, followed by a value.</li>
-                <li><strong>Data is separated by commas:</strong> Commas are used to separate multiple name/value pairs or array elements.</li>
-                <li><strong>Curly braces hold objects:</strong> Objects start with <code>{</code> and end with <code>}</code>.</li>
-                <li><strong>Square brackets hold arrays:</strong> Arrays start with <code>[</code> and end with <code>]</code>.</li>
-            </ul>
+    <!-- Extensive Educational Content & Documentation for AdSense Compliance -->
+    <div class="tech-details-section">
+        <h2>Developer Guide: Deep Dive into JSON Standards &amp; Data Manipulation</h2>
+        <p>JavaScript Object Notation (JSON) is the universal standard for structured data serialization on the web, defined by <strong>RFC 8259</strong> and <strong>ECMA-404</strong>. Used primarily in REST APIs, GraphQL, and configuration files, JSON provides a lightweight, human-readable format that maps directly to core data structures in almost every programming language.</p>
 
-            <h3>Common JSON Validation Pitfalls</h3>
-            <p>While JSON is flexible, our validator enforces strict adherence to RFC 8259 to ensure compatibility across all systems. Common errors include:</p>
-            <ol>
-                <li><strong>Single Quotes:</strong> JSON requires double quotes (<code>"</code>) for both keys and string values. Single quotes (<code>'</code>) will cause a syntax error.</li>
-                <li><strong>Trailing Commas:</strong> Unlike JavaScript objects, JSON does not allow a comma after the last element in an object or array.</li>
-                <li><strong>Unquoted Keys:</strong> All keys in a JSON object must be wrapped in double quotes.</li>
-                <li><strong>Control Characters:</strong> Strings must not contain unescaped control characters.</li>
-            </ol>
-
-            <h3>The Benefits of Key Sorting & Minification</h3>
-            <p>Sorting keys alphabetically (Deterministic JSON) is essential for caching and digital signatures, as it ensures that identical objects always produce the same string representation. Minification, on the other hand, is a production-level optimization that strips all whitespace, significantly reducing the amount of data transferred over the network without affecting the data's integrity.</p>
+        <div class="details-grid">
+            <div class="details-card">
+                <h3>1. RFC 8259 Compliance &amp; Strict Syntax Rules</h3>
+                <p>Although JSON syntax resembles JavaScript object literal notation, RFC 8259 enforces strict formatting requirements:</p>
+                <ul>
+                    <li><strong>Double Quotes Mandatory:</strong> Strings and object key names must use double quotes (<code>"key"</code>). Single quotes cause a syntax error.</li>
+                    <li><strong>No Trailing Commas:</strong> Commas after the last key-value pair or array element are prohibited in standard JSON.</li>
+                    <li><strong>Strict Literals:</strong> Allowed primitive values are string, number, object, array, <code>true</code>, <code>false</code>, and <code>null</code>. Functions, <code>undefined</code>, and NaN are not permitted.</li>
+                </ul>
+            </div>
+            <div class="details-card">
+                <h3>2. Key Sorting &amp; Canonical Serialization</h3>
+                <p>Deterministic JSON requires key-value pairs to be sorted alphabetically. Sorting keys is essential in microservices architecture for cryptographic signing, HMAC generation, and HTTP payload caching, ensuring identical objects yield identical SHA-256 hashes.</p>
+            </div>
+            <div class="details-card">
+                <h3>3. Minification vs. Prettification</h3>
+                <p>Minification strips all structural whitespace, tabs, and newlines from a JSON payload. This reduces network payload size by 20% to 40% prior to gzip/brotli compression. Prettification, by contrast, adds uniform 2-space or 4-space indentation for developer debugging.</p>
+            </div>
         </div>
-    </footer>
+
+        <div class="code-examples-card">
+            <h3>JSON Parsing &amp; Handling Code Snippets</h3>
+            <pre><code>// JavaScript / Node.js
+const rawJson = '{"name":"Parse Utils","type":"utility","version":1}';
+const parsed = JSON.parse(rawJson);
+const prettified = JSON.stringify(parsed, null, 2);
+const minified = JSON.stringify(parsed);
+
+# Python 3
+import json
+data = json.loads(rawJson)
+pretty_str = json.dumps(data, indent=2, sort_keys=True)
+
+// Go (Golang)
+package main
+import (
+    "encoding/json"
+    "fmt"
+)
+type Config struct {
+    Name string `json:"name"`
+}
+func main() {
+    var cfg Config
+    json.Unmarshal([]byte(rawJson), &amp;cfg)
+}</code></pre>
+        </div>
+
+        <div class="faq-card">
+            <h3>JSON Processing FAQ</h3>
+            <div class="faq-item">
+                <h4>Q: Why does JSON.parse fail on unquoted keys?</h4>
+                <p><strong>A:</strong> Unlike JS object literals, standard JSON strictly requires keys to be enclosed in double quotes as specified in RFC 8259.</p>
+            </div>
+            <div class="faq-item">
+                <h4>Q: How does this tool handle large JSON files?</h4>
+                <p><strong>A:</strong> Parse Utils processes JSON using non-blocking browser V8 memory buffers, allowing instant formatting of payloads up to 10MB completely offline.</p>
+            </div>
+        </div>
+    </div>
 </section>

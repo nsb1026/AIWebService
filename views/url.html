@@ -1,7 +1,10 @@
 <section id="url-view" class="view">
     <header class="view-header">
-        <h1 data-i18n="url_h1">Deep URL Parser & Analyzer</h1>
-        <p data-i18n="url_p">Deconstruct complex URLs into their fundamental components. Analyze protocols, query parameters, and fragments.</p>
+        <h1 data-i18n="url_h1">Deep URL Parser &amp; Query Analyzer</h1>
+        <p data-i18n="url_p">Deconstruct complex Uniform Resource Locators into protocol schemes, hostname authorities, port numbers, pathname routes, search query parameters, and hash fragments.</p>
+        <div class="tool-description">
+            <p><strong>Technical Overview:</strong> Web APIs rely heavily on query strings for parameter passing, authentication tokens, and pagination controls. Inspecting nested query parameters manually can lead to missed parameters or parsing errors. Our client-side URL analyzer uses standard WHATWG URL algorithms to extract all query pairs into clean JSON structure instantly.</p>
+        </div>
     </header>
     <div class="parser-container">
         <div class="parser-input-side">
@@ -9,17 +12,82 @@
                 <label>Source URL</label>
                 <div id="url-status" class="json-status"></div>
             </div>
-            <textarea id="url-input" data-i18n="placeholder_url" placeholder="Paste your URL here..."></textarea>
+            <textarea id="url-input" data-i18n="placeholder_url" placeholder="Paste your target URL here (e.g., https://api.example.com:8443/v1/search?q=developer+tools&amp;category=web&amp;sort=desc#results)..."></textarea>
         </div>
         <div class="parser-controls">
             <button id="btn-url-parse" class="primary-btn">Parse URL</button>
         </div>
         <div class="parser-output-side">
             <div class="input-header">
-                <label>URL Components</label>
+                <label>URL Components (JSON Output)</label>
                 <button class="copy-btn btn-small" data-target="url-output" data-i18n="btn_copy">Copy JSON</button>
             </div>
-            <textarea id="url-output" readonly placeholder="Analyzed URL components will appear here..."></textarea>
+            <textarea id="url-output" readonly placeholder="Analyzed URL components will appear here in structured JSON format..."></textarea>
+        </div>
+    </div>
+
+    <!-- Technical Guide & Educational Content -->
+    <div class="tech-details-section">
+        <h2>Developer Guide: The Anatomy of a Uniform Resource Locator (RFC 3986 &amp; WHATWG)</h2>
+        <p>A Uniform Resource Locator (URL) is a specific type of Uniform Resource Identifier (URI) that specifies where a resource is located on a computer network and the mechanism for retrieving it. The standard specification is defined by <strong>RFC 3986</strong> and maintained by the <strong>WHATWG URL Standard</strong>.</p>
+
+        <div class="details-grid">
+            <div class="details-card">
+                <h3>1. Component Breakdown of a URL</h3>
+                <p>Every standard Web URL consists of predictable functional parts:</p>
+                <ul>
+                    <li><strong>Scheme (Protocol):</strong> Defines network protocol (e.g. <code>https:</code>, <code>http:</code>, <code>ftp:</code>, <code>mailto:</code>, <code>wss:</code>).</li>
+                    <li><strong>Authority (Host &amp; Port):</strong> Specifies domain name or IP address (e.g., <code>api.example.com</code>) and explicit port (e.g. <code>8443</code>).</li>
+                    <li><strong>Path:</strong> Hierarchical path pointing to specific resource endpoint (e.g. <code>/v1/users/profile</code>).</li>
+                    <li><strong>Query String:</strong> Key-value parameter pairs starting after <code>?</code> and separated by <code>&amp;</code>.</li>
+                    <li><strong>Fragment (Hash):</strong> Internal location identifier starting after <code>#</code>, processed solely client-side by web browsers.</li>
+                </ul>
+            </div>
+            <div class="details-card">
+                <h3>2. Query String Normalization &amp; Encoding Rules</h3>
+                <p>Query parameters often carry special characters (spaces, quotes, non-ASCII symbols). Unreserved characters (<code>A-Z</code>, <code>a-z</code>, <code>0-9</code>, <code>-</code>, <code>_</code>, <code>.</code>, <code>~</code>) remain plain, while all other characters are percent-encoded (e.g., space becomes <code>%20</code> or <code>+</code>).</p>
+            </div>
+            <div class="details-card">
+                <h3>3. Security Consideration: Open Redirects &amp; SSRF</h3>
+                <p>Parsing hostnames accurately is critical for defensive programming. Malicious URLs with tricky userinfo syntax (e.g., <code>https://trusted.com@attacker.com</code>) can bypass naive string checking. Always use standard URL parsing libraries to extract the true <code>hostname</code>.</p>
+            </div>
+        </div>
+
+        <div class="code-examples-card">
+            <h3>URL Parsing Snippets in Native Languages</h3>
+            <pre><code>// JavaScript (WHATWG URL API)
+const parsedUrl = new URL("https://api.example.com/search?q=json&amp;page=2#top");
+console.log(parsedUrl.hostname); // "api.example.com"
+console.log(parsedUrl.searchParams.get("q")); // "json"
+console.log(parsedUrl.pathname); // "/search"
+
+# Python 3
+from urllib.parse import urlparse, parse_qs
+parsed = urlparse("https://api.example.com/search?q=json&amp;page=2#top")
+params = parse_qs(parsed.query) # {'q': ['json'], 'page': ['2']}
+
+// Go (Golang)
+package main
+import (
+    "fmt"
+    "net/url"
+)
+func main() {
+    u, _ := url.Parse("https://api.example.com/search?q=json&amp;page=2#top")
+    fmt.Println("Host:", u.Host, "Query:", u.Query().Get("q"))
+}</code></pre>
+        </div>
+
+        <div class="faq-card">
+            <h3>URL Parsing FAQ</h3>
+            <div class="faq-item">
+                <h4>Q: What is the difference between URI, URL, and URN?</h4>
+                <p><strong>A:</strong> URI is the overarching identifier category. A URL specifies <em>how to locate</em> the resource (location + protocol), whereas a URN specifies a resource <em>by name in a given namespace</em> (e.g. <code>urn:isbn:0451450523</code>) regardless of location.</p>
+            </div>
+            <div class="faq-item">
+                <h4>Q: Are query parameter keys case-sensitive?</h4>
+                <p><strong>A:</strong> Standard specifications treat query parameter strings as case-sensitive, though individual backend framework routers decide how they interpret query keys.</p>
+            </div>
         </div>
     </div>
 </section>

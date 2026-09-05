@@ -23,6 +23,10 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Cache for loaded views
     const loadedViews = new Set();
+    if (document.getElementById('encoder-view')) {
+        loadedViews.add('encoder-view');
+        setupEncoder();
+    }
 
     // Map of view IDs to their specific setup functions
     const moduleSetupMap = {
