@@ -3047,6 +3047,797 @@ fetchPosts();
 &lt;/script&gt;</code></pre>
             `
         }
+    },
+    'spring-msa-redis-session': {
+        en: {
+            title: 'Spring Boot 3.3 + Spring Cloud MSA: Distributed Session Management & Redis Token Blacklisting Guide',
+            content: `
+                <p>In modern enterprise <strong>Microservices Architecture (MSA)</strong> powered by <strong>Spring Boot 3.3.x</strong>, <strong>Spring Cloud Gateway 2023.0.x</strong>, and <strong>Java 21 LTS</strong>, managing user authentication across dozens of decoupled microservices requires a robust, high-performance distributed token strategy. This guide demonstrates how to build an edge API gateway, implement Refresh Token Rotation (RTR), and leverage <strong>Redis 7.x Cluster</strong> for instant access token blacklisting and stateless distributed session management.</p>
+                
+                <div class="technical-note" style="background: rgba(99, 102, 241, 0.1); border-left: 4px solid #6366f1; padding: 1rem; margin: 1.5rem 0; border-radius: 4px;">
+                    <strong>Architecture Core Concept:</strong> In an MSA environment, downstream microservices should remain decoupled from database authentication lookups. The <strong>Spring Cloud Gateway</strong> validates JWT signatures at the edge, checks the <strong>Redis 7.x Blacklist</strong> for logged-out tokens, and injects authenticated user metadata (<code>X-User-Id</code>, <code>X-User-Role</code>) into downstream request headers.
+                </div>
+
+                <h2>1. Dependencies Configuration (build.gradle)</h2>
+                <p>Add Spring Cloud Gateway, Spring Data Redis (Lettuce), and JJWT 0.12.5 dependencies to your <code>build.gradle</code>:</p>
+                <pre><code class="language-groovy">// [build.gradle] Spring Boot 3.3.0 & Spring Cloud 2023.0.x MSA API Gateway / Auth Server
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.3.0'        // Spring Boot 3.3 Framework Plugin
+    id 'io.spring.dependency-management' version '1.1.5' // Spring Dependency Management
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21) // Force JDK 21 LTS Toolchain
+    }
+}
+
+ext {
+    set('springCloudVersion', "2023.0.1") // Spring Cloud 2023.0.x (Release Train GA)
+}
+
+dependencies {
+    // Spring Cloud Gateway (Reactive Netty Edge Gateway for Routing & Token Validation)
+    implementation 'org.springframework.cloud:spring-cloud-starter-gateway'
+    
+    // Spring Data Redis (Lettuce Connection Pool for Distributed Caching & Blacklisting)
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    
+    // JJWT 0.12.5 Cryptographic Libraries for Token Signing & Verification
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
+    
+    // Lombok & Jackson Utilities
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:\${springCloudVersion}"
+    }
+}</code></pre>
+
+                <h2>2. Gateway Routing & Redis Configuration (application.yml)</h2>
+                <p>Define API Gateway routing rules, Redis connection pooling, and token TTL properties in <code>application.yml</code>:</p>
+                <pre><code class="language-yaml"># [application.yml] Spring Cloud Gateway Routing & Distributed Redis Configuration
+server:
+  port: 8080 # Edge API Gateway Public Entry Port
+
+spring:
+  application:
+    name: api-gateway-service
+  
+  # Spring Data Redis (Lettuce Connection Pool & Master-Replica Topology)
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: "" # Redis Auth Password (if configured)
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 16   # Max concurrent connections
+          max-idle: 8      # Max idle connections
+          min-idle: 2      # Min pool idle connections
+
+  # Spring Cloud Gateway Dynamic Microservices Route Definitions
+  cloud:
+    gateway:
+      routes:
+        # Route 1: Authentication & Authorization Microservice
+        - id: auth-service
+          uri: lb://AUTH-SERVICE
+          predicates:
+            - Path=/api/v1/auth/**
+        
+        # Route 2: User Domain Microservice (Secured via JwtGatewayFilterFactory)
+        - id: user-service
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/api/v1/users/**
+          filters:
+            - name: JwtGatewayFilter # Custom JWT & Redis Blacklist Edge Filter
+
+# Custom JWT Claims & Expiration Timestamps
+jwt:
+  secret: "v9y$B&E)H@MbQeThWmZq4t7w!z%C*F-JaNdRfUjXn2r5u8x/A?D(G+KbPeShVkYp" # Min 256-bit Secret
+  access-token-expiration: 1800000    # 30 Minutes (Milliseconds)
+  refresh-token-expiration: 604800000 # 7 Days (Milliseconds)</code></pre>
+
+                <h2>3. Redis Template & Token Management Service (RedisTokenService.java)</h2>
+                <p>Configure Lettuce Redis connection template and implement Refresh Token storage & Access Token blacklisting:</p>
+                <pre><code class="language-java">package com.example.config.redis;
+
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.stereotype.Service;
+
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
+
+// [@Service] Distributed Token Management Service managing Refresh Tokens & Revoked Blacklists in Redis
+@Service
+public class RedisTokenService {
+
+    private final StringRedisTemplate redisTemplate;
+
+    public RedisTokenService(StringRedisTemplate redisTemplate) {
+        this.redisTemplate = redisTemplate;
+    }
+
+    // 1. Save Refresh Token in Redis with automatic 7-day Time-To-Live (TTL)
+    public void saveRefreshToken(String username, String refreshToken, long expirationMs) {
+        String key = "RT:" + username; // Key Pattern: "RT:<username>"
+        redisTemplate.opsForValue().set(key, refreshToken, expirationMs, TimeUnit.MILLISECONDS);
+    }
+
+    // 2. Retrieve active Refresh Token from Redis
+    public String getRefreshToken(String username) {
+        return redisTemplate.opsForValue().get("RT:" + username);
+    }
+
+    // 3. Delete Refresh Token from Redis (used during logout or token rotation)
+    public void deleteRefreshToken(String username) {
+        redisTemplate.delete("RT:" + username);
+    }
+
+    // 4. Blacklist an active Access Token upon Logout until its original expiration timestamp
+    public void addBlacklist(String accessToken, long remainingTtlMs) {
+        String key = "BL:" + accessToken; // Key Pattern: "BL:<access_token>"
+        if (remainingTtlMs > 0) {
+            redisTemplate.opsForValue().set(key, "logout", remainingTtlMs, TimeUnit.MILLISECONDS);
+        }
+    }
+
+    // 5. Check if an Access Token has been revoked / blacklisted
+    public boolean isBlacklisted(String accessToken) {
+        Boolean hasKey = redisTemplate.hasKey("BL:" + accessToken);
+        return Boolean.TRUE.equals(hasKey);
+    }
+}</code></pre>
+
+                <h2>4. Spring Cloud Gateway Custom JWT Filter (JwtGatewayFilterFactory.java)</h2>
+                <p>Intercept edge requests, validate JWT signatures, check Redis blacklist, and forward user identity headers to downstream microservices:</p>
+                <pre><code class="language-java">package com.example.gateway.filter;
+
+import com.example.config.redis.RedisTokenService;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.gateway.filter.GatewayFilter;
+import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.stereotype.Component;
+
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
+
+// [AbstractGatewayFilterFactory] Custom Gateway Edge Filter for JWT & Redis Blacklist Validation
+@Component
+public class JwtGatewayFilterFactory extends AbstractGatewayFilterFactory<JwtGatewayFilterFactory.Config> {
+
+    private final RedisTokenService redisTokenService;
+    private final SecretKey secretKey;
+
+    public JwtGatewayFilterFactory(RedisTokenService redisTokenService,
+                                  @Value("\${jwt.secret}") String secret) {
+        super(Config.class);
+        this.redisTokenService = redisTokenService;
+        this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+    }
+
+    public static class Config {
+        // Filter configuration properties (if needed)
+    }
+
+    @Override
+    public GatewayFilter apply(Config config) {
+        return (exchange, chain) -> {
+            ServerHttpRequest request = exchange.getRequest();
+
+            // 1. Check for Authorization header presence
+            if (!request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
+                exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                return exchange.getResponse().setComplete();
+            }
+
+            String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                return exchange.getResponse().setComplete();
+            }
+
+            String token = authHeader.substring(7);
+
+            // 2. Check Redis Blacklist (Verifies if token was invalidated via logout)
+            if (redisTokenService.isBlacklisted(token)) {
+                exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                return exchange.getResponse().setComplete(); // 401 Unauthorized
+            }
+
+            try {
+                // 3. Verify JWT Cryptographic Signature & Expiration Date
+                Claims claims = Jwts.parser()
+                        .verifyWith(secretKey)
+                        .build()
+                        .parseSignedClaims(token)
+                        .getPayload();
+
+                // 4. Inject User Identity Metadata into downstream HTTP request headers
+                ServerHttpRequest mutatedRequest = request.mutate()
+                        .header("X-User-Id", claims.getSubject())
+                        .header("X-User-Role", claims.get("role", String.class))
+                        .build();
+
+                return chain.filter(exchange.mutate().request(mutatedRequest).build());
+
+            } catch (Exception e) {
+                exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                return exchange.getResponse().setComplete();
+            }
+        };
+    }
+}</code></pre>
+
+                <h2>5. Auth Controller & Refresh Token Rotation (AuthService.java & AuthController.java)</h2>
+                <p>Implement enterprise Login, Refresh Token Rotation (RTR), and Instant Logout with Redis Token Blacklisting:</p>
+                <pre><code class="language-java">package com.example.service;
+
+import com.example.config.redis.RedisTokenService;
+import com.example.dto.JwtTokenResponseDto;
+import com.example.dto.LoginRequestDto;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
+
+// [@Service] Authentication & MSA Token Service with Refresh Token Rotation (RTR)
+@Service
+public class AuthService {
+
+    private final RedisTokenService redisTokenService;
+    private final SecretKey secretKey;
+    private final long accessTokenExpiration;
+    private final long refreshTokenExpiration;
+
+    public AuthService(RedisTokenService redisTokenService,
+                       @Value("\${jwt.secret}") String secret,
+                       @Value("\${jwt.access-token-expiration}") long accessTokenExpiration,
+                       @Value("\${jwt.refresh-token-expiration}") long refreshTokenExpiration) {
+        this.redisTokenService = redisTokenService;
+        this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        this.accessTokenExpiration = accessTokenExpiration;
+        this.refreshTokenExpiration = refreshTokenExpiration;
+    }
+
+    // 1. User Login: Issue Access Token + Refresh Token and store Refresh Token in Redis
+    public JwtTokenResponseDto login(LoginRequestDto loginDto) {
+        String username = loginDto.getUsername();
+        String role = "USER"; // Fetch actual role from DB UserRepository
+
+        String accessToken = createToken(username, role, accessTokenExpiration);
+        String refreshToken = createToken(username, role, refreshTokenExpiration);
+
+        // Store Refresh Token in Redis with 7-day TTL
+        redisTokenService.saveRefreshToken(username, refreshToken, refreshTokenExpiration);
+
+        return JwtTokenResponseDto.builder()
+                .grantType("Bearer")
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .accessTokenExpiresIn(accessTokenExpiration)
+                .build();
+    }
+
+    // 2. Refresh Token Rotation (RTR): Validate old Refresh Token, invalidate it, & issue new pair
+    public JwtTokenResponseDto refreshTokenRotation(String currentRefreshToken) {
+        Claims claims = parseClaims(currentRefreshToken);
+        String username = claims.getSubject();
+
+        // Validate presented Refresh Token against Redis stored token
+        String savedRefreshToken = redisTokenService.getRefreshToken(username);
+        if (savedRefreshToken == null || !savedRefreshToken.equals(currentRefreshToken)) {
+            throw new IllegalArgumentException("Invalid or revoked Refresh Token!");
+        }
+
+        // Invalidate old Refresh Token
+        redisTokenService.deleteRefreshToken(username);
+
+        // Issue NEW Access Token and NEW Refresh Token (Rotation)
+        String newAccessToken = createToken(username, claims.get("role", String.class), accessTokenExpiration);
+        String newRefreshToken = createToken(username, claims.get("role", String.class), refreshTokenExpiration);
+
+        // Save NEW Refresh Token in Redis
+        redisTokenService.saveRefreshToken(username, newRefreshToken, refreshTokenExpiration);
+
+        return JwtTokenResponseDto.builder()
+                .grantType("Bearer")
+                .accessToken(newAccessToken)
+                .refreshToken(newRefreshToken)
+                .accessTokenExpiresIn(accessTokenExpiration)
+                .build();
+    }
+
+    // 3. Instant Logout: Blacklist Access Token in Redis & Delete Refresh Token
+    public void logout(String accessToken) {
+        Claims claims = parseClaims(accessToken);
+        String username = claims.getSubject();
+        
+        // Calculate remaining active lifespan of Access Token in milliseconds
+        long remainingTtlMs = claims.getExpiration().getTime() - System.currentTimeMillis();
+
+        // Add Access Token to Redis Blacklist with remaining TTL
+        redisTokenService.addBlacklist(accessToken, remainingTtlMs);
+
+        // Remove stored Refresh Token from Redis
+        redisTokenService.deleteRefreshToken(username);
+    }
+
+    private String createToken(String subject, String role, long expirationMs) {
+        Date now = new Date();
+        return Jwts.builder()
+                .subject(subject)
+                .claim("role", role)
+                .issuedAt(now)
+                .expiration(new Date(now.getTime() + expirationMs))
+                .signWith(secretKey)
+                .compact();
+    }
+
+    private Claims parseClaims(String token) {
+        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload();
+    }
+}</code></pre>
+
+                <p>Auth Controller Endpoints:</p>
+                <pre><code class="language-java">package com.example.controller;
+
+import com.example.dto.JwtTokenResponseDto;
+import com.example.dto.LoginRequestDto;
+import com.example.service.AuthService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+
+// [@RestController & @RequestMapping] MSA Centralized Auth REST Controller
+@RestController
+@RequestMapping("/api/v1/auth")
+public class AuthController {
+
+    private final AuthService authService;
+
+    public AuthController(AuthService authService) {
+        this.authService = authService;
+    }
+
+    // [POST /api/v1/auth/login] Validates credentials and returns JWT Access & Refresh Token pair
+    @PostMapping("/login")
+    public ResponseEntity<JwtTokenResponseDto> login(@RequestBody LoginRequestDto loginDto) {
+        return ResponseEntity.ok(authService.login(loginDto));
+    }
+
+    // [POST /api/v1/auth/refresh] Executes Refresh Token Rotation (RTR)
+    @PostMapping("/refresh")
+    public ResponseEntity<JwtTokenResponseDto> refresh(@RequestHeader("Refresh-Token") String refreshToken) {
+        return ResponseEntity.ok(authService.refreshTokenRotation(refreshToken));
+    }
+
+    // [POST /api/v1/auth/logout] Blacklists active Access Token in Redis and revokes Refresh Token
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(@RequestHeader("Authorization") String authHeader) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            authService.logout(authHeader.substring(7));
+        }
+        return ResponseEntity.ok(Map.of("message", "Successfully logged out and token blacklisted."));
+    }
+}</code></pre>
+            `
+        },
+        ko: {
+            title: 'Spring Boot 3.3 + Spring Cloud MSA: Redis 연동 분산 세션 관리 및 토큰 블랙리스트 실무 구현 가이드',
+            content: `
+                <p><strong>Spring Boot 3.3.x</strong>, <strong>Spring Cloud Gateway 2023.0.x</strong>, <strong>Java 21 LTS</strong> 기반의 엔터프라이즈 <strong>마이크로서비스 아키텍처(MSA)</strong> 환경에서 수십 개의 분산 서비스 간 사용자 인증을 안전하게 처리하기 위해서는 대용량 인메모리 데이터베이스인 <strong>Redis 7.x Cluster</strong>와의 연동이 필수적입니다. 본 가이드에서는 API Gateway 전위 필터링, Refresh Token Rotation(RTR), 및 로그아웃된 토큰의 즉시 차단을 위한 <strong>Redis 블랙리스트 시스템</strong> 구축 방법을 실무 코드 중심으로 설명합니다.</p>
+                
+                <div class="technical-note" style="background: rgba(99, 102, 241, 0.1); border-left: 4px solid #6366f1; padding: 1rem; margin: 1.5rem 0; border-radius: 4px;">
+                    <strong>핵심 아키텍처 설계 원칙:</strong> MSA 환경에서 하위 데이터베이스(RDB)에 대한 반복적인 사용자 조회 요청은 심각한 병목을 유발합니다. <strong>Spring Cloud Gateway</strong> 전위 필터에서 최전방 JWT 서명 검증 및 <strong>Redis 블랙리스트</strong> 조회를 완료한 후, 검증된 사용자 식별자(<code>X-User-Id</code>, <code>X-User-Role</code>)를 하위 서비스로 전파하는 무상태 구조를 지향합니다.
+                </div>
+
+                <h2>1단계: 프로젝트 의존성 설정 (build.gradle)</h2>
+                <p>Spring Cloud Gateway, Spring Data Redis (Lettuce), 및 JJWT 0.12.5 라이브러리를 <code>build.gradle</code>에 추가합니다:</p>
+                <pre><code class="language-groovy">// [build.gradle] Spring Boot 3.3.0 & Spring Cloud 2023.0.x MSA API Gateway 및 인증 서버 빌드 설정
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.3.0'        // Spring Boot 3.3 프레임워크 플러그인
+    id 'io.spring.dependency-management' version '1.1.5' // Spring 의존성버전 관리
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21) // JDK 21 LTS 툴체인 지정
+    }
+}
+
+ext {
+    set('springCloudVersion', "2023.0.1") // Spring Cloud 2023.0.x (Release Train GA)
+}
+
+dependencies {
+    // Spring Cloud Gateway (Reactive Netty 기반 전위 게이트웨이 라우팅 및 보안 필터)
+    implementation 'org.springframework.cloud:spring-cloud-starter-gateway'
+    
+    // Spring Data Redis (Lettuce 커넥션 풀 기반 분산 세션 및 블랙리스트 관리)
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    
+    // JJWT 0.12.5 암호화 모듈 (JWT 서명 생성 및 검증)
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
+    
+    // Lombok & Jackson 유틸리티
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:\${springCloudVersion}"
+    }
+}</code></pre>
+
+                <h2>2단계: 게이트웨이 라우팅 및 Redis 설정 (application.yml)</h2>
+                <p>Spring Cloud Gateway의 경로별 라우팅 규칙, Redis 렛처스(Lettuce) 커넥션 풀 및 JWT 만료시간을 설정합니다:</p>
+                <pre><code class="language-yaml"># [application.yml] Spring Cloud Gateway 라우팅 및 분산 Redis 환경 설정
+server:
+  port: 8080 # Edge API Gateway 포트 번호
+
+spring:
+  application:
+    name: api-gateway-service
+  
+  # Spring Data Redis (Lettuce 커넥션 풀 설정)
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: "" # Redis 접속 비밀번호 (필요 시 작성)
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 16   # 동시 최대 커넥션 수
+          max-idle: 8      # 최대 유효 커넥션 수
+          min-idle: 2      # 최소 유효 커넥션 수
+
+  # Spring Cloud Gateway 동적 라우팅 룰 설정
+  cloud:
+    gateway:
+      routes:
+        # 1. 중앙 인증/인가 마이크로서비스 라우트
+        - id: auth-service
+          uri: lb://AUTH-SERVICE
+          predicates:
+            - Path=/api/v1/auth/**
+        
+        # 2. 사용자 도메인 마이크로서비스 라우트 (JwtGatewayFilter 커스텀 필터 적용)
+        - id: user-service
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/api/v1/users/**
+          filters:
+            - name: JwtGatewayFilter # 커스텀 JWT 검증 및 Redis 블랙리스트 전위 필터
+
+# JWT 서명키 및 만료 유효시간 설정
+jwt:
+  secret: "v9y$B&E)H@MbQeThWmZq4t7w!z%C*F-JaNdRfUjXn2r5u8x/A?D(G+KbPeShVkYp" # 최소 256비트 비밀키
+  access-token-expiration: 1800000    # 30분 (밀리초)
+  refresh-token-expiration: 604800000 # 7일 (밀리초)</code></pre>
+
+                <h2>3단계: Redis 토큰 서비스 구현 (RedisTokenService.java)</h2>
+                <p>StringRedisTemplate을 사용하여 Refresh Token 저장(7일 TTL) 및 로그아웃된 Access Token 블랙리스트 관리를 구현합니다:</p>
+                <pre><code class="language-java">package com.example.config.redis;
+
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.stereotype.Service;
+
+import java.util.concurrent.TimeUnit;
+
+// [@Service] Redis 기반 Refresh Token 및 로그아웃 블랙리스트 데이터 전담 서비스
+@Service
+public class RedisTokenService {
+
+    private final StringRedisTemplate redisTemplate;
+
+    public RedisTokenService(StringRedisTemplate redisTemplate) {
+        this.redisTemplate = redisTemplate;
+    }
+
+    // 1. Refresh Token 저장 (키 패턴: "RT:<username>", 7일 후 자동 만료/삭제)
+    public void saveRefreshToken(String username, String refreshToken, long expirationMs) {
+        String key = "RT:" + username;
+        redisTemplate.opsForValue().set(key, refreshToken, expirationMs, TimeUnit.MILLISECONDS);
+    }
+
+    // 2. Redis에서 유효한 Refresh Token 조회
+    public String getRefreshToken(String username) {
+        return redisTemplate.opsForValue().get("RT:" + username);
+    }
+
+    // 3. Refresh Token 삭제 (로그아웃 또는 RTR 재발급 시 호출)
+    public void deleteRefreshToken(String username) {
+        redisTemplate.delete("RT:" + username);
+    }
+
+    // 4. 로그아웃 시 Access Token의 남은 만료 시간만큼 Redis 블랙리스트에 등록
+    public void addBlacklist(String accessToken, long remainingTtlMs) {
+        String key = "BL:" + accessToken; // 키 패턴: "BL:<access_token>"
+        if (remainingTtlMs > 0) {
+            redisTemplate.opsForValue().set(key, "logout", remainingTtlMs, TimeUnit.MILLISECONDS);
+        }
+    }
+
+    // 5. 요청 들어온 Access Token이 블랙리스트에 등록되어 있는지 확인
+    public boolean isBlacklisted(String accessToken) {
+        Boolean hasKey = redisTemplate.hasKey("BL:" + accessToken);
+        return Boolean.TRUE.equals(hasKey);
+    }
+}</code></pre>
+
+                <h2>4단계: Spring Cloud Gateway 커스텀 보안 필터 (JwtGatewayFilterFactory.java)</h2>
+                <p>게이트웨이 최전방에서 HTTP 요청을 인터셉트하여 JWT 서명 및 Redis 블랙리스트 여부를 검증합니다:</p>
+                <pre><code class="language-java">package com.example.gateway.filter;
+
+import com.example.config.redis.RedisTokenService;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.gateway.filter.GatewayFilter;
+import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.stereotype.Component;
+
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
+
+// [AbstractGatewayFilterFactory] Spring Cloud Gateway 전위 보안 검증 커스텀 필터
+@Component
+public class JwtGatewayFilterFactory extends AbstractGatewayFilterFactory<JwtGatewayFilterFactory.Config> {
+
+    private final RedisTokenService redisTokenService;
+    private final SecretKey secretKey;
+
+    public JwtGatewayFilterFactory(RedisTokenService redisTokenService,
+                                  @Value("\${jwt.secret}") String secret) {
+        super(Config.class);
+        this.redisTokenService = redisTokenService;
+        this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+    }
+
+    public static class Config {
+        // 필터 설정 프로퍼티 클래스
+    }
+
+    @Override
+    public GatewayFilter apply(Config config) {
+        return (exchange, chain) -> {
+            ServerHttpRequest request = exchange.getRequest();
+
+            // 1. Authorization 헤더 존재 여부 확인
+            if (!request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
+                exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                return exchange.getResponse().setComplete();
+            }
+
+            String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                return exchange.getResponse().setComplete();
+            }
+
+            String token = authHeader.substring(7);
+
+            // 2. Redis 블랙리스트 조회 (로그아웃 처리된 토큰 차단)
+            if (redisTokenService.isBlacklisted(token)) {
+                exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                return exchange.getResponse().setComplete(); // 401 Unauthorized 차단
+            }
+
+            try {
+                // 3. JWT 위변조 서명 및 만료일시 검증
+                Claims claims = Jwts.parser()
+                        .verifyWith(secretKey)
+                        .build()
+                        .parseSignedClaims(token)
+                        .getPayload();
+
+                // 4. 검증 완료된 사용자 ID 및 권한을 하위 마이크로서비스 요청 헤더로 주입 (X-User-Id, X-User-Role)
+                ServerHttpRequest mutatedRequest = request.mutate()
+                        .header("X-User-Id", claims.getSubject())
+                        .header("X-User-Role", claims.get("role", String.class))
+                        .build();
+
+                return chain.filter(exchange.mutate().request(mutatedRequest).build());
+
+            } catch (Exception e) {
+                exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                return exchange.getResponse().setComplete();
+            }
+        };
+    }
+}</code></pre>
+
+                <h2>5단계: Auth 컨트롤러 및 Refresh Token Rotation (AuthService.java & AuthController.java)</h2>
+                <p>로그인, Refresh Token Rotation(RTR 토큰 재발급), 및 Redis 블랙리스트 기반 로그아웃 서비스 구현:</p>
+                <pre><code class="language-java">package com.example.service;
+
+import com.example.config.redis.RedisTokenService;
+import com.example.dto.JwtTokenResponseDto;
+import com.example.dto.LoginRequestDto;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
+
+// [@Service] MSA 중앙 인증 및 RTR(Refresh Token Rotation) 처리 서비스
+@Service
+public class AuthService {
+
+    private final RedisTokenService redisTokenService;
+    private final SecretKey secretKey;
+    private final long accessTokenExpiration;
+    private final long refreshTokenExpiration;
+
+    public AuthService(RedisTokenService redisTokenService,
+                       @Value("\${jwt.secret}") String secret,
+                       @Value("\${jwt.access-token-expiration}") long accessTokenExpiration,
+                       @Value("\${jwt.refresh-token-expiration}") long refreshTokenExpiration) {
+        this.redisTokenService = redisTokenService;
+        this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        this.accessTokenExpiration = accessTokenExpiration;
+        this.refreshTokenExpiration = refreshTokenExpiration;
+    }
+
+    // 1. 사용자 로그인: Access Token과 Refresh Token을 동시 발급하고 Refresh Token은 Redis에 7일간 저장
+    public JwtTokenResponseDto login(LoginRequestDto loginDto) {
+        String username = loginDto.getUsername();
+        String role = "USER"; // DB 사용자 조회 결과 권한 반영
+
+        String accessToken = createToken(username, role, accessTokenExpiration);
+        String refreshToken = createToken(username, role, refreshTokenExpiration);
+
+        // Redis에 Refresh Token 저장 (7일 유효기간)
+        redisTokenService.saveRefreshToken(username, refreshToken, refreshTokenExpiration);
+
+        return JwtTokenResponseDto.builder()
+                .grantType("Bearer")
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .accessTokenExpiresIn(accessTokenExpiration)
+                .build();
+    }
+
+    // 2. Refresh Token Rotation (RTR): 기존 Refresh Token 검증 후 무효화 및 새 토큰 쌍(Access/Refresh) 재발급
+    public JwtTokenResponseDto refreshTokenRotation(String currentRefreshToken) {
+        Claims claims = parseClaims(currentRefreshToken);
+        String username = claims.getSubject();
+
+        // Redis에 저장된 토큰과 제시된 토큰 일치 여부 검증
+        String savedRefreshToken = redisTokenService.getRefreshToken(username);
+        if (savedRefreshToken == null || !savedRefreshToken.equals(currentRefreshToken)) {
+            throw new IllegalArgumentException("유효하지 않거나 이미 폐기된 Refresh Token입니다!");
+        }
+
+        // 기존 Refresh Token 폐기 (탈취된 토큰 재사용 방지 보안)
+        redisTokenService.deleteRefreshToken(username);
+
+        // 새로운 Access Token 및 새로운 Refresh Token 발급 (Rotation)
+        String newAccessToken = createToken(username, claims.get("role", String.class), accessTokenExpiration);
+        String newRefreshToken = createToken(username, claims.get("role", String.class), refreshTokenExpiration);
+
+        // 새 Refresh Token을 Redis에 저장
+        redisTokenService.saveRefreshToken(username, newRefreshToken, refreshTokenExpiration);
+
+        return JwtTokenResponseDto.builder()
+                .grantType("Bearer")
+                .accessToken(newAccessToken)
+                .refreshToken(newRefreshToken)
+                .accessTokenExpiresIn(accessTokenExpiration)
+                .build();
+    }
+
+    // 3. 즉시 로그아웃: Access Token의 잔여 유효시간만큼 Redis 블랙리스트 등록 및 Refresh Token 폐기
+    public void logout(String accessToken) {
+        Claims claims = parseClaims(accessToken);
+        String username = claims.getSubject();
+        
+        // Access Token의 잔여 유효시간(밀리초) 계산
+        long remainingTtlMs = claims.getExpiration().getTime() - System.currentTimeMillis();
+
+        // Access Token을 Redis 블랙리스트에 등록 (잔여 유효시간 동안 무효화)
+        redisTokenService.addBlacklist(accessToken, remainingTtlMs);
+
+        // Redis에서 저장되어 있던 Refresh Token 삭제
+        redisTokenService.deleteRefreshToken(username);
+    }
+
+    private String createToken(String subject, String role, long expirationMs) {
+        Date now = new Date();
+        return Jwts.builder()
+                .subject(subject)
+                .claim("role", role)
+                .issuedAt(now)
+                .expiration(new Date(now.getTime() + expirationMs))
+                .signWith(secretKey)
+                .compact();
+    }
+
+    private Claims parseClaims(String token) {
+        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload();
+    }
+}</code></pre>
+
+                <p>Auth 컨트롤러 엔드포인트 구현:</p>
+                <pre><code class="language-java">package com.example.controller;
+
+import com.example.dto.JwtTokenResponseDto;
+import com.example.dto.LoginRequestDto;
+import com.example.service.AuthService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+
+// [@RestController & @RequestMapping] MSA 중앙 인증 컨트롤러
+@RestController
+@RequestMapping("/api/v1/auth")
+public class AuthController {
+
+    private final AuthService authService;
+
+    public AuthController(AuthService authService) {
+        this.authService = authService;
+    }
+
+    // [POST /api/v1/auth/login] 사용자 인증 및 Access/Refresh 토큰 발급 API
+    @PostMapping("/login")
+    public ResponseEntity<JwtTokenResponseDto> login(@RequestBody LoginRequestDto loginDto) {
+        return ResponseEntity.ok(authService.login(loginDto));
+    }
+
+    // [POST /api/v1/auth/refresh] Refresh Token Rotation (RTR) 기반 토큰 재발급 API
+    @PostMapping("/refresh")
+    public ResponseEntity<JwtTokenResponseDto> refresh(@RequestHeader("Refresh-Token") String refreshToken) {
+        return ResponseEntity.ok(authService.refreshTokenRotation(refreshToken));
+    }
+
+    // [POST /api/v1/auth/logout] Access Token 블랙리스트 등록 및 로그아웃 API
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(@RequestHeader("Authorization") String authHeader) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            authService.logout(authHeader.substring(7));
+        }
+        return ResponseEntity.ok(Map.of("message", "성공적으로 로그아웃 되었으며 토큰이 블랙리스트에 등록되었습니다."));
+    }
+}</code></pre>
+            `
+        }
     }
 };
 

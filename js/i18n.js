@@ -19,6 +19,7 @@ export const translations = {
         nav_spring_login: "Spring Security Login Guide",
         nav_spring_file: "Spring File Upload/Download",
         nav_spring_db: "Spring DB (MariaDB/Oracle)",
+        nav_spring_msa: "Spring MSA Redis Session",
         nav_utilities: "Utilities",
         nav_curl: "cURL Converter",
         nav_hash: "Hash & HMAC",
@@ -255,6 +256,8 @@ export const translations = {
 
         guide_t_spring_jwt: "Spring Boot 3.3 + Java 21 LTS: Spring Security 6 JWT Guide",
         guide_s_spring_jwt: "A complete, modern guide to implementing Stateless JWT Authentication using Spring Boot 3.3, Spring Security 6.3, Java 21 LTS, and JJWT 0.12.x. Includes copyable source code.",
+        guide_t_spring_msa: "Spring Boot 3.3 + MSA: Redis Token & Session Management Guide",
+        guide_s_spring_msa: "Complete guide for Spring Cloud Gateway JWT Edge Filter, Redis Distributed Session, Refresh Token Rotation (RTR), and Instant Access Token Blacklisting.",
         guide_t_base64: "Understanding Base64 Encoding",
         guide_s_base64: "Base64 is not encryption. It's a way to represent binary data in an ASCII string format. Learn why we use it for images and data URIs.",
         guide_t_api: "REST API Debugging Best Practices",
@@ -436,6 +439,7 @@ export const translations = {
         nav_spring_login: "Spring Security 로그인 연동",
         nav_spring_file: "Spring 파일 업로드/다운로드",
         nav_spring_db: "Spring DB (MariaDB/Oracle) 연동",
+        nav_spring_msa: "Spring MSA Redis 세션 가이드",
         nav_utilities: "유틸리티",
         nav_curl: "cURL 변환기",
         nav_hash: "해시 & HMAC",
@@ -672,6 +676,8 @@ export const translations = {
 
         guide_t_spring_jwt: "Spring Boot 3.3 + Java 21 LTS: Spring Security 6 기반 JWT 토큰 인증 완전 정복 가이드",
         guide_s_spring_jwt: "Spring Boot 3.3, Spring Security 6.3, Java 21 LTS 및 JJWT 0.12.x 기반 무상태 JWT 인증 구현 완전 가이드. 복사 가능한 전체 소스코드 제공.",
+        guide_t_spring_msa: "Spring Boot 3.3 + MSA: Redis 연동 토큰 및 세션 관리 가이드",
+        guide_s_spring_msa: "Spring Cloud Gateway 전위 보안 필터, Redis 분산 세션, Refresh Token Rotation(RTR), 및 즉시 블랙리스트 로그아웃 구현 가이드.",
         guide_t_base64: "Base64 인코딩 원리 및 활용",
         guide_s_base64: "Base64는 암호화가 아닌 이진-텍스트 표현 방식입니다. 데이터 URI 및 미디어 전송에 사용하는 이유를 알아봅니다.",
         guide_t_api: "REST API 디버깅 실전 가이드",
