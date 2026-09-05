@@ -5336,6 +5336,1108 @@ public class UserService {
 }</code></pre>
             `
         }
+    },
+    'spring-redis-cache': {
+        en: {
+            title: 'Spring Boot 3.3 + Redis Caching Strategy (@Cacheable) & Performance Optimization Guide',
+            content: `
+                <p>In high-throughput <strong>Spring Boot 3.3.x</strong> web applications, caching frequently accessed Database query results in <strong>Redis</strong> dramatically reduces DB CPU load and lowers API response latency from hundreds of milliseconds to sub-millisecond levels. This guide covers Spring Cache Abstraction (<code>@Cacheable</code>, <code>@CacheEvict</code>, <code>@CachePut</code>), Jackson2 JSON serializer setup, TTL configuration, and Cache Stampede defense strategies.</p>
+
+                <div class="technical-note" style="background: rgba(99, 102, 241, 0.1); border-left: 4px solid #6366f1; padding: 1rem; margin: 1.5rem 0; border-radius: 4px;">
+                    <strong>Caching Architecture Best Practices:</strong>
+                    <ul style="margin-top: 0.5rem; margin-bottom: 0;">
+                        <li><strong>Read-Through Caching:</strong> Check Redis cache first. If hit, return immediately; if miss, fetch from DB and write to Redis.</li>
+                        <li><strong>Cache Invalidation (@CacheEvict):</strong> Evict or update cache entries instantly whenever data is modified (PUT/DELETE) to prevent stale data inconsistencies.</li>
+                        <li><strong>Cache Stampede Defense:</strong> Use <code>sync = true</code> or TTL jitter to prevent thousands of simultaneous DB queries when popular cache keys expire.</li>
+                    </ul>
+                </div>
+
+                <h2>1. Dependencies &amp; Redis Cache Configuration (CacheConfig.java)</h2>
+                <p>Configure Spring Cache Manager with Redis Jackson2 JSON serializer and custom TTL settings in <code>CacheConfig.java</code>:</p>
+                <pre><code class="language-java">package com.example.config;
+
+import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.cache.RedisCacheConfiguration;
+import org.springframework.data.redis.cache.RedisCacheManager;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.RedisSerializationContext;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
+
+import java.time.Duration;
+
+// [@Configuration & @EnableCaching] Enable Spring Cache Abstraction with Redis backend
+@Configuration
+@EnableCaching
+public class CacheConfig {
+
+    @Bean
+    public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
+        // Configure default JSON serialization and 1-hour Default TTL
+        RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofHours(1)) // Cache expires after 1 Hour automatically
+                .disableCachingNullValues()    // Do not store null values in Redis
+                .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
+                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer()));
+
+        return RedisCacheManager.builder(connectionFactory)
+                .cacheDefaults(config)
+                .build();
+    }
+}</code></pre>
+
+                <h2>2. Cache Abstraction Annotations (@Cacheable, @CacheEvict, @CachePut)</h2>
+                <p>Apply caching annotations in your service layer to manage data lifecycle automatically:</p>
+                <pre><code class="language-java">package com.example.service;
+
+import com.example.dto.PostResponseDto;
+import com.example.exception.EntityNotFoundException;
+import com.example.repository.PostRepository;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Slf4j
+@Service
+public class PostCacheService {
+
+    private final PostRepository postRepository;
+
+    public PostCacheService(PostRepository postRepository) {
+        this.postRepository = postRepository;
+    }
+
+    // [@Cacheable] Check Redis "posts" cache using key #id. On miss, execute method & cache result.
+    // sync = true prevents Cache Stampede under concurrent requests!
+    @Cacheable(value = "posts", key = "#id", sync = true, unless = "#result == null")
+    @Transactional(readOnly = true)
+    public PostResponseDto getPostById(Long id) {
+        log.info("Cache miss for post id: {}. Fetching record directly from DB...", id);
+        return postRepository.findById(id)
+                .map(PostResponseDto::fromEntity)
+                .orElseThrow(() -> new EntityNotFoundException("Post not found"));
+    }
+
+    // [@CachePut] Always executes method and updates Redis cache key with returned updated object
+    @CachePut(value = "posts", key = "#id")
+    @Transactional
+    public PostResponseDto updatePost(Long id, PostUpdateDto updateDto) {
+        log.info("Updating post id: {} in DB and refreshing Redis cache...", id);
+        PostEntity post = postRepository.findById(id).orElseThrow();
+        post.update(updateDto.getTitle(), updateDto.getContent());
+        return PostResponseDto.fromEntity(post);
+    }
+
+    // [@CacheEvict] Evicts target key from Redis cache when post is deleted
+    @CacheEvict(value = "posts", key = "#id")
+    @Transactional
+    public void deletePost(Long id) {
+        log.info("Deleting post id: {} from DB and evicting Redis cache key...", id);
+        postRepository.deleteById(id);
+    }
+}</code></pre>
+            `
+        },
+        ko: {
+            title: 'Spring Boot 3.3 + Redis 캐싱 전략(@Cacheable) 및 성능 최적화 가이드',
+            content: `
+                <p>대용량 트래픽을 처리하는 <strong>Spring Boot 3.3.x</strong> 애플리케이션에서 자주 조회되는 데이터베이스 쿼리 결과를 <strong>Redis 메모리 캐시</strong>에 저장하면, DB CPU 사용량을 획기적으로 줄이고 API 응답 시간을 수백 ms에서 1ms 미만으로 단축시킬 수 있습니다. 본 가이드에서는 Spring Cache 추상화 기능(<code>@Cacheable</code>, <code>@CacheEvict</code>, <code>@CachePut</code>), Jackson2 JSON 직렬화 설정, TTL 관리, 그리고 동시 요청 폭주 시 DB를 보호하는 Cache Stampede 방지 기법을 구현합니다.</p>
+
+                <div class="technical-note" style="background: rgba(99, 102, 241, 0.1); border-left: 4px solid #6366f1; padding: 1rem; margin: 1.5rem 0; border-radius: 4px;">
+                    <strong>캐싱 아키텍처 핵심 전략:</strong>
+                    <ul style="margin-top: 0.5rem; margin-bottom: 0;">
+                        <li><strong>Read-Through Caching:</strong> Redis 캐시를 먼저 조회하고, 히트(Hit) 시 즉시 반환 / 미스(Miss) 시 DB에서 읽어와 Redis에 캐싱.</li>
+                        <li><strong>캐시 격퇴 (@CacheEvict):</strong> 데이터 변경(수정/삭제) 발생 시 Redis 캐시 키를 즉시 삭제하여 데이터 불일치(Stale Data) 방지.</li>
+                        <li><strong>Cache Stampede 방지:</strong> 인기 캐시 만료 시 수천 개의 동시 요청이 DB로 쏠리는 현상을 <code>sync = true</code> 설정으로 방지.</li>
+                    </ul>
+                </div>
+
+                <h2>1단계: Redis 캐시 매니저 설정 (CacheConfig.java)</h2>
+                <p>Spring Cache Manager에 JSON 직렬화 방식과 기본 1시간 TTL을 설정합니다:</p>
+                <pre><code class="language-java">package com.example.config;
+
+import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.cache.RedisCacheConfiguration;
+import org.springframework.data.redis.cache.RedisCacheManager;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.RedisSerializationContext;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
+
+import java.time.Duration;
+
+// [@Configuration & @EnableCaching] Spring Cache 추상화 활성화 및 Redis 설정
+@Configuration
+@EnableCaching
+public class CacheConfig {
+
+    @Bean
+    public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
+        // 기본 1시간 TTL 및 JSON 직렬화 설정
+        RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofHours(1)) // 캐시 만료 시간 1시간 자동 설정
+                .disableCachingNullValues()    // null 값 캐싱 방지
+                .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
+                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer()));
+
+        return RedisCacheManager.builder(connectionFactory)
+                .cacheDefaults(config)
+                .build();
+    }
+}</code></pre>
+
+                <h2>2단계: 캐시 어노테이션 실무 적용 (@Cacheable, @CacheEvict, @CachePut)</h2>
+                <p>서비스 레이어에 캐시 어노테이션을 적용하여 데이터 생명주기를 자동으로 관리합니다:</p>
+                <pre><code class="language-java">package com.example.service;
+
+import com.example.dto.PostResponseDto;
+import com.example.exception.EntityNotFoundException;
+import com.example.repository.PostRepository;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Slf4j
+@Service
+public class PostCacheService {
+
+    private final PostRepository postRepository;
+
+    public PostCacheService(PostRepository postRepository) {
+        this.postRepository = postRepository;
+    }
+
+    // [@Cacheable] #id 키로 Redis "posts" 캐시 조회. 캐시 미스 시 메서드 실행 후 결과 저장.
+    // sync = true 설정으로 동시 요청 폭주 시 Cache Stampede DB 과부하 방지!
+    @Cacheable(value = "posts", key = "#id", sync = true, unless = "#result == null")
+    @Transactional(readOnly = true)
+    public PostResponseDto getPostById(Long id) {
+        log.info("캐시 미스 발생(Post ID: {}). DB에서 직접 데이터 조회 중...", id);
+        return postRepository.findById(id)
+                .map(PostResponseDto::fromEntity)
+                .orElseThrow(() -> new EntityNotFoundException("게시글을 찾을 수 없습니다."));
+    }
+
+    // [@CachePut] DB 수정 후 캐시 키에 새로 반환된 객체를 즉시 업데이트
+    @CachePut(value = "posts", key = "#id")
+    @Transactional
+    public PostResponseDto updatePost(Long id, PostUpdateDto updateDto) {
+        log.info("게시글 수정(Post ID: {}). DB 반영 및 Redis 캐시 갱신...", id);
+        PostEntity post = postRepository.findById(id).orElseThrow();
+        post.update(updateDto.getTitle(), updateDto.getContent());
+        return PostResponseDto.fromEntity(post);
+    }
+
+    // [@CacheEvict] 게시글 삭제 시 Redis 캐시 키 즉시 파기
+    @CacheEvict(value = "posts", key = "#id")
+    @Transactional
+    public void deletePost(Long id) {
+        log.info("게시글 삭제(Post ID: {}). DB 삭제 및 Redis 캐시 키 제거...", id);
+        postRepository.deleteById(id);
+    }
+}</code></pre>
+            `
+        }
+    },
+    'spring-concurrency-redisson-lock': {
+        en: {
+            title: 'Spring Boot 3.3 Concurrency Control (Optimistic/Pessimistic & Redisson Distributed Lock) Guide',
+            content: `
+                <p>In high-concurrency environments like e-commerce flash sales, ticket booking, or limited coupon distribution, multiple threads attempting to decrement inventory concurrently cause critical <strong>Race Conditions</strong>. This guide demonstrates JPA Optimistic Locking (<code>@Version</code>), JPA Pessimistic Locking (<code>SELECT FOR UPDATE</code>), and custom AOP <strong>Redisson Distributed Locking</strong> across multi-server instances.</p>
+
+                <div class="technical-note" style="background: rgba(99, 102, 241, 0.1); border-left: 4px solid #6366f1; padding: 1rem; margin: 1.5rem 0; border-radius: 4px;">
+                    <strong>Locking Mechanism Decision Matrix:</strong>
+                    <ul style="margin-top: 0.5rem; margin-bottom: 0;">
+                        <li><strong>Optimistic Lock (@Version):</strong> Low collision frequency. Uses version numbers without DB locks; retries on conflict.</li>
+                        <li><strong>Pessimistic Lock (FOR UPDATE):</strong> High collision frequency on single DB instance. Acquires DB row locks immediately.</li>
+                        <li><strong>Redisson Distributed Lock:</strong> Multi-server MSA environment. Uses Redis Pub/Sub without spinning CPU loops, ensuring high throughput.</li>
+                    </ul>
+                </div>
+
+                <h2>1. Redisson Distributed Lock Custom Annotation &amp; AOP Aspect</h2>
+                <p>Implement a reusable <code>@DistributedLock</code> annotation and Spring AOP Aspect leveraging <code>RedissonClient</code>:</p>
+                <pre><code class="language-java">package com.example.config.lock;
+
+import java.lang.annotation.*;
+import java.util.concurrent.TimeUnit;
+
+// [@DistributedLock] Custom annotation for Redis distributed locking
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface DistributedLock {
+    String key();                        // Lock key name (e.g. "product:" + #productId)
+    TimeUnit timeUnit() default TimeUnit.SECONDS;
+    long waitTime() default 5L;          // Max time to wait for lock acquisition (5s)
+    long leaseTime() default 3L;         // Lock auto-release timeout (3s)
+}
+
+// Aspect intercepting @DistributedLock methods
+package com.example.config.lock;
+
+import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.reflect.MethodSignature;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.stereotype.Component;
+
+@Slf4j
+@Aspect
+@Component
+public class DistributedLockAspect {
+
+    private final RedissonClient redissonClient;
+    private final SpelExpressionParser parser = new SpelExpressionParser();
+
+    public DistributedLockAspect(RedissonClient redissonClient) {
+        this.redissonClient = redissonClient;
+    }
+
+    @Around("@annotation(distributedLock)")
+    public Object lock(ProceedingJoinPoint joinPoint, DistributedLock distributedLock) throws Throwable {
+        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+        
+        // Parse Spring EL key expression (e.g. #productId)
+        StandardEvaluationContext context = new StandardEvaluationContext();
+        Object[] args = joinPoint.getArgs();
+        String[] paramNames = signature.getParameterNames();
+        for (int i = 0; i < args.length; i++) {
+            context.setVariable(paramNames[i], args[i]);
+        }
+        String lockKey = "LOCK:" + parser.parseExpression(distributedLock.key()).getValue(context, String.class);
+
+        RLock rLock = redissonClient.getLock(lockKey);
+        boolean isLocked = false;
+
+        try {
+            // Attempt to acquire lock using Pub/Sub without spinning
+            isLocked = rLock.tryLock(distributedLock.waitTime(), distributedLock.leaseTime(), distributedLock.timeUnit());
+            if (!isLocked) {
+                log.warn("Failed to acquire distributed lock for key: {}", lockKey);
+                throw new IllegalStateException("System busy. Please try again.");
+            }
+
+            log.info("Acquired distributed lock successfully: {}", lockKey);
+            return joinPoint.proceed();
+        } finally {
+            if (isLocked && rLock.isHeldByCurrentThread()) {
+                rLock.unlock();
+                log.info("Released distributed lock: {}", lockKey);
+            }
+        }
+    }
+}</code></pre>
+
+                <h2>2. Stock Deduction Service Implementation (ProductService.java)</h2>
+                <p>Apply <code>@DistributedLock</code> to prevent race conditions during concurrent stock deductions:</p>
+                <pre><code class="language-java">package com.example.service;
+
+import com.example.config.lock.DistributedLock;
+import com.example.domain.ProductEntity;
+import com.example.repository.ProductRepository;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Slf4j
+@Service
+public class ProductService {
+
+    private final ProductRepository productRepository;
+
+    public ProductService(ProductRepository productRepository) {
+        this.productRepository = productRepository;
+    }
+
+    // [@DistributedLock] Protects stock deduction concurrency across multi-server cluster
+    @DistributedLock(key = "'product:' + #productId", waitTime = 5, leaseTime = 3)
+    @Transactional
+    public void decreaseStock(Long productId, int quantity) {
+        ProductEntity product = productRepository.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("Product not found"));
+
+        if (product.getStock() < quantity) {
+            throw new IllegalStateException("Insufficient stock remaining: " + product.getStock());
+        }
+
+        product.decreaseStock(quantity);
+        log.info("Stock decreased successfully. ProductId: {}, Remaining Stock: {}", productId, product.getStock());
+    }
+}</code></pre>
+            `
+        },
+        ko: {
+            title: 'Spring Boot 3.3 동시성 제어 (낙관적/비관적 락 & Redisson 분산 락) 가이드',
+            content: `
+                <p>선착순 쿠폰 발급, 수량 차감, 티켓 예매 등 동시성 요청이 폭주하는 환경에서는 수십 개의 스레드가 동일한 DB 행(Row)을 동시에 수정하려 할 때 데이터 불일치(<strong>Race Condition</strong>) 문제가 발생합니다. 본 가이드에서는 JPA 낙관적 락(<code>@Version</code>), 비관적 락(<code>SELECT FOR UPDATE</code>), 그리고 분산 서버(MSA) 환경에서 성능 저하 없이 안전하게 동시성을 제어하는 <strong>Redisson 커스텀 AOP 분산 락(Distributed Lock)</strong>을 구현합니다.</p>
+
+                <div class="technical-note" style="background: rgba(99, 102, 241, 0.1); border-left: 4px solid #6366f1; padding: 1rem; margin: 1.5rem 0; border-radius: 4px;">
+                    <strong>동시성 제어 기술 선택 가이드:</strong>
+                    <ul style="margin-top: 0.5rem; margin-bottom: 0;">
+                        <li><strong>낙관적 락 (@Version):</strong> 충돌이 적은 시스템. DB 락 없이 버전 번호로 검증하며 충돌 시 재시도.</li>
+                        <li><strong>비관적 락 (FOR UPDATE):</strong> 단일 DB 환경에서 충돌이 잦은 경우. DB Row 락을 즉시 선점하여 처리.</li>
+                        <li><strong>Redisson 분산 락:</strong> 다중 서버(MSA) 환경. Redis Pub/Sub 기반으로 CPU 스핀락 없이 고성능 분산 락 제어.</li>
+                    </ul>
+                </div>
+
+                <h2>1단계: Redisson 커스텀 분산 락 어노테이션 &amp; AOP (DistributedLockAspect.java)</h2>
+                <p><code>RedissonClient</code>와 Spring EL 식을 지원하는 커스텀 AOP 락을 구현합니다:</p>
+                <pre><code class="language-java">package com.example.config.lock;
+
+import java.lang.annotation.*;
+import java.util.concurrent.TimeUnit;
+
+// [@DistributedLock] Redis 분산 락 적용 커스텀 어노테이션
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface DistributedLock {
+    String key();                        // 락 키 이름 (e.g. "product:" + #productId)
+    TimeUnit timeUnit() default TimeUnit.SECONDS;
+    long waitTime() default 5L;          // 락 획득 대기 최대 시간 (5초)
+    long leaseTime() default 3L;         // 락 임대 자동 해제 시간 (3초)
+}
+
+// AOP Aspect를 활용한 락 선점 및 해제 자동화
+package com.example.config.lock;
+
+import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.reflect.MethodSignature;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.stereotype.Component;
+
+@Slf4j
+@Aspect
+@Component
+public class DistributedLockAspect {
+
+    private final RedissonClient redissonClient;
+    private final SpelExpressionParser parser = new SpelExpressionParser();
+
+    public DistributedLockAspect(RedissonClient redissonClient) {
+        this.redissonClient = redissonClient;
+    }
+
+    @Around("@annotation(distributedLock)")
+    public Object lock(ProceedingJoinPoint joinPoint, DistributedLock distributedLock) throws Throwable {
+        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+        
+        // SpEL 식 파싱하여 락 키 생성
+        StandardEvaluationContext context = new StandardEvaluationContext();
+        Object[] args = joinPoint.getArgs();
+        String[] paramNames = signature.getParameterNames();
+        for (int i = 0; i < args.length; i++) {
+            context.setVariable(paramNames[i], args[i]);
+        }
+        String lockKey = "LOCK:" + parser.parseExpression(distributedLock.key()).getValue(context, String.class);
+
+        RLock rLock = redissonClient.getLock(lockKey);
+        boolean isLocked = false;
+
+        try {
+            // Pub/Sub 방식으로 CPU 스핀 없이 락 획득 시도
+            isLocked = rLock.tryLock(distributedLock.waitTime(), distributedLock.leaseTime(), distributedLock.timeUnit());
+            if (!isLocked) {
+                log.warn("분산 락 획득 실패 키: {}", lockKey);
+                throw new IllegalStateException("현재 요청이 많아 처리가 지연되고 있습니다. 다시 시도해 주세요.");
+            }
+
+            log.info("분산 락 선점 성공: {}", lockKey);
+            return joinPoint.proceed();
+        } finally {
+            if (isLocked && rLock.isHeldByCurrentThread()) {
+                rLock.unlock();
+                log.info("분산 락 해제 완료: {}", lockKey);
+            }
+        }
+    }
+}</code></pre>
+
+                <h2>2단계: 재고 차감 서비스에 분산 락 적용 (ProductService.java)</h2>
+                <p>동시 요청 시 재고 차감 비즈니스 로직에 <code>@DistributedLock</code>을 적용합니다:</p>
+                <pre><code class="language-java">package com.example.service;
+
+import com.example.config.lock.DistributedLock;
+import com.example.domain.ProductEntity;
+import com.example.repository.ProductRepository;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Slf4j
+@Service
+public class ProductService {
+
+    private final ProductRepository productRepository;
+
+    public ProductService(ProductRepository productRepository) {
+        this.productRepository = productRepository;
+    }
+
+    // [@DistributedLock] 멀티 서버 환경에서 재고 차감 동시성 보장
+    @DistributedLock(key = "'product:' + #productId", waitTime = 5, leaseTime = 3)
+    @Transactional
+    public void decreaseStock(Long productId, int quantity) {
+        ProductEntity product = productRepository.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다."));
+
+        if (product.getStock() < quantity) {
+            throw new IllegalStateException("잔여 재고가 부족합니다. 현재 재고: " + product.getStock());
+        }
+
+        product.decreaseStock(quantity);
+        log.info("재고 차감 완료. 상품 ID: {}, 남은 재고: {}", productId, product.getStock());
+    }
+}</code></pre>
+            `
+        }
+    },
+    'spring-transactional-propagation': {
+        en: {
+            title: 'Spring Boot 3.3 Transaction Management, Propagation & Rollback Deep Dive',
+            content: `
+                <p>Understanding Spring Framework's AOP-based <code>@Transactional</code> proxy behavior, transaction propagation modes (<code>REQUIRED</code>, <code>REQUIRES_NEW</code>), exception rollback rules, and DB Read-Only replica routing is essential for building data-consistent enterprise applications. This guide details transaction isolation levels, self-invocation pitfalls, and master-slave routing configurations.</p>
+
+                <div class="technical-note" style="background: rgba(99, 102, 241, 0.1); border-left: 4px solid #6366f1; padding: 1rem; margin: 1.5rem 0; border-radius: 4px;">
+                    <strong>Transaction Core Rules:</strong>
+                    <ul style="margin-top: 0.5rem; margin-bottom: 0;">
+                        <li><strong>Self-Invocation Trap:</strong> Calling a <code>@Transactional</code> method from within the same class bypasses the Spring AOP proxy, disabling transaction management.</li>
+                        <li><strong>Propagation.REQUIRES_NEW:</strong> Suspends the outer transaction and creates an independent inner transaction. If the inner fails, it rolls back without affecting outer success (when caught).</li>
+                        <li><strong>Rollback Policy:</strong> By default, Spring rolls back only on <code>RuntimeException</code> and <code>Error</code>. Specify <code>rollbackFor = Exception.class</code> for checked exceptions.</li>
+                    </ul>
+                </div>
+
+                <h2>1. Propagation &amp; Rollback Configuration (OrderService.java)</h2>
+                <p>Demonstrate <code>REQUIRED</code> vs <code>REQUIRES_NEW</code> propagation and rollback handling in production services:</p>
+                <pre><code class="language-java">package com.example.service;
+
+import com.example.domain.OrderEntity;
+import com.example.repository.OrderRepository;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+@Slf4j
+@Service
+public class OrderService {
+
+    private final OrderRepository orderRepository;
+    private final LogHistoryService logHistoryService;
+
+    public OrderService(OrderRepository orderRepository, LogHistoryService logHistoryService) {
+        this.orderRepository = orderRepository;
+        this.logHistoryService = logHistoryService;
+    }
+
+    // Outer Main Transaction: Roll back on any Exception
+    @Transactional(rollbackFor = Exception.class)
+    public Long createOrder(OrderRequestDto requestDto) {
+        log.info("Starting main order creation transaction...");
+        OrderEntity order = orderRepository.save(requestDto.toEntity());
+
+        try {
+            // Call independent log service running in REQUIRES_NEW propagation
+            logHistoryService.saveAuditLog("Order created ID: " + order.getId());
+        } catch (Exception e) {
+            log.warn("Audit log saving failed, but main order transaction will proceed.", e);
+        }
+
+        return order.getId();
+    }
+}
+
+// Independent Audit Log Service running in REQUIRES_NEW transaction
+@Slf4j
+@Service
+public class LogHistoryService {
+
+    private final AuditLogRepository auditLogRepository;
+
+    public LogHistoryService(AuditLogRepository auditLogRepository) {
+        this.auditLogRepository = auditLogRepository;
+    }
+
+    // [@Transactional(propagation = Propagation.REQUIRES_NEW)]
+    // Starts an isolated transaction. Failures here do not trigger rollback in the outer main order transaction.
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void saveAuditLog(String message) {
+        log.info("Executing isolated audit log transaction...");
+        auditLogRepository.save(new AuditLogEntity(message));
+    }
+}</code></pre>
+            `
+        },
+        ko: {
+            title: 'Spring Boot 3.3 트랜잭션 전파(Propagation) & 롤백(Rollback) 깊이보기',
+            content: `
+                <p>Spring 프레임워크의 AOP 프록시 기반 <code>@Transactional</code> 메커니즘, 트랜잭션 전파 속성(<code>REQUIRED</code>, <code>REQUIRES_NEW</code>), 예외 롤백 정책, 그리고 Read-Only DB 복제본(Replica) 라우팅을 이해하는 것은 데이터 정합성을 보장하는 enterprise 백엔드 개발의 핵심입니다. 본 가이드에서는 자기 호출(Self-Invocation) 함정, 전파 수준별 롤백 격리, 그리고 Master-Slave 라우팅 기법을 다룹니다.</p>
+
+                <div class="technical-note" style="background: rgba(99, 102, 241, 0.1); border-left: 4px solid #6366f1; padding: 1rem; margin: 1.5rem 0; border-radius: 4px;">
+                    <strong>트랜잭션 핵심 실무 수칙:</strong>
+                    <ul style="margin-top: 0.5rem; margin-bottom: 0;">
+                        <li><strong>자기 호출(Self-Invocation) 주의:</strong> 같은 클래스 내부에서 <code>@Transactional</code> 메서드를 호출하면 AOP 프록시를 거치지 않아 트랜잭션이 무시됩니다.</li>
+                        <li><strong>REQUIRES_NEW 전파:</strong> 기존 트랜잭션을 보류하고 독립된 별도 트랜잭션을 생성합니다. 내부 실패 시 외부에 영향을 주지 않고 개별 롤백됩니다.</li>
+                        <li><strong>롤백 정책:</strong> 기본적으로 <code>RuntimeException</code> 및 <code>Error</code>만 롤백됩니다. Checked Exception 도 롤백하려면 <code>rollbackFor = Exception.class</code> 설정 필수.</li>
+                    </ul>
+                </div>
+
+                <h2>1단계: 트랜잭션 전파 및 롤백 실무 구현 (OrderService.java)</h2>
+                <p>주문 처리 메인 트랜잭션과 독립 이력 저장 <code>REQUIRES_NEW</code> 트랜잭션을 분리 구현합니다:</p>
+                <pre><code class="language-java">package com.example.service;
+
+import com.example.domain.OrderEntity;
+import com.example.repository.OrderRepository;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+@Slf4j
+@Service
+public class OrderService {
+
+    private final OrderRepository orderRepository;
+    private final LogHistoryService logHistoryService;
+
+    public OrderService(OrderRepository orderRepository, LogHistoryService logHistoryService) {
+        this.orderRepository = orderRepository;
+        this.logHistoryService = logHistoryService;
+    }
+
+    // 메인 주문 트랜잭션: Checked Exception 포함 전체 롤백 설정
+    @Transactional(rollbackFor = Exception.class)
+    public Long createOrder(OrderRequestDto requestDto) {
+        log.info("메인 주문 생성 트랜잭션 시작...");
+        OrderEntity order = orderRepository.save(requestDto.toEntity());
+
+        try {
+            // REQUIRES_NEW 전파 속성으로 실행되는 독립 이력 로그 저장 서비스 호출
+            logHistoryService.saveAuditLog("주문 생성 완료 ID: " + order.getId());
+        } catch (Exception e) {
+            log.warn("이력 로그 저장 실패(메인 주문 트랜잭션은 성공 유지).", e);
+        }
+
+        return order.getId();
+    }
+}
+
+// 독립적인 이력 저장 서비스 (REQUIRES_NEW 적용)
+@Slf4j
+@Service
+public class LogHistoryService {
+
+    private final AuditLogRepository auditLogRepository;
+
+    public LogHistoryService(AuditLogRepository auditLogRepository) {
+        this.auditLogRepository = auditLogRepository;
+    }
+
+    // [@Transactional(propagation = Propagation.REQUIRES_NEW)]
+    // 외부 트랜잭션과 격리된 새 트랜잭션을 시작합니다. 여기서 발생한 예외는 메인 주문을 롤백시키지 않습니다.
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void saveAuditLog(String message) {
+        log.info("독립 감사 로그 트랜잭션 실행 중...");
+        auditLogRepository.save(new AuditLogEntity(message));
+    }
+}</code></pre>
+            `
+        }
+    },
+    'spring-async-event-architecture': {
+        en: {
+            title: 'Spring Boot 3.3 Asynchronous Execution (@Async) & Event-Driven Architecture Guide',
+            content: `
+                <p>Decoupling non-core side effects (e.g. sending welcome emails, pushing mobile push notifications, audit logging) from main HTTP transaction threads improves API responsiveness and system resilience. This guide demonstrates custom <code>ThreadPoolTaskExecutor</code> setup, Spring Application Event publishing, and transaction-synchronized <code>@TransactionalEventListener(phase = AFTER_COMMIT)</code> handlers.</p>
+
+                <div class="technical-note" style="background: rgba(99, 102, 241, 0.1); border-left: 4px solid #6366f1; padding: 1rem; margin: 1.5rem 0; border-radius: 4px;">
+                    <strong>Event-Driven Design Benefits:</strong>
+                    <ul style="margin-top: 0.5rem; margin-bottom: 0;">
+                        <li><strong>Domain Decoupling:</strong> The primary domain service focuses solely on core business logic without hard-dependency on notification or email modules.</li>
+                        <li><strong>Transactional Safety (AFTER_COMMIT):</strong> Events execute only AFTER the database transaction commits successfully, preventing phantom email sends for rolled-back DB writes.</li>
+                        <li><strong>Thread Pool Isolation:</strong> Custom thread pools prevent asynchronous tasks from consuming web servlet container worker threads.</li>
+                    </ul>
+                </div>
+
+                <h2>1. Custom Thread Pool Configuration (AsyncConfig.java)</h2>
+                <p>Configure dedicated thread pool executor for async events in <code>AsyncConfig.java</code>:</p>
+                <pre><code class="language-java">package com.example.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+
+import java.util.concurrent.Executor;
+
+// [@Configuration & @EnableAsync] Enable Spring Asynchronous Task Execution
+@Configuration
+@EnableAsync
+public class AsyncConfig {
+
+    @Bean(name = "asyncExecutor")
+    public Executor asyncExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(10);             // Baseline active threads
+        executor.setMaxPoolSize(50);              // Max threads under heavy load
+        executor.setQueueCapacity(100);           // Buffer task queue capacity
+        executor.setThreadNamePrefix("AsyncEvt-"); // Thread name prefix for easy logging
+        executor.initialize();
+        return executor;
+    }
+}</code></pre>
+
+                <h2>2. Event Publishing &amp; Transactional Listener (UserSignupEventListener.java)</h2>
+                <p>Publish domain events and consume them asynchronously after transaction commit:</p>
+                <pre><code class="language-java">package com.example.event;
+
+import lombok.Getter;
+
+// Domain Event Object holding immutable event data payload
+@Getter
+public class UserSignedUpEvent {
+    private final Long userId;
+    private final String email;
+
+    public UserSignedUpEvent(Long userId, String email) {
+        this.userId = userId;
+        this.email = email;
+    }
+}
+
+// User Service Publishing Domain Events
+package com.example.service;
+
+import com.example.event.UserSignedUpEvent;
+import com.example.repository.UserRepository;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Slf4j
+@Service
+public class UserService {
+
+    private final UserRepository userRepository;
+    private final ApplicationEventPublisher eventPublisher;
+
+    public UserService(UserRepository userRepository, ApplicationEventPublisher eventPublisher) {
+        this.userRepository = userRepository;
+        this.eventPublisher = eventPublisher;
+    }
+
+    @Transactional
+    public Long signUp(UserSignUpDto signUpDto) {
+        Long userId = userRepository.save(signUpDto.toEntity()).getId();
+        log.info("User registered in DB. Publishing UserSignedUpEvent...");
+
+        // Publish Spring Application Event
+        eventPublisher.publishEvent(new UserSignedUpEvent(userId, signUpDto.getEmail()));
+        return userId;
+    }
+}
+
+// Event Listener synchronized with DB Transaction Commit
+package com.example.event;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
+
+@Slf4j
+@Component
+public class UserSignupEventListener {
+
+    // [@TransactionalEventListener(phase = AFTER_COMMIT)] Ensures event runs AFTER DB commit succeeds
+    // [@Async("asyncExecutor")] Runs asynchronously on dedicated thread pool
+    @Async("asyncExecutor")
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void handleUserSignedUp(UserSignedUpEvent event) {
+        log.info("Async Event Handler running on thread [{}]. Sending welcome email to: {}",
+                Thread.currentThread().getName(), event.getEmail());
+        
+        // Execute email dispatch logic
+    }
+}</code></pre>
+            `
+        },
+        ko: {
+            title: 'Spring Boot 3.3 비동기 처리(@Async) & 이벤트 기반 아키텍처(@EventListener) 가이드',
+            content: `
+                <p>회원가입 완료 후 축하 이메일 발송, 푸시 알림 전송, 통계 로그 쌓기 등 메인 트랜잭션과 직접적인 상관없는 부가 로직을 분리하면 API 응답 속도가 대폭 향상되고 비즈니스 결합도가 낮아집니다. 본 가이드에서는 커스텀 <code>ThreadPoolTaskExecutor</code> 설정, Spring Application Event 발행, 그리고 DB 트랜잭션 커밋 성공 후에만 안전하게 비동기로 실행되는 <code>@TransactionalEventListener(phase = AFTER_COMMIT)</code> 패턴을 구축합니다.</p>
+
+                <div class="technical-note" style="background: rgba(99, 102, 241, 0.1); border-left: 4px solid #6366f1; padding: 1rem; margin: 1.5rem 0; border-radius: 4px;">
+                    <strong>이벤트 기반 아키텍처의 핵심 이점:</strong>
+                    <ul style="margin-top: 0.5rem; margin-bottom: 0;">
+                        <li><strong>도메인 의존성 제거:</strong> 회원 서비스가 이메일/알림 모듈에 직접 의존하지 않고 이벤트만 발행하여 결합도 최소화.</li>
+                        <li><strong>트랜잭션 안전성 (AFTER_COMMIT):</strong> DB 저장 트랜잭션이 성공적으로 커밋된 후에만 이벤트가 실행되어 롤백 시 이메일 유령 발송 방지.</li>
+                        <li><strong>스레드 풀 격리:</strong> 독립된 커스텀 스레드 풀을 사용하여 비동기 작업이 서블릿 톰캣 스레드를 점유하지 않도록 방지.</li>
+                    </ul>
+                </div>
+
+                <h2>1단계: 비동기 전용 커스텀 스레드 풀 설정 (AsyncConfig.java)</h2>
+                <p>비동기 이벤트 처리를 위한 전용 <code>ThreadPoolTaskExecutor</code>를 구성합니다:</p>
+                <pre><code class="language-java">package com.example.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+
+import java.util.concurrent.Executor;
+
+// [@Configuration & @EnableAsync] Spring 비동기 실행 기능 활성화
+@Configuration
+@EnableAsync
+public class AsyncConfig {
+
+    @Bean(name = "asyncExecutor")
+    public Executor asyncExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(10);             // 기본 유지 스레드 수
+        executor.setMaxPoolSize(50);              // 트래픽 폭주 시 최대 스레드 수
+        executor.setQueueCapacity(100);           // 작업 대기 큐 크기
+        executor.setThreadNamePrefix("AsyncEvt-"); // 로그 식별용 스레드 이름 접두사
+        executor.initialize();
+        return executor;
+    }
+}</code></pre>
+
+                <h2>2단계: 이벤트 발행 및 트랜잭션 동기화 리스너 (UserSignupEventListener.java)</h2>
+                <p>도메인 이벤트를 발행하고 트랜잭션 커밋 완료 후 비동기로 수신 처리합니다:</p>
+                <pre><code class="language-java">package com.example.event;
+
+import lombok.Getter;
+
+// 회원가입 이벤트 객체 (불변 데이터 캡슐화)
+@Getter
+public class UserSignedUpEvent {
+    private final Long userId;
+    private final String email;
+
+    public UserSignedUpEvent(Long userId, String email) {
+        this.userId = userId;
+        this.email = email;
+    }
+}
+
+// 회원가입 서비스 (이벤트 발행)
+package com.example.service;
+
+import com.example.event.UserSignedUpEvent;
+import com.example.repository.UserRepository;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Slf4j
+@Service
+public class UserService {
+
+    private final UserRepository userRepository;
+    private final ApplicationEventPublisher eventPublisher;
+
+    public UserService(UserRepository userRepository, ApplicationEventPublisher eventPublisher) {
+        this.userRepository = userRepository;
+        this.eventPublisher = eventPublisher;
+    }
+
+    @Transactional
+    public Long signUp(UserSignUpDto signUpDto) {
+        Long userId = userRepository.save(signUpDto.toEntity()).getId();
+        log.info("사용자 DB 저장 완료. UserSignedUpEvent 발행 중...");
+
+        // Spring Application Event 발행
+        eventPublisher.publishEvent(new UserSignedUpEvent(userId, signUpDto.getEmail()));
+        return userId;
+    }
+}
+
+// 트랜잭션 커밋 후 실행되는 비동기 이벤트 리스너
+package com.example.event;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
+
+@Slf4j
+@Component
+public class UserSignupEventListener {
+
+    // [@TransactionalEventListener(phase = AFTER_COMMIT)] DB 트랜잭션 성공 커밋 후에만 작동
+    // [@Async("asyncExecutor")] 독립된 비동기 스레드 풀에서 실행
+    @Async("asyncExecutor")
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void handleUserSignedUp(UserSignedUpEvent event) {
+        log.info("비동기 이벤트 리스너 실행 [스레드: {}]. 가입 축하 이메일 발송 중: {}",
+                Thread.currentThread().getName(), event.getEmail());
+        
+        // 이메일 발송 로직 수행
+    }
+}</code></pre>
+            `
+        }
+    },
+    'spring-openapi-swagger': {
+        en: {
+            title: 'Spring Boot 3.3 OpenAPI 3.0 (Swagger UI) API Documentation & JWT Authentication Guide',
+            content: `
+                <p>Maintaining up-to-date REST API documentation manually is time-consuming and error-prone. By integrating <strong>OpenAPI 3.0</strong> (Swagger UI) with <strong>Spring Boot 3.3.x</strong> using <code>springdoc-openapi-starter-webmvc-ui</code>, developers automatically generate interactive browser API documentation. This guide details OpenAPI 3.0 configuration, JWT Bearer Token SecurityScheme setup, and DTO field annotation best practices.</p>
+
+                <div class="technical-note" style="background: rgba(99, 102, 241, 0.1); border-left: 4px solid #6366f1; padding: 1rem; margin: 1.5rem 0; border-radius: 4px;">
+                    <strong>Swagger UI Integration Highlights:</strong>
+                    <ul style="margin-top: 0.5rem; margin-bottom: 0;">
+                        <li><strong>JWT Bearer Authorization:</strong> Configures the "Authorize" lock button in Swagger UI to test secured API endpoints with Bearer tokens automatically.</li>
+                        <li><strong>Schema Annotations (@Schema):</strong> Enriches DTOs with example values, constraints, and descriptions for frontend developers.</li>
+                        <li><strong>Interactive Testing:</strong> Execute live API requests directly from the browser UI at <code>/swagger-ui/index.html</code>.</li>
+                    </ul>
+                </div>
+
+                <h2>1. OpenAPI 3.0 Configuration &amp; Security Scheme (OpenApiConfig.java)</h2>
+                <p>Configure Swagger UI metadata and JWT Bearer token authentication in <code>OpenApiConfig.java</code>:</p>
+                <pre><code class="language-java">package com.example.config;
+
+import io.swagger.v3.oas.models.Components;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+// [@Configuration] Springdoc OpenAPI 3.0 Swagger UI Configuration
+@Configuration
+public class OpenApiConfig {
+
+    @Bean
+    public OpenAPI openAPI() {
+        String securitySchemeName = "BearerAuth";
+
+        // Define JWT Bearer Token Security Scheme
+        SecurityScheme securityScheme = new SecurityScheme()
+                .name(securitySchemeName)
+                .type(SecurityScheme.Type.HTTP)
+                .scheme("bearer")
+                .bearerFormat("JWT")
+                .description("Enter your Access Token to authorize REST API requests.");
+
+        // Security Requirement
+        SecurityRequirement securityRequirement = new SecurityRequirement().addList(securitySchemeName);
+
+        return new OpenAPI()
+                .info(new Info()
+                        .title("Production Enterprise REST API Specification")
+                        .description("Spring Boot 3.3 Enterprise Service API Documentation")
+                        .version("v1.0.0"))
+                .addSecurityItem(securityRequirement)
+                .components(new Components().addSecuritySchemes(securitySchemeName, securityScheme));
+    }
+}</code></pre>
+
+                <h2>2. Controller &amp; DTO Documentation Annotations (UserController.java)</h2>
+                <p>Annotate controllers and DTOs with OpenAPI documentation attributes:</p>
+                <pre><code class="language-java">package com.example.controller;
+
+import com.example.dto.UserRegisterDto;
+import com.example.dto.UserResponseDto;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+// [@Tag] Group REST Controller under a specific Swagger UI section
+@Tag(name = "User Management API", description = "Endpoints for user registration, authentication, and profile management")
+@RestController
+@RequestMapping("/api/v1/users")
+public class UserController {
+
+    // [@Operation & @ApiResponse] Document API endpoint summary, description, and response status codes
+    @Operation(summary = "Register New User", description = "Creates a new user account and returns the created profile record.")
+    @ApiResponse(responseCode = "200", description = "User created successfully",
+            content = @Content(schema = @Schema(implementation = UserResponseDto.class)))
+    @ApiResponse(responseCode = "400", description = "Validation parameter failure")
+    @ApiResponse(responseCode = "409", description = "Duplicate email conflict")
+    @PostMapping
+    public ResponseEntity<UserResponseDto> registerUser(@Valid @RequestBody UserRegisterDto registerDto) {
+        // Business logic execution
+        return ResponseEntity.ok(new UserResponseDto(1L, registerDto.getEmail(), registerDto.getName()));
+    }
+}
+
+// Annotated DTO with example values and field descriptions
+package com.example.dto;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import lombok.Getter;
+
+@Getter
+@Schema(description = "User Registration Request DTO Payload")
+public class UserRegisterDto {
+
+    @Schema(description = "User Login Email Address", example = "user@example.com")
+    @NotBlank
+    @Email
+    private String email;
+
+    @Schema(description = "User Password", example = "Password123!")
+    @NotBlank
+    private String password;
+
+    @Schema(description = "User Full Name", example = "Hong Gildong")
+    @NotBlank
+    private String name;
+}</code></pre>
+            `
+        },
+        ko: {
+            title: 'Spring Boot 3.3 OpenAPI 3.0 (Swagger UI) API 문서화 & JWT 인증 연동 가이드',
+            content: `
+                <p>수동으로 API 명세서를 작성하고 업데이트하는 것은 많은 시간과 오류를 수반합니다. <strong>Spring Boot 3.3.x</strong> 환경에서 <code>springdoc-openapi-starter-webmvc-ui</code> 라이브러리를 활용하면 소스 코드의 어노테이션 기반으로 최신 브라우저 기반 대화형 API 문서(Swagger UI)를 자동 생성할 수 있습니다. 본 가이드에서는 OpenAPI 3.0 전역 설정, Swagger UI 내 JWT Bearer 인증 헤더 연동, 그리고 DTO 스키마 설명 추가법을 다룹니다.</p>
+
+                <div class="technical-note" style="background: rgba(99, 102, 241, 0.1); border-left: 4px solid #6366f1; padding: 1rem; margin: 1.5rem 0; border-radius: 4px;">
+                    <strong>Swagger UI 주요 연동 특징:</strong>
+                    <ul style="margin-top: 0.5rem; margin-bottom: 0;">
+                        <li><strong>JWT Bearer 인증 연동:</strong> Swagger UI 상단에 "Authorize" 자물쇠 버튼을 구성하여 토큰이 필요한 보안 API를 웹 화면에서 테스트 가능.</li>
+                        <li><strong>스키마 어노테이션 (@Schema):</strong> DTO 필드별 예시값(example), 필수 여부, 설명을 명시하여 프론트엔드 개발자와의 소통 원활화.</li>
+                        <li><strong>실시간 테스트:</strong> 브라우저 <code>/swagger-ui/index.html</code> 경로에서 즉시 API 요청 및 응답 확인 가능.</li>
+                    </ul>
+                </div>
+
+                <h2>1단계: OpenAPI 3.0 전역 설정 및 JWT SecurityScheme (OpenApiConfig.java)</h2>
+                <p>Swagger UI 메타데이터 및 JWT Bearer 토큰 인증 헤더를 설정합니다:</p>
+                <pre><code class="language-java">package com.example.config;
+
+import io.swagger.v3.oas.models.Components;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+// [@Configuration] Springdoc OpenAPI 3.0 Swagger UI 전역 설정
+@Configuration
+public class OpenApiConfig {
+
+    @Bean
+    public OpenAPI openAPI() {
+        String securitySchemeName = "BearerAuth";
+
+        // JWT Bearer 토큰 인증 스키마 정의
+        SecurityScheme securityScheme = new SecurityScheme()
+                .name(securitySchemeName)
+                .type(SecurityScheme.Type.HTTP)
+                .scheme("bearer")
+                .bearerFormat("JWT")
+                .description("보안 API 호출을 위한 JWT Access Token을 입력하세요.");
+
+        // 전역 보안 요구사항 추가
+        SecurityRequirement securityRequirement = new SecurityRequirement().addList(securitySchemeName);
+
+        return new OpenAPI()
+                .info(new Info()
+                        .title("엔터프라이즈 REST API 명세서")
+                        .description("Spring Boot 3.3 기반 서비스 API 자동 생성 문서")
+                        .version("v1.0.0"))
+                .addSecurityItem(securityRequirement)
+                .components(new Components().addSecuritySchemes(securitySchemeName, securityScheme));
+    }
+}</code></pre>
+
+                <h2>2단계: 컨트롤러 및 DTO 명세 어노테이션 작성 (UserController.java)</h2>
+                <p>컨트롤러와 DTO에 Swagger 문서용 어노테이션을 부여합니다:</p>
+                <pre><code class="language-java">package com.example.controller;
+
+import com.example.dto.UserRegisterDto;
+import com.example.dto.UserResponseDto;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+// [@Tag] Swagger UI에서 컨트롤러 그룹화 이름 및 설명 지정
+@Tag(name = "사용자 관리 API", description = "회원 가입, 조회 및 프로필 관리 엔드포인트")
+@RestController
+@RequestMapping("/api/v1/users")
+public class UserController {
+
+    // [@Operation & @ApiResponse] 엔드포인트 기능 요약 및 응답 코드별 설명 작성
+    @Operation(summary = "신규 회원가입", description = "새로운 사용자 계정을 생성하고 생성된 프로필 정보를 반환합니다.")
+    @ApiResponse(responseCode = "200", description = "회원가입 성공",
+            content = @Content(schema = @Schema(implementation = UserResponseDto.class)))
+    @ApiResponse(responseCode = "400", description = "입력 파라미터 검증 실패")
+    @ApiResponse(responseCode = "409", description = "이메일 중복 충돌")
+    @PostMapping
+    public ResponseEntity<UserResponseDto> registerUser(@Valid @RequestBody UserRegisterDto registerDto) {
+        // 비즈니스 로직 실행
+        return ResponseEntity.ok(new UserResponseDto(1L, registerDto.getEmail(), registerDto.getName()));
+    }
+}
+
+// 예시값과 필드 설명이 포함된 DTO
+package com.example.dto;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import lombok.Getter;
+
+@Getter
+@Schema(description = "신규 회원가입 요청 DTO Payload")
+public class UserRegisterDto {
+
+    @Schema(description = "사용자 이메일 주소", example = "user@example.com")
+    @NotBlank
+    @Email
+    private String email;
+
+    @Schema(description = "비밀번호", example = "Password123!")
+    @NotBlank
+    private String password;
+
+    @Schema(description = "사용자 이름", example = "홍길동")
+    @NotBlank
+    private String name;
+}</code></pre>
+            `
+        }
     }
 };
 
