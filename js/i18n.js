@@ -67,6 +67,24 @@ export const translations = {
         diff_h1: "Intelligent Text & Code Diff Checker",
         diff_p: "Perform side-by-side comparisons of code versions, API payloads, or text documents. Our algorithm highlights additions, deletions, and modifications with high precision.",
         
+        curl_h1: "cURL Command to Code Converter",
+        curl_p: "Parse raw cURL commands from browser DevTools, Postman, or terminal into clean executable code snippets for JavaScript, Python, Go, and PHP.",
+
+        hash_h1: "Cryptographic Hash & HMAC Generator",
+        hash_p: "Generate cryptographic hashes (SHA-256, SHA-512, SHA-1, MD5) and Hash-based Message Authentication Codes (HMAC) locally in your browser memory using the Web Crypto API.",
+
+        cron_h1: "Cron Expression Explainer & Generator",
+        cron_p: "Parse 5-part standard Cron expressions into plain human-readable sentences and calculate future execution timelines.",
+
+        timestamp_h1: "Unix Timestamp & Epoch Timezone Converter",
+        timestamp_p: "Convert Unix Epoch timestamps (seconds & milliseconds) into human-readable ISO 8601, UTC, and KST (Korea Standard Time) formats with real-time live clock feed.",
+
+        regex_h1: "Regex (Regular Expression) Tester & Cheatsheet",
+        regex_p: "Test and debug regular expressions in real-time with pattern matching, capture group analysis, flag toggles, and common regex template presets.",
+
+        status_h1: "HTTP Status Codes Reference & Troubleshooting Guide",
+        status_p: "A comprehensive developer reference of 1xx, 2xx, 3xx, 4xx, and 5xx HTTP response status codes with detailed root-cause diagnostics and frontend/backend remediation steps.",
+
         resources_h1: "Developer Knowledge Base & Technical FAQ",
         resources_p: "A curated repository of web standards, security protocols, and data engineering concepts to support your daily development cycle.",
         
@@ -80,7 +98,7 @@ export const translations = {
         terms_p: "Please read these terms carefully before using our utilities.",
 
         guides_h1: "Developer Guides & Resources",
-        guides_p: "In-depth articles to help you master web development and data processing. All content is original and technically vetted.",
+        guides_p: "In-depth articles to help you master web development and data processing. All content is original and technically verified.",
 
         news_h1: "What's New & Site Notices",
         news_p: "Stay updated with the latest improvements, new tools, and technical announcements from the Parse Utils team.",
@@ -117,13 +135,19 @@ export const translations = {
         placeholder_html: "Paste your HTML, SVG, or XML snippet here...",
         placeholder_diff_orig: "Original content...",
         placeholder_diff_mod: "Modified content...",
+        placeholder_curl: "Paste your cURL command here...",
+        placeholder_hash: "Type or paste text to compute cryptographic hashes...",
+        placeholder_cron: "e.g. */15 * * * *",
+        placeholder_timestamp: "Paste Unix timestamp in seconds or milliseconds...",
+        placeholder_regex_test: "Paste sample text to test regular expression matching...",
+        placeholder_status_filter: "Search by status code or name (e.g. 401, Unauthorized)...",
         
-        cookie_text: "We use cookies to personalize content and ads, and to analyze our traffic. We also share information about your use of our site with our advertising and analytics partners. ",
+        cookie_text: "We use cookies to personalize content and ads, and to analyze our traffic. We also share information about your use of our site with our advertising and analytics partners.",
         cookie_learn_more: "Learn more",
         cookie_accept: "Accept All",
         cookie_decline: "Decline",
 
-        footer_copyright: "© 2026 Parse Utils - Precision Tools for Modern Engineering. All rights reserved.",
+        footer_copyright: "© 2026 Parse Utils - Precision Tools for Modern Engineering.",
         footer_transform: "Transformation Tools",
         footer_analysis: "Analysis & Formatting",
         footer_trust: "Trust & Transparency"
@@ -173,10 +197,10 @@ export const translations = {
         jwt_p: "JSON 웹 토큰을 로컬에서 디코딩합니다. 외부 서버에 민감한 토큰을 노출하지 않고 헤더, 페이로드 및 서명을 검사합니다.",
 
         url_h1: "심층 URL 파서 및 분석기",
-        url_p: "복잡한 URL을 기본 구성 요소로 분해합니다. 디버깅 및 SEO 최적화를 위해 프로토콜, 쿼리 매개변수 및 프래그먼트를 분석합니다.",
+        url_p: "복잡한 URL을 기본 구성 요소로 해체합니다. 디버깅 및 SEO 최적화를 위해 프로토콜, 쿼리 매개변수 및 프래그먼트를 분석합니다.",
 
         css_h1: "최신 CSS 포맷터 및 압축기",
-        css_p: "스타일시트를 정제하고 최적화합니다. 개발을 위해 정렬하거나 프로덕션 배포를 위해 압축합니다.",
+        css_p: "스타일시트를 정제하고 최적화합니다. 개발을 위해 가독성을 높이거나 프로덕션 배포를 위해 압축합니다.",
 
         sql_h1: "시맨틱 SQL 포맷터",
         sql_p: "지저분한 SQL 쿼리를 읽기 쉽고 구조화된 문장으로 변환합니다. 더 나은 데이터베이스 관리를 위해 다양한 SQL 방언을 지원합니다.",
@@ -196,6 +220,24 @@ export const translations = {
         diff_h1: "지능형 텍스트 및 코드 차이점 분석기",
         diff_p: "코드 버전, API 페이로드 또는 텍스트 문서의 나란한 비교를 수행합니다. 우리의 알고리즘은 추가, 삭제 및 수정을 높은 정밀도로 강조 표시합니다.",
         
+        curl_h1: "cURL 명령어 소스코드 변환기",
+        curl_p: "브라우저 개발자 도구, Postman, 터미널의 원시 cURL 명령어를 해석하여 JavaScript, Python, Go 언어의 바로 실행 가능한 소스코드로 변환합니다.",
+
+        hash_h1: "암호화 해시 및 HMAC 생성기",
+        hash_p: "Web Crypto API를 사용하여 브라우저 로컬 메모리에서 암호화 해시(SHA-256, SHA-512, SHA-1, MD5) 및 HMAC 비밀키 서명 메시지를 생성합니다.",
+
+        cron_h1: "Cron 표현식 해석기 및 생성기",
+        cron_p: "표준 5자리 Cron 표현식을 쉬운 한국어 문장으로 해석하고 향후 실행 예정 타임라인 스케줄을 계산합니다.",
+
+        timestamp_h1: "Unix 타임스탬프 및 타임존 변환기",
+        timestamp_p: "Unix Epoch 타임스탬프(초/밀리초)를 ISO 8601, UTC, KST(한국 표준시) 형식으로 즉시 변환하며 실시간 에폭 시계를 제공합니다.",
+
+        regex_h1: "정규표현식(Regex) 실시간 검증기 및 치트시트",
+        regex_p: "패턴 일치 검증, 캡처 그룹 분석, 플래그 토글, 자주 사용하는 정규식 템플릿 프리셋으로 정규표현식을 실시간 테스트합니다.",
+
+        status_h1: "HTTP 상태 코드 백과사전 및 트러블슈팅 가이드",
+        status_p: "1xx, 2xx, 3xx, 4xx, 5xx HTTP 응답 상태 코드에 대한 포괄적인 원인 분석 및 프론트엔드/백엔드 조치 가이드를 제공합니다.",
+
         resources_h1: "개발자 지식 베이스 및 기술 FAQ",
         resources_p: "일상적인 개발 주기를 지원하기 위해 웹 표준, 보안 프로토콜 및 데이터 엔지니어링 개념의 선별된 저장소입니다.",
         
@@ -246,6 +288,12 @@ export const translations = {
         placeholder_html: "여기에 HTML, SVG 또는 XML 스니펫을 붙여넣으세요...",
         placeholder_diff_orig: "원본 내용...",
         placeholder_diff_mod: "수정된 내용...",
+        placeholder_curl: "여기에 cURL 명령어를 붙여넣으세요...",
+        placeholder_hash: "암호화 해시를 계산할 텍스트를 입력하세요...",
+        placeholder_cron: "예: */15 * * * *",
+        placeholder_timestamp: "초 또는 밀리초 단위의 Unix 타임스탬프를 입력하세요...",
+        placeholder_regex_test: "정규표현식 일치를 테스트할 텍스트를 입력하세요...",
+        placeholder_status_filter: "상태 코드 또는 이름으로 검색 (예: 401, Unauthorized)...",
         
         cookie_text: "우리는 콘텐츠와 광고를 개인화하고 트래픽을 분석하기 위해 쿠키를 사용합니다. 또한 귀하의 사이트 이용 정보를 광고 및 분석 파트너와 공유합니다. ",
         cookie_learn_more: "자세히 알아보기",

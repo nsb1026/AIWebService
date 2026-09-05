@@ -3,7 +3,7 @@
         <h1 data-i18n="regex_h1">Regex (Regular Expression) Tester &amp; Cheatsheet</h1>
         <p data-i18n="regex_p">Test and debug regular expressions in real-time with pattern matching, capture group analysis, flag toggles, and common regex template presets.</p>
         <div class="tool-description">
-            <p><strong>Technical Overview:</strong> Regular Expressions (Regex) define search patterns for string matching, input validation, and text extraction across all major programming languages. Testing regex patterns locally prevents catastrophic backtracking ($O(2^n)$ performance degradation) and input validation bugs.</p>
+            <p><strong>Technical Overview:</strong> Regular Expressions (RegEx) define search patterns for string matching, input validation, and text extraction across all major programming languages. Testing regex patterns locally prevents catastrophic backtracking ($O(2^n)$ performance degradation) and input validation bugs.</p>
         </div>
     </header>
 
@@ -30,9 +30,9 @@
 
             <div class="input-header">
                 <label>Test String / Sample Text</label>
-                <button id="btn-regex-clear" class="btn-small danger-btn">Clear Text</button>
+                <button id="btn-regex-clear" class="btn-small danger-btn" data-i18n="btn_clear">Clear Text</button>
             </div>
-            <textarea id="regex-test-text" style="height: 140px;">Contact us at support@parseutils.com or dev.team@company.co.kr for inquiries. Admin email: admin@test.org.</textarea>
+            <textarea id="regex-test-text" data-i18n="placeholder_regex_test" style="height: 140px;" placeholder="Paste sample text to test regular expression matching...">Contact us at support@parseutils.com or dev.team@company.co.kr for inquiries. Admin email: admin@test.org.</textarea>
         </div>
 
         <div class="parser-output-side">
