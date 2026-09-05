@@ -3838,6 +3838,802 @@ public class AuthController {
 }</code></pre>
             `
         }
+    },
+    'spring-oauth2-jwt-social': {
+        en: {
+            title: 'Spring Boot 3.3 + OAuth2 Social Login (Google, Kakao, Naver) + JWT Integration & Board Security Guide',
+            content: `
+                <p>In modern production web applications powered by <strong>Spring Boot 3.3.x</strong>, <strong>Spring Security 6.3.x</strong>, and <strong>Java 21 LTS</strong>, integrating Social Login (OAuth2 Client) alongside standard ID/password authentication is an essential requirement. This guide demonstrates how to normalize profile attributes across <strong>Google, Kakao, and Naver</strong>, bridge OAuth2 success to custom JWT Access & Refresh token issuance, implement global REST security exception handlers (401/403), and enforce Board Post ownership authorization using Spring Security expressions.</p>
+                
+                <div class="technical-note" style="background: rgba(99, 102, 241, 0.1); border-left: 4px solid #6366f1; padding: 1rem; margin: 1.5rem 0; border-radius: 4px;">
+                    <strong>Architecture Core Concept:</strong> Standard OAuth2 Client handlers redirect users to third-party authorization servers. Upon successful authentication, our <code>CustomOAuth2UserService</code> auto-registers or updates the user profile in our database, and <code>OAuth2AuthenticationSuccessHandler</code> generates stateless JWT tokens before issuing a secure HTTP redirect to the frontend application.
+                </div>
+
+                <h2>1. Dependencies Configuration (build.gradle)</h2>
+                <p>Add Spring Security OAuth2 Client and JJWT 0.12.5 dependencies to your <code>build.gradle</code>:</p>
+                <pre><code class="language-groovy">// [build.gradle] Spring Boot 3.3.0 & OAuth2 Client / Security Dependencies
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.3.0'        // Spring Boot 3.3 Framework
+    id 'io.spring.dependency-management' version '1.1.5' // Spring Dependency Management
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21) // Force JDK 21 LTS Toolchain
+    }
+}
+
+dependencies {
+    // Spring Boot Starter Web (REST APIs & Embedded Tomcat)
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    
+    // Spring Boot Starter Security (Authentication & Authorization Engine)
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    
+    // Spring Boot Starter OAuth2 Client (Google, Kakao, Naver Social Login Protocol)
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    
+    // Spring Data JPA & H2 / MariaDB
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    runtimeOnly 'com.h2database:h2'
+    
+    // JJWT 0.12.5 Cryptographic Libraries
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
+    
+    // Lombok Utilities
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+}</code></pre>
+
+                <h2>2. OAuth2 Client Application Configuration (application.yml)</h2>
+                <p>Configure OAuth2 Client registrations and custom provider authorization endpoints for Google, Kakao, and Naver in <code>application.yml</code>:</p>
+                <pre><code class="language-yaml"># [application.yml] Spring Security OAuth2 Client Provider & Registration Settings
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          # 1. Google OAuth2 Provider (Default Spring Security Provider)
+          google:
+            client-id: "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+            client-secret: "YOUR_GOOGLE_CLIENT_SECRET"
+            scope:
+              - profile
+              - email
+
+          # 2. Kakao OAuth2 Provider (Custom Provider)
+          kakao:
+            client-id: "YOUR_KAKAO_REST_API_KEY"
+            client-secret: "YOUR_KAKAO_CLIENT_SECRET"
+            client-authentication-method: client_secret_post
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope:
+              - profile_nickname
+              - account_email
+
+          # 3. Naver OAuth2 Provider (Custom Provider)
+          naver:
+            client-id: "YOUR_NAVER_CLIENT_ID"
+            client-secret: "YOUR_NAVER_CLIENT_SECRET"
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope:
+              - name
+              - email
+
+        provider:
+          # Kakao Custom Authorization & Token Endpoints
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
+
+          # Naver Custom Authorization & Token Endpoints
+          naver:
+            authorization-uri: https://nid.naver.com/oauth2.0/authorize
+            token-uri: https://nid.naver.com/oauth2.0/token
+            user-info-uri: https://openapi.naver.com/v1/nid/me
+            user-name-attribute: response
+
+# JWT Properties
+jwt:
+  secret: "v9y$B&E)H@MbQeThWmZq4t7w!z%C*F-JaNdRfUjXn2r5u8x/A?D(G+KbPeShVkYp"
+  access-token-expiration: 1800000    # 30 Minutes
+  refresh-token-expiration: 604800000 # 7 Days</code></pre>
+
+                <h2>3. OAuth2 Attribute Normalization & User Service (CustomOAuth2UserService.java)</h2>
+                <p>Implement <code>OAuth2Attributes</code> DTO to normalize profile fields across Google, Kakao, and Naver, and auto-register DB records:</p>
+                <pre><code class="language-java">package com.example.config.oauth;
+
+import com.example.domain.UserEntity;
+import com.example.repository.UserRepository;
+import lombok.Builder;
+import lombok.Getter;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.stereotype.Service;
+
+import java.util.Collections;
+import java.util.Map;
+
+// [OAuth2Attributes] Normalizes heterogeneous profile maps from Google, Kakao, and Naver
+@Getter
+@Builder
+public class OAuth2Attributes {
+    private Map<String, Object> attributes;
+    private String nameAttributeKey;
+    private String name;
+    private String email;
+    private String provider;
+
+    public static OAuth2Attributes of(String registrationId, String userNameAttributeName, Map<String, Object> attributes) {
+        if ("kakao".equals(registrationId)) {
+            return ofKakao(userNameAttributeName, attributes);
+        } else if ("naver".equals(registrationId)) {
+            return ofNaver(userNameAttributeName, attributes);
+        }
+        return ofGoogle(userNameAttributeName, attributes);
+    }
+
+    private static OAuth2Attributes ofGoogle(String userNameAttributeName, Map<String, Object> attributes) {
+        return OAuth2Attributes.builder()
+                .name((String) attributes.get("name"))
+                .email((String) attributes.get("email"))
+                .provider("google")
+                .attributes(attributes)
+                .nameAttributeKey(userNameAttributeName)
+                .build();
+    }
+
+    private static OAuth2Attributes ofKakao(String userNameAttributeName, Map<String, Object> attributes) {
+        Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
+        Map<String, Object> profile = (Map<String, Object>) kakaoAccount.get("profile");
+
+        return OAuth2Attributes.builder()
+                .name((String) profile.get("nickname"))
+                .email((String) kakaoAccount.get("email"))
+                .provider("kakao")
+                .attributes(attributes)
+                .nameAttributeKey(userNameAttributeName)
+                .build();
+    }
+
+    private static OAuth2Attributes ofNaver(String userNameAttributeName, Map<String, Object> attributes) {
+        Map<String, Object> response = (Map<String, Object>) attributes.get("response");
+
+        return OAuth2Attributes.builder()
+                .name((String) response.get("name"))
+                .email((String) response.get("email"))
+                .provider("naver")
+                .attributes(response)
+                .nameAttributeKey("id")
+                .build();
+    }
+}
+
+// [@Service] Custom OAuth2 UserService loading profile and saving/updating DB user records
+@Service
+public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
+
+    private final UserRepository userRepository;
+
+    public CustomOAuth2UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    @Override
+    public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
+        OAuth2UserService<OAuth2UserRequest, OAuth2User> delegate = new DefaultOAuth2UserService();
+        OAuth2User oAuth2User = delegate.loadUser(userRequest);
+
+        String registrationId = userRequest.getClientRegistration().getRegistrationId();
+        String userNameAttributeName = userRequest.getClientRegistration().getProviderDetails()
+                .getUserInfoEndpoint().getUserNameAttributeName();
+
+        OAuth2Attributes attributes = OAuth2Attributes.of(registrationId, userNameAttributeName, oAuth2User.getAttributes());
+
+        UserEntity user = saveOrUpdate(attributes);
+
+        return new DefaultOAuth2User(
+                Collections.singleton(new SimpleGrantedAuthority("ROLE_" + user.getRole())),
+                attributes.getAttributes(),
+                attributes.getNameAttributeKey());
+    }
+
+    private UserEntity saveOrUpdate(OAuth2Attributes attributes) {
+        UserEntity user = userRepository.findByEmail(attributes.getEmail())
+                .map(entity -> entity.updateProfile(attributes.getName()))
+                .orElse(UserEntity.builder()
+                        .name(attributes.getName())
+                        .email(attributes.getEmail())
+                        .provider(attributes.getProvider())
+                        .role("USER")
+                        .build());
+
+        return userRepository.save(user);
+    }
+}</code></pre>
+
+                <h2>4. OAuth2 Success Handler & JWT Bridge (OAuth2AuthenticationSuccessHandler.java)</h2>
+                <p>Bridge Spring Security OAuth2 login success to issue custom JWT tokens and redirect to the frontend:</p>
+                <pre><code class="language-java">package com.example.config.oauth;
+
+import com.example.config.jwt.JwtTokenProvider;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
+import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import java.io.IOException;
+
+// [SimpleUrlAuthenticationSuccessHandler] Intercepts OAuth2 login success and issues JWT tokens
+@Component
+public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
+
+    private final JwtTokenProvider tokenProvider;
+
+    public OAuth2AuthenticationSuccessHandler(JwtTokenProvider tokenProvider) {
+        this.tokenProvider = tokenProvider;
+    }
+
+    @Override
+    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
+        OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
+        String email = (String) oAuth2User.getAttributes().get("email");
+        if (email == null && oAuth2User.getAttributes().containsKey("response")) {
+            var res = (java.util.Map<String, Object>) oAuth2User.getAttributes().get("response");
+            email = (String) res.get("email");
+        }
+
+        // Generate custom JWT Access & Refresh Tokens
+        String accessToken = tokenProvider.createAccessToken(email, "USER");
+        String refreshToken = tokenProvider.createRefreshToken(email);
+
+        // Construct frontend redirect URI containing access token parameter
+        String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:3000/oauth2/redirect")
+                .queryParam("token", accessToken)
+                .queryParam("refreshToken", refreshToken)
+                .build().toUriString();
+
+        getRedirectStrategy().sendRedirect(request, response, targetUrl);
+    }
+}</code></pre>
+
+                <h2>5. Security Exception Handling (JwtAuthenticationEntryPoint & GlobalExceptionHandler)</h2>
+                <p>Standardize REST API 401 Unauthorized, 403 Forbidden, and <code>@RestControllerAdvice</code> error responses:</p>
+                <pre><code class="language-java">package com.example.exception;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.io.IOException;
+import java.util.Map;
+
+// [AuthenticationEntryPoint] Handles 401 Unauthorized (Missing or Expired JWT Token)
+@Component
+public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
+    @Override
+    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException {
+        response.setContentType("application/json;charset=UTF-8");
+        response.setStatus(401);
+        response.getWriter().write("{\"error\": \"Unauthorized\", \"message\": \"JWT token is missing, expired, or invalid.\"}");
+    }
+}
+
+// [AccessDeniedHandler] Handles 403 Forbidden (Authenticated User lacking required Role/Ownership)
+@Component
+public class JwtAccessDeniedHandler implements AccessDeniedHandler {
+    @Override
+    public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException {
+        response.setContentType("application/json;charset=UTF-8");
+        response.setStatus(403);
+        response.getWriter().write("{\"error\": \"Forbidden\", \"message\": \"Access denied. You do not have permission for this resource.\"}");
+    }
+}
+
+// [@RestControllerAdvice] Global Exception Handler capturing application-level exceptions
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<?> handleIllegalArgumentException(IllegalArgumentException ex) {
+        return ResponseEntity.badRequest().body(Map.of("error", "Bad Request", "message", ex.getMessage()));
+    }
+}</code></pre>
+
+                <h2>6. Board Post Ownership Authorization (PostSecurity.java & PostController.java)</h2>
+                <p>Enforce post author ownership verification using <code>@PreAuthorize</code> Security Expressions:</p>
+                <pre><code class="language-java">package com.example.security;
+
+import com.example.repository.PostRepository;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Component;
+
+// [@Component("postSecurity")] Custom Spring Security Expression Evaluator for Board Post Ownership
+@Component("postSecurity")
+public class PostSecurity {
+
+    private final PostRepository postRepository;
+
+    public PostSecurity(PostRepository postRepository) {
+        this.postRepository = postRepository;
+    }
+
+    // Returns true if the authenticated user is the author of the post OR holds ADMIN role
+    public boolean isAuthor(Long postId, Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return false;
+        }
+
+        String username = authentication.getName(); // Extracted from JWT token subject
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (isAdmin) return true;
+
+        return postRepository.findById(postId)
+                .map(post -> post.getAuthorEmail().equals(username))
+                .orElse(false);
+    }
+}</code></pre>
+
+                <p>Board REST Controller with <code>@PreAuthorize</code> Security Checks:</p>
+                <pre><code class="language-java">package com.example.controller;
+
+import com.example.dto.PostRequestDto;
+import com.example.security.PostSecurity;
+import com.example.service.PostService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+// [@RestController & @RequestMapping] Board Post REST Controller with RBAC & Author Verification
+@RestController
+@RequestMapping("/api/v1/posts")
+public class PostController {
+
+    private final PostService postService;
+
+    public PostController(PostService postService) {
+        this.postService = postService;
+    }
+
+    // [PUT /api/v1/posts/{id}] Secured: Only the Post Author or ADMIN can update this post
+    @PutMapping("/{id}")
+    @PreAuthorize("@postSecurity.isAuthor(#id, authentication)")
+    public ResponseEntity<?> updatePost(@PathVariable Long id, @RequestBody PostRequestDto requestDto) {
+        return ResponseEntity.ok(postService.updatePost(id, requestDto));
+    }
+
+    // [DELETE /api/v1/posts/{id}] Secured: Only the Post Author or ADMIN can delete this post
+    @DeleteMapping("/{id}")
+    @PreAuthorize("@postSecurity.isAuthor(#id, authentication)")
+    public ResponseEntity<?> deletePost(@PathVariable Long id) {
+        postService.deletePost(id);
+        return ResponseEntity.ok(java.util.Map.of("message", "Post deleted successfully."));
+    }
+}</code></pre>
+            `
+        },
+        ko: {
+            title: 'Spring Boot 3.3 + OAuth2 소셜 로그인 (카카오, 네이버, 구글) + JWT 연동 및 게시판 권한 보안 가이드',
+            content: `
+                <p><strong>Spring Boot 3.3.x</strong>, <strong>Spring Security 6.3.x</strong>, <strong>Java 21 LTS</strong> 기반 실무 엔터프라이즈 및 스타트업 서비스 개발 시, ID/비밀번호 기반 기본 로그인과 더불어 <strong>카카오, 네이버, 구글 OAuth2 소셜 로그인</strong> 연동은 필수 요구사항입니다. 본 가이드에서는 다양한 소셜 공급자의 프로필 데이터를 하나로 정규화하는 방법, OAuth2 인증 성공 시 자체 커스텀 JWT Access/Refresh 토큰을 생성하여 프론트엔드로 안전하게 전달하는 브릿지 핸들러, REST API 401/403 예외 처리, 그리고 게시글 수정/삭제 시 <strong>작성자 본인 검증(@PreAuthorize)</strong> 보안 구현법을 학습합니다.</p>
+                
+                <div class="technical-note" style="background: rgba(99, 102, 241, 0.1); border-left: 4px solid #6366f1; padding: 1rem; margin: 1.5rem 0; border-radius: 4px;">
+                    <strong>핵심 연동 아키텍처 흐름:</strong> 사용자가 소셜 로그인 버튼 클릭 ➔ OAuth2 인증 서버 토큰 교환 ➔ <code>CustomOAuth2UserService</code>에서 DB 회원가입/프로필 업데이트 ➔ <code>OAuth2AuthenticationSuccessHandler</code>에서 자체 JWT 발급 ➔ 프론트엔드 리다이렉트로 토큰 전파 ➔ 이후 모든 요청은 헤더의 JWT로 무상태(Stateless) 처리.
+                </div>
+
+                <h2>1단계: 프로젝트 의존성 설정 (build.gradle)</h2>
+                <p>Spring Security OAuth2 Client 라이브러리와 JJWT 0.12.5 모듈을 <code>build.gradle</code>에 추가합니다:</p>
+                <pre><code class="language-groovy">// [build.gradle] Spring Boot 3.3.0 & OAuth2 Client / Spring Security 빌드 설정
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.3.0'        // Spring Boot 3.3 프레임워크
+    id 'io.spring.dependency-management' version '1.1.5' // Spring 의존성버전 관리
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21) // JDK 21 LTS 강제 지정
+    }
+}
+
+dependencies {
+    // Spring Boot Starter Web (RESTful API 및 내장 톰캣)
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    
+    // Spring Boot Starter Security (인증/인가 엔진)
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    
+    // Spring Boot Starter OAuth2 Client (구글, 카카오, 네이버 소셜 로그인 연동)
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    
+    // Spring Data JPA & 데이터베이스 렌더링
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    runtimeOnly 'com.h2database:h2'
+    
+    // JJWT 0.12.5 암호화 모듈
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
+    
+    // Lombok 유틸리티
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+}</code></pre>
+
+                <h2>2단계: OAuth2 클라이언트 환경 설정 (application.yml)</h2>
+                <p>구글, 카카오, 네이버의 Client ID/Secret 및 커스텀 Provider 엔드포인트를 <code>application.yml</code>에 등록합니다:</p>
+                <pre><code class="language-yaml"># [application.yml] Spring Security OAuth2 Client 공급자 및 등록 정보
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          # 1. 구글 OAuth2 설정 (Spring Security 기본 지원)
+          google:
+            client-id: "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+            client-secret: "YOUR_GOOGLE_CLIENT_SECRET"
+            scope:
+              - profile
+              - email
+
+          # 2. 카카오 OAuth2 설정 (커스텀 Provider 연동)
+          kakao:
+            client-id: "YOUR_KAKAO_REST_API_KEY"
+            client-secret: "YOUR_KAKAO_CLIENT_SECRET"
+            client-authentication-method: client_secret_post
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope:
+              - profile_nickname
+              - account_email
+
+          # 3. 네이버 OAuth2 설정 (커스텀 Provider 연동)
+          naver:
+            client-id: "YOUR_NAVER_CLIENT_ID"
+            client-secret: "YOUR_NAVER_CLIENT_SECRET"
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope:
+              - name
+              - email
+
+        provider:
+          # 카카오 인증 & 토큰 요청 API 엔드포인트 URL
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
+
+          # 네이버 인증 & 토큰 요청 API 엔드포인트 URL
+          naver:
+            authorization-uri: https://nid.naver.com/oauth2.0/authorize
+            token-uri: https://nid.naver.com/oauth2.0/token
+            user-info-uri: https://openapi.naver.com/v1/nid/me
+            user-name-attribute: response
+
+# JWT 설정 프로퍼티
+jwt:
+  secret: "v9y$B&E)H@MbQeThWmZq4t7w!z%C*F-JaNdRfUjXn2r5u8x/A?D(G+KbPeShVkYp"
+  access-token-expiration: 1800000    # 30분
+  refresh-token-expiration: 604800000 # 7일</code></pre>
+
+                <h2>3단계: 소셜 프로필 정규화 및 UserService (CustomOAuth2UserService.java)</h2>
+                <p>구글, 카카오, 네이버마다 서로 다른 JSON 응답 형태를 표준 <code>OAuth2Attributes</code>로 정규화하고 DB 자동 저장/업데이트를 처리합니다:</p>
+                <pre><code class="language-java">package com.example.config.oauth;
+
+import com.example.domain.UserEntity;
+import com.example.repository.UserRepository;
+import lombok.Builder;
+import lombok.Getter;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.stereotype.Service;
+
+import java.util.Collections;
+import java.util.Map;
+
+// [OAuth2Attributes] 공급자별(Google, Kakao, Naver) 이종 프로필 Map 데이터를 통일된 객체로 매핑
+@Getter
+@Builder
+public class OAuth2Attributes {
+    private Map<String, Object> attributes;
+    private String nameAttributeKey;
+    private String name;
+    private String email;
+    private String provider;
+
+    public static OAuth2Attributes of(String registrationId, String userNameAttributeName, Map<String, Object> attributes) {
+        if ("kakao".equals(registrationId)) {
+            return ofKakao(userNameAttributeName, attributes);
+        } else if ("naver".equals(registrationId)) {
+            return ofNaver(userNameAttributeName, attributes);
+        }
+        return ofGoogle(userNameAttributeName, attributes);
+    }
+
+    private static OAuth2Attributes ofGoogle(String userNameAttributeName, Map<String, Object> attributes) {
+        return OAuth2Attributes.builder()
+                .name((String) attributes.get("name"))
+                .email((String) attributes.get("email"))
+                .provider("google")
+                .attributes(attributes)
+                .nameAttributeKey(userNameAttributeName)
+                .build();
+    }
+
+    private static OAuth2Attributes ofKakao(String userNameAttributeName, Map<String, Object> attributes) {
+        Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
+        Map<String, Object> profile = (Map<String, Object>) kakaoAccount.get("profile");
+
+        return OAuth2Attributes.builder()
+                .name((String) profile.get("nickname"))
+                .email((String) kakaoAccount.get("email"))
+                .provider("kakao")
+                .attributes(attributes)
+                .nameAttributeKey(userNameAttributeName)
+                .build();
+    }
+
+    private static OAuth2Attributes ofNaver(String userNameAttributeName, Map<String, Object> attributes) {
+        Map<String, Object> response = (Map<String, Object>) attributes.get("response");
+
+        return OAuth2Attributes.builder()
+                .name((String) response.get("name"))
+                .email((String) response.get("email"))
+                .provider("naver")
+                .attributes(response)
+                .nameAttributeKey("id")
+                .build();
+    }
+}
+
+// [@Service] OAuth2 인증 성공 시 사용자 정보 수집 및 DB 자동 회원가입/업데이트 서비스
+@Service
+public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
+
+    private final UserRepository userRepository;
+
+    public CustomOAuth2UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    @Override
+    public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
+        OAuth2UserService<OAuth2UserRequest, OAuth2User> delegate = new DefaultOAuth2UserService();
+        OAuth2User oAuth2User = delegate.loadUser(userRequest);
+
+        String registrationId = userRequest.getClientRegistration().getRegistrationId();
+        String userNameAttributeName = userRequest.getClientRegistration().getProviderDetails()
+                .getUserInfoEndpoint().getUserNameAttributeName();
+
+        // 소셜 응답 데이터 정규화 객체 생성
+        OAuth2Attributes attributes = OAuth2Attributes.of(registrationId, userNameAttributeName, oAuth2User.getAttributes());
+
+        // DB 유저 조회 및 가입/업데이트
+        UserEntity user = saveOrUpdate(attributes);
+
+        return new DefaultOAuth2User(
+                Collections.singleton(new SimpleGrantedAuthority("ROLE_" + user.getRole())),
+                attributes.getAttributes(),
+                attributes.getNameAttributeKey());
+    }
+
+    private UserEntity saveOrUpdate(OAuth2Attributes attributes) {
+        UserEntity user = userRepository.findByEmail(attributes.getEmail())
+                .map(entity -> entity.updateProfile(attributes.getName()))
+                .orElse(UserEntity.builder()
+                        .name(attributes.getName())
+                        .email(attributes.getEmail())
+                        .provider(attributes.getProvider())
+                        .role("USER")
+                        .build());
+
+        return userRepository.save(user);
+    }
+}</code></pre>
+
+                <h2>4단계: OAuth2 성공 핸들러 및 JWT 토큰 발급 (OAuth2AuthenticationSuccessHandler.java)</h2>
+                <p>소셜 인증 완료 후 자체 커스텀 JWT 토큰을 발급하여 프론트엔드로 전달합니다:</p>
+                <pre><code class="language-java">package com.example.config.oauth;
+
+import com.example.config.jwt.JwtTokenProvider;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
+import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import java.io.IOException;
+
+// [SimpleUrlAuthenticationSuccessHandler] OAuth2 인증 성공 후 커스텀 JWT 발급 및 프론트엔드 리다이렉트
+@Component
+public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
+
+    private final JwtTokenProvider tokenProvider;
+
+    public OAuth2AuthenticationSuccessHandler(JwtTokenProvider tokenProvider) {
+        this.tokenProvider = tokenProvider;
+    }
+
+    @Override
+    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
+        OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
+        String email = (String) oAuth2User.getAttributes().get("email");
+        if (email == null && oAuth2User.getAttributes().containsKey("response")) {
+            var res = (java.util.Map<String, Object>) oAuth2User.getAttributes().get("response");
+            email = (String) res.get("email");
+        }
+
+        // 자체 JWT Access Token 및 Refresh Token 발급
+        String accessToken = tokenProvider.createAccessToken(email, "USER");
+        String refreshToken = tokenProvider.createRefreshToken(email);
+
+        // 프론트엔드 클라이언트 주소로 JWT 토큰을 전달하기 위한 리다이렉트 URL 구성
+        String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:3000/oauth2/redirect")
+                .queryParam("token", accessToken)
+                .queryParam("refreshToken", refreshToken)
+                .build().toUriString();
+
+        getRedirectStrategy().sendRedirect(request, response, targetUrl);
+    }
+}</code></pre>
+
+                <h2>5단계: 글로벌 보안 예외 처리 (JwtAuthenticationEntryPoint & GlobalExceptionHandler)</h2>
+                <p>REST API 401 Unauthorized(미인증/토큰만료) 및 403 Forbidden(권한없음) 오류 응답을 JSON 규격으로 표준화합니다:</p>
+                <pre><code class="language-java">package com.example.exception;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.io.IOException;
+import java.util.Map;
+
+// [AuthenticationEntryPoint] 인증 실패 (401 Unauthorized: JWT 토큰 부재/만료) 처리
+@Component
+public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
+    @Override
+    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException {
+        response.setContentType("application/json;charset=UTF-8");
+        response.setStatus(401);
+        response.getWriter().write("{\"error\": \"Unauthorized\", \"message\": \"인증이 필요하거나 유효하지 않은 JWT 토큰입니다.\"}");
+    }
+}
+
+// [AccessDeniedHandler] 인가 실패 (403 Forbidden: 접근 권한 또는 본인 소유권 부족) 처리
+@Component
+public class JwtAccessDeniedHandler implements AccessDeniedHandler {
+    @Override
+    public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException {
+        response.setContentType("application/json;charset=UTF-8");
+        response.setStatus(403);
+        response.getWriter().write("{\"error\": \"Forbidden\", \"message\": \"해당 자원에 대한 접근/수정 권한이 없습니다.\"}");
+    }
+}
+
+// [@RestControllerAdvice] 애플리케이션 전역 예외 처리
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<?> handleIllegalArgumentException(IllegalArgumentException ex) {
+        return ResponseEntity.badRequest().body(Map.of("error", "Bad Request", "message", ex.getMessage()));
+    }
+}</code></pre>
+
+                <h2>6단계: 게시글 작성자 소유권 인가 보안 (PostSecurity.java & PostController.java)</h2>
+                <p>게시글 수정/삭제 시 <code>@PreAuthorize</code> 보안 표현식을 사용하여 작성자 본인 여부를 검증합니다:</p>
+                <pre><code class="language-java">package com.example.security;
+
+import com.example.repository.PostRepository;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Component;
+
+// [@Component("postSecurity")] 게시글 작성자 본인 및 관리자 권한 검증용 Spring Security 빈
+@Component("postSecurity")
+public class PostSecurity {
+
+    private final PostRepository postRepository;
+
+    public PostSecurity(PostRepository postRepository) {
+        this.postRepository = postRepository;
+    }
+
+    // 게시글 작성자 이메일과 현재 인증된 유저 이메일이 일치하거나 ADMIN 권한이면 true 반환
+    public boolean isAuthor(Long postId, Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return false;
+        }
+
+        String username = authentication.getName(); // JWT 토큰 Subject (Email)
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (isAdmin) return true; // 관리자는 무조건 승인
+
+        return postRepository.findById(postId)
+                .map(post -> post.getAuthorEmail().equals(username))
+                .orElse(false);
+    }
+}</code></pre>
+
+                <p>게시판 REST 컨트롤러 <code>@PreAuthorize</code> 보안 검증 적용:</p>
+                <pre><code class="language-java">package com.example.controller;
+
+import com.example.dto.PostRequestDto;
+import com.example.service.PostService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+// [@RestController & @RequestMapping] 게시글 관리 REST 컨트롤러
+@RestController
+@RequestMapping("/api/v1/posts")
+public class PostController {
+
+    private final PostService postService;
+
+    public PostController(PostService postService) {
+        this.postService = postService;
+    }
+
+    // [PUT /api/v1/posts/{id}] 작성자 본인 또는 관리자만 수정 가능 (@PreAuthorize 소유권 검증)
+    @PutMapping("/{id}")
+    @PreAuthorize("@postSecurity.isAuthor(#id, authentication)")
+    public ResponseEntity<?> updatePost(@PathVariable Long id, @RequestBody PostRequestDto requestDto) {
+        return ResponseEntity.ok(postService.updatePost(id, requestDto));
+    }
+
+    // [DELETE /api/v1/posts/{id}] 작성자 본인 또는 관리자만 삭제 가능
+    @DeleteMapping("/{id}")
+    @PreAuthorize("@postSecurity.isAuthor(#id, authentication)")
+    public ResponseEntity<?> deletePost(@PathVariable Long id) {
+        postService.deletePost(id);
+        return ResponseEntity.ok(java.util.Map.of("message", "성공적으로 게시글이 삭제되었습니다."));
+    }
+}</code></pre>
+            `
+        }
     }
 };
 
