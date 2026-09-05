@@ -4634,6 +4634,708 @@ public class PostController {
 }</code></pre>
             `
         }
+    },
+    'spring-exception-logback-logging': {
+        en: {
+            title: 'Spring Boot 3.3 Global Exception Management & Logback Colored Console / MDC Tracing Guide',
+            content: `
+                <p>In production enterprise web services built with <strong>Spring Boot 3.3.x</strong>, <strong>Java 21 LTS</strong>, and <strong>SLF4J / Logback</strong>, robust exception handling and structured logging are indispensable for rapid troubleshooting, system auditability, and maintaining high availability. This guide details how to build a unified custom exception hierarchy with <code>@RestControllerAdvice</code>, format ANSI colored log output for local development, configure production <code>logback-spring.xml</code> rolling file appenders, and implement MDC (Mapped Diagnostic Context) filters for distributed request tracing.</p>
+                
+                <div class="technical-note" style="background: rgba(99, 102, 241, 0.1); border-left: 4px solid #6366f1; padding: 1rem; margin: 1.5rem 0; border-radius: 4px;">
+                    <strong>Key Architecture Concepts:</strong>
+                    <ul style="margin-top: 0.5rem; margin-bottom: 0;">
+                        <li><strong>Unified Error Response:</strong> Encapsulate all API error responses in a standardized JSON payload with domain-specific <code>ErrorCode</code> enums and validation field error details.</li>
+                        <li><strong>Log Level Strategy:</strong> Differentiate business warnings (<code>WARN</code> for user input errors) from critical system faults (<code>ERROR</code> with stack traces).</li>
+                        <li><strong>MDC Tracing:</strong> Inject a unique <code>traceId</code> into the ThreadLocal MDC context per HTTP request to aggregate multi-step log events.</li>
+                        <li><strong>Color &amp; Rolling Appenders:</strong> High-visibility ANSI colors in local dev console, and async non-blocking rolling file logs in production.</li>
+                    </ul>
+                </div>
+
+                <h2>1. Custom ErrorCode Enum &amp; Business Exception Hierarchy</h2>
+                <p>Define a domain-wide <code>ErrorCode</code> enum and custom runtime exceptions (<code>BusinessException</code>):</p>
+                <pre><code class="language-java">package com.example.exception;
+
+import lombok.Getter;
+import org.springframework.http.HttpStatus;
+
+// [ErrorCode] Centralized Enum holding HTTP Status, Custom Business Error Code, and Default Message
+@Getter
+public enum ErrorCode {
+
+    // 400 Bad Request Errors
+    INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "C001", "Invalid input parameter format or constraint failure."),
+    METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "C002", "Requested HTTP method is not supported."),
+    
+    // 401 & 403 Security Errors
+    UNAUTHORIZED_ACCESS(HttpStatus.UNAUTHORIZED, "A001", "Authentication credentials are missing or expired."),
+    ACCESS_DENIED(HttpStatus.FORBIDDEN, "A002", "You do not have administrative privilege to access this resource."),
+
+    // 404 Not Found Errors
+    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "Target user record could not be found."),
+    POST_NOT_FOUND(HttpStatus.NOT_FOUND, "P001", "Target board post could not be found."),
+
+    // 409 Conflict Errors
+    DUPLICATE_EMAIL(HttpStatus.CONFLICT, "U002", "The requested email address is already registered."),
+
+    // 500 Internal Server Errors
+    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S001", "An unexpected internal server error occurred. Please contact admin.");
+
+    private final HttpStatus status; // HTTP Status Code
+    private final String code;       // Custom Business Domain Code
+    private final String message;    // Default Error Description Message
+
+    ErrorCode(HttpStatus status, String code, String message) {
+        this.status = status;
+        this.code = code;
+        this.message = message;
+    }
+}
+
+// [BusinessException] Root Custom Runtime Exception for Business Domain Failures
+@Getter
+public class BusinessException extends RuntimeException {
+    private final ErrorCode errorCode;
+
+    public BusinessException(ErrorCode errorCode) {
+        super(errorCode.getMessage());
+        this.errorCode = errorCode;
+    }
+
+    public BusinessException(ErrorCode errorCode, String customMessage) {
+        super(customMessage);
+        this.errorCode = errorCode;
+    }
+}
+
+// [EntityNotFoundException] Subclass Exception thrown when DB records are missing
+public class EntityNotFoundException extends BusinessException {
+    public EntityNotFoundException(ErrorCode errorCode) {
+        super(errorCode);
+    }
+}</code></pre>
+
+                <h2>2. Standardized ErrorResponse DTO &amp; Global Exception Interceptor (@RestControllerAdvice)</h2>
+                <p>Create a standardized JSON error response structure and intercept application exceptions globally:</p>
+                <pre><code class="language-java">package com.example.exception;
+
+import lombok.Getter;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+// [ErrorResponse] Standardized JSON Error Response Payload for REST APIs
+@Getter
+public class ErrorResponse {
+
+    private final LocalDateTime timestamp = LocalDateTime.now(); // Error occurrence timestamp
+    private final int status;                                      // HTTP Status numeric code (e.g. 400, 404)
+    private final String code;                                    // Domain specific error code (e.g. U001)
+    private final String message;                                 // Human-readable error summary
+    private final List<FieldErrorDetail> errors;                 // Specific validation field failure list
+
+    private ErrorResponse(ErrorCode errorCode, List<FieldErrorDetail> errors) {
+        this.status = errorCode.getStatus().value();
+        this.code = errorCode.getCode();
+        this.message = errorCode.getMessage();
+        this.errors = errors != null ? errors : new ArrayList<>();
+    }
+
+    public static ErrorResponse of(ErrorCode errorCode) {
+        return new ErrorResponse(errorCode, new ArrayList<>());
+    }
+
+    public static ErrorResponse of(ErrorCode errorCode, BindingResult bindingResult) {
+        return new ErrorResponse(errorCode, FieldErrorDetail.of(bindingResult));
+    }
+
+    // [FieldErrorDetail] Nested DTO describing specific validation failure fields
+    @Getter
+    public static class FieldErrorDetail {
+        private final String field;         // Target DTO field name (e.g. "email")
+        private final String value;         // Rejected input value (e.g. "invalid-email")
+        private final String reason;        // Constraint violation reason (e.g. "Must be valid email format")
+
+        private FieldErrorDetail(String field, String value, String reason) {
+            this.field = field;
+            this.value = value;
+            this.reason = reason;
+        }
+
+        public static List<FieldErrorDetail> of(BindingResult bindingResult) {
+            List<FieldError> fieldErrors = bindingResult.getFieldErrors();
+            return fieldErrors.stream()
+                    .map(error -> new FieldErrorDetail(
+                            error.getField(),
+                            error.getRejectedValue() == null ? "" : error.getRejectedValue().toString(),
+                            error.getDefaultMessage()))
+                    .collect(Collectors.toList());
+        }
+    }
+}
+
+// [@RestControllerAdvice] Global Spring Exception Handling Controller Advice
+package com.example.exception;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+@Slf4j
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    // 1. Handle DTO Input Validation Errors (@Valid / @Validated)
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    protected ResponseEntity<ErrorResponse> handleMethodArgumentNotValid(MethodArgumentNotValidException e) {
+        log.warn("Validation failure occurred: {} field errors", e.getBindingResult().getFieldErrorCount());
+        ErrorResponse response = ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE, e.getBindingResult());
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    // 2. Handle Custom Domain Business Exceptions (EntityNotFound, DuplicateEmail, etc.)
+    @ExceptionHandler(BusinessException.class)
+    protected ResponseEntity<ErrorResponse> handleBusinessException(BusinessException e) {
+        ErrorCode errorCode = e.getErrorCode();
+        log.warn("Business Exception [{}] Code: {}, Message: {}", errorCode.name(), errorCode.getCode(), e.getMessage());
+        ErrorResponse response = ErrorResponse.of(errorCode);
+        return new ResponseEntity<>(response, errorCode.getStatus());
+    }
+
+    // 3. Handle Spring Security Access Denied Errors (403 Forbidden)
+    @ExceptionHandler(AccessDeniedException.class)
+    protected ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException e) {
+        log.warn("Access Denied Exception: {}", e.getMessage());
+        ErrorResponse response = ErrorResponse.of(ErrorCode.ACCESS_DENIED);
+        return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
+    }
+
+    // 4. Handle Uncaught System Exceptions (500 Internal Server Error)
+    @ExceptionHandler(Exception.class)
+    protected ResponseEntity<ErrorResponse> handleException(Exception e) {
+        log.error("Unhandled Internal Server Exception: ", e); // Log full stack trace for unexpected errors
+        ErrorResponse response = ErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+}</code></pre>
+
+                <h2>3. Logback Color &amp; Rolling File Appender XML Config (logback-spring.xml)</h2>
+                <p>Configure ANSI color log formatting for local development and rolling file appenders for production in <code>src/main/resources/logback-spring.xml</code>:</p>
+                <pre><code class="language-xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!-- [logback-spring.xml] Logback Configuration with Spring Profile Support --&gt;
+&lt;configuration scan="true" scanPeriod="30 seconds"&gt;
+
+    &lt;!-- Include Spring Boot Default Conversion Rules for ANSI Colors --&gt;
+    &lt;conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter" /&gt;
+    &lt;conversionRule conversionWord="wex" converterClass="org.springframework.boot.logging.logback.WhitespaceThrowableProxyConverter" /&gt;
+
+    &lt;!-- Define Application Name &amp; Log Output Path --&gt;
+    &lt;property name="LOG_PATH" value="./logs" /&gt;
+    &lt;property name="LOG_FILE_NAME" value="application" /&gt;
+
+    &lt;!-- 1. Local Development Console Appender (ANSI Colors Enabled) --&gt;
+    &lt;appender name="CONSOLE_COLOR" class="ch.qos.logback.core.ConsoleAppender"&gt;
+        &lt;encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder"&gt;
+            &lt;!-- Log Pattern: Date %clr(Level) [%thread] %cyan(Logger) [%X{traceId}] : Message --&gt;
+            &lt;pattern&gt;%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight(%-5level) [%thread] %cyan(%logger{36}) [traceId=%X{traceId}] : %msg%n&lt;/pattern&gt;
+            &lt;charset&gt;UTF-8&lt;/charset&gt;
+        &lt;/encoder&gt;
+    &lt;/appender&gt;
+
+    &lt;!-- 2. Production Rolling File Appender (Daily &amp; Size Based Compression) --&gt;
+    &lt;appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender"&gt;
+        &lt;file&gt;\${LOG_PATH}/\${LOG_FILE_NAME}.log&lt;/file&gt;
+        &lt;encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder"&gt;
+            &lt;pattern&gt;%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} [traceId=%X{traceId}] : %msg%n&lt;/pattern&gt;
+            &lt;charset&gt;UTF-8&lt;/charset&gt;
+        &lt;/encoder&gt;
+
+        &lt;!-- Rolling Policy: Max 100MB per file, retain up to 30 days of archives --&gt;
+        &lt;rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy"&gt;
+            &lt;fileNamePattern&gt;\${LOG_PATH}/archive/\${LOG_FILE_NAME}-%d{yyyy-MM-dd}.%i.log.gz&lt;/fileNamePattern&gt;
+            &lt;maxFileSize&gt;100MB&lt;/maxFileSize&gt;
+            &lt;maxHistory&gt;30&lt;/maxHistory&gt;
+            &lt;totalSizeCap&gt;10GB&lt;/totalSizeCap&gt;
+        &lt;/rollingPolicy&gt;
+    &lt;/appender&gt;
+
+    &lt;!-- 3. Async Non-blocking File Appender for High Production Performance --&gt;
+    &lt;appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender"&gt;
+        &lt;appender-ref ref="FILE" /&gt;
+        &lt;queueSize&gt;512&lt;/queueSize&gt;
+        &lt;discardingThreshold&gt;0&lt;/discardingThreshold&gt;
+        &lt;includeCallerData&gt;false&lt;/includeCallerData&gt;
+    &lt;/appender&gt;
+
+    &lt;!-- Local Profile Configuration --&gt;
+    &lt;springProfile name="dev,local"&gt;
+        &lt;root level="INFO"&gt;
+            &lt;appender-ref ref="CONSOLE_COLOR" /&gt;
+        &lt;/root&gt;
+        &lt;logger name="com.example" level="DEBUG" /&gt;
+        &lt;logger name="org.hibernate.SQL" level="DEBUG" /&gt;
+    &lt;/springProfile&gt;
+
+    &lt;!-- Production Profile Configuration --&gt;
+    &lt;springProfile name="prod"&gt;
+        &lt;root level="INFO"&gt;
+            &lt;appender-ref ref="CONSOLE_COLOR" /&gt;
+            &lt;appender-ref ref="ASYNC_FILE" /&gt;
+        &lt;/root&gt;
+        &lt;logger name="com.example" level="INFO" /&gt;
+    &lt;/springProfile&gt;
+
+&lt;/configuration&gt;</code></pre>
+
+                <h2>4. MDC Request Tracing Interceptor &amp; Filter (MdcLoggingFilter.java)</h2>
+                <p>Implement a Servlet Filter that injects a unique Trace ID into the Logback MDC context per request and guarantees thread-safe cleanup:</p>
+                <pre><code class="language-java">package com.example.config.logging;
+
+import jakarta.servlet.*;
+import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.MDC;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.util.UUID;
+
+// [@Component & @Order] Highest priority filter to inject MDC Trace ID into all HTTP log statements
+@Component
+@Order(Ordered.HIGHEST_PRECEDENCE)
+public class MdcLoggingFilter implements Filter {
+
+    private static final String TRACE_ID_HEADER = "X-Trace-Id";
+    private static final String MDC_TRACE_ID_KEY = "traceId";
+
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+        HttpServletRequest httpRequest = (HttpServletRequest) request;
+        
+        // 1. Extract existing X-Trace-Id from HTTP header or generate a new random UUID
+        String traceId = httpRequest.getHeader(TRACE_ID_HEADER);
+        if (traceId == null || traceId.trim().isEmpty()) {
+            traceId = UUID.randomUUID().toString().substring(0, 8); // 8-character compact trace ID
+        }
+
+        try {
+            // 2. Put traceId into SLF4J MDC ThreadLocal map
+            MDC.put(MDC_TRACE_ID_KEY, traceId);
+            
+            // 3. Continue filter chain execution
+            chain.doFilter(request, response);
+        } finally {
+            // 4. CRITICAL: Clear MDC context to prevent ThreadLocal memory leak in worker thread pool
+            MDC.clear();
+        }
+    }
+}</code></pre>
+
+                <h2>5. Service &amp; Controller Logging Best Practices</h2>
+                <p>Follow logging best practices using SLF4J parameterization, log level selection, and sensitive data masking:</p>
+                <pre><code class="language-java">package com.example.service;
+
+import com.example.dto.UserRegisterDto;
+import com.example.exception.BusinessException;
+import com.example.exception.ErrorCode;
+import com.example.repository.UserRepository;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Slf4j
+@Service
+public class UserService {
+
+    private final UserRepository userRepository;
+
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    @Transactional
+    public Long registerUser(UserRegisterDto registerDto) {
+        // [INFO Level] Parameterized Logging - NEVER use string concatenation (+) to avoid GC overhead
+        log.info("Attempting user registration with email: {}", registerDto.getEmail());
+
+        // Check duplicate email
+        if (userRepository.existsByEmail(registerDto.getEmail())) {
+            // [WARN Level] Expected business validation error
+            log.warn("User registration failed. Duplicate email address: {}", registerDto.getEmail());
+            throw new BusinessException(ErrorCode.DUPLICATE_EMAIL);
+        }
+
+        // Mask sensitive data (password, token, social ID) before logging!
+        log.debug("User password verified and encrypted securely. Password length: {}", registerDto.getPassword().length());
+
+        // Save user
+        Long userId = userRepository.save(registerDto.toEntity()).getId();
+
+        // [INFO Level] Key business milestone log
+        log.info("User registered successfully. Assigned userId: {}", userId);
+        return userId;
+    }
+}</code></pre>
+            `
+        },
+        ko: {
+            title: 'Spring Boot 3.3 전역 예외 처리(Global Exception Handling) & Logback 콘솔 컬러/MDC 로깅 실무 가이드',
+            content: `
+                <p><strong>Spring Boot 3.3.x</strong>, <strong>Java 21 LTS</strong>, <strong>SLF4J / Logback</strong> 환경 기반의 실무 대규모 웹 서비스 개발 시, 일관된 예외 처리 및 체계적인 로그 관리는 신속한 장애 조치, 보안 감사, 시스템 안정성 유지의 핵심 요소입니다. 본 가이드에서는 <code>@RestControllerAdvice</code> 기반의 커스텀 예외 체계 구축, 로컬 콘솔 ANSI 컬러 로그 적용, 운영 환경 <code>logback-spring.xml</code> 롤링 파일 로그 설정, 그리고 요청 단위 Trace ID 생성을 위한 MDC(Mapped Diagnostic Context) 추적 기법을 학습합니다.</p>
+                
+                <div class="technical-note" style="background: rgba(99, 102, 241, 0.1); border-left: 4px solid #6366f1; padding: 1rem; margin: 1.5rem 0; border-radius: 4px;">
+                    <strong>핵심 로깅 &amp; 예외 아키텍처 전략:</strong>
+                    <ul style="margin-top: 0.5rem; margin-bottom: 0;">
+                        <li><strong>통합 에러 응답 규격:</strong> 도메인별 <code>ErrorCode</code> Enum과 검증 오류(Validation FieldError) 상세 목록을 하나의 JSON 구조로 통일.</li>
+                        <li><strong>로그 레벨 수립:</strong> 사용자 입력 오류 등 예상 가능한 비즈니스 예외(<code>WARN</code>)와 시스템 장애(<code>ERROR</code> + Stack Trace)를 명확히 구분.</li>
+                        <li><strong>MDC 요청 추적:</strong> HTTP 요청 진입 시 고유 <code>traceId</code>를 부여하여 분산 환경 및 멀티스레드 로그 이력을 하나로 그룹화.</li>
+                        <li><strong>콘솔 컬러 &amp; 파일 롤링:</strong> 개발 환경 ANSI 가독성 컬러 적용 및 운영 환경 비동기(Async) 롤링 파일 압축 저장.</li>
+                    </ul>
+                </div>
+
+                <h2>1단계: 커스텀 ErrorCode Enum &amp; 비즈니스 예외 클래스 (ErrorCode.java &amp; BusinessException.java)</h2>
+                <p>도메인 전체에서 공유할 <code>ErrorCode</code> Enum과 기본 비즈니스 최상위 예외 클래스를 정의합니다:</p>
+                <pre><code class="language-java">package com.example.exception;
+
+import lombok.Getter;
+import org.springframework.http.HttpStatus;
+
+// [ErrorCode] HTTP 상태 코드, 커스텀 오류 코드, 기본 메시지를 관리하는 중앙 Enum
+@Getter
+public enum ErrorCode {
+
+    // 400 Bad Request
+    INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "C001", "올바르지 않은 입력값 형식이거나 제약조건을 위반했습니다."),
+    METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "C002", "지원하지 않는 HTTP 요청 메서드입니다."),
+    
+    // 401 & 403 Security
+    UNAUTHORIZED_ACCESS(HttpStatus.UNAUTHORIZED, "A001", "인증 자격 증명이 유효하지 않거나 만료되었습니다."),
+    ACCESS_DENIED(HttpStatus.FORBIDDEN, "A002", "해당 자원에 접근할 수 있는 권한이 없습니다."),
+
+    // 404 Not Found
+    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "요청한 사용자 정보를 찾을 수 없습니다."),
+    POST_NOT_FOUND(HttpStatus.NOT_FOUND, "P001", "요청한 게시글 데이터를 찾을 수 없습니다."),
+
+    // 409 Conflict
+    DUPLICATE_EMAIL(HttpStatus.CONFLICT, "U002", "이미 가입되어 있는 이메일 주소입니다."),
+
+    // 500 Internal Server Error
+    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S001", "서버 내부 오류가 발생했습니다. 관리자에게 문의하세요.");
+
+    private final HttpStatus status; // HTTP 상태 코드 (e.g. 400 BAD_REQUEST)
+    private final String code;       // 도메인별 고유 오류 코드 (e.g. U001)
+    private final String message;    // 기본 에러 설명 메세지
+
+    ErrorCode(HttpStatus status, String code, String message) {
+        this.status = status;
+        this.code = code;
+        this.message = message;
+    }
+}
+
+// [BusinessException] 비즈니스 도메인 최상위 런타임 예외 클래스
+@Getter
+public class BusinessException extends RuntimeException {
+    private final ErrorCode errorCode;
+
+    public BusinessException(ErrorCode errorCode) {
+        super(errorCode.getMessage());
+        this.errorCode = errorCode;
+    }
+
+    public BusinessException(ErrorCode errorCode, String customMessage) {
+        super(customMessage);
+        this.errorCode = errorCode;
+    }
+}
+
+// [EntityNotFoundException] DB 데이터 조회 실패 시 발생시킬 하위 세부 예외
+public class EntityNotFoundException extends BusinessException {
+    public EntityNotFoundException(ErrorCode errorCode) {
+        super(errorCode);
+    }
+}</code></pre>
+
+                <h2>2단계: 표준 ErrorResponse DTO &amp; 전역 예외 처리기 (@RestControllerAdvice)</h2>
+                <p>표준화된 에러 JSON 응답 객체를 정의하고 <code>@RestControllerAdvice</code>로 시스템 및 비즈니스 예외를 일괄 캡처합니다:</p>
+                <pre><code class="language-java">package com.example.exception;
+
+import lombok.Getter;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+// [ErrorResponse] REST API 전역 표준 에러 응답 객체
+@Getter
+public class ErrorResponse {
+
+    private final LocalDateTime timestamp = LocalDateTime.now(); // 예외 발생 시각
+    private final int status;                                      // HTTP Status 숫자 (e.g. 400)
+    private final String code;                                    // 커스텀 에러 코드 (e.g. U001)
+    private final String message;                                 // 에러 메시지
+    private final List<FieldErrorDetail> errors;                 // Valid 필드 검증 오류 리스트
+
+    private ErrorResponse(ErrorCode errorCode, List<FieldErrorDetail> errors) {
+        this.status = errorCode.getStatus().value();
+        this.code = errorCode.getCode();
+        this.message = errorCode.getMessage();
+        this.errors = errors != null ? errors : new ArrayList<>();
+    }
+
+    public static ErrorResponse of(ErrorCode errorCode) {
+        return new ErrorResponse(errorCode, new ArrayList<>());
+    }
+
+    public static ErrorResponse of(ErrorCode errorCode, BindingResult bindingResult) {
+        return new ErrorResponse(errorCode, FieldErrorDetail.of(bindingResult));
+    }
+
+    // [FieldErrorDetail] DTO 필드 검증 실패 세부 내역 DTO
+    @Getter
+    public static class FieldErrorDetail {
+        private final String field;         // 검증 실패 필드명 (e.g. "email")
+        private final String value;         // 거부된 입력값 (e.g. "invalid-email")
+        private final String reason;        // 검증 제약조건 메시지 (e.g. "올바른 이메일 형식이 아닙니다")
+
+        private FieldErrorDetail(String field, String value, String reason) {
+            this.field = field;
+            this.value = value;
+            this.reason = reason;
+        }
+
+        public static List<FieldErrorDetail> of(BindingResult bindingResult) {
+            List<FieldError> fieldErrors = bindingResult.getFieldErrors();
+            return fieldErrors.stream()
+                    .map(error -> new FieldErrorDetail(
+                            error.getField(),
+                            error.getRejectedValue() == null ? "" : error.getRejectedValue().toString(),
+                            error.getDefaultMessage()))
+                    .collect(Collectors.toList());
+        }
+    }
+}
+
+// [@RestControllerAdvice] 애플리케이션 전역 예외 처리 컨트롤러 어드바이스
+package com.example.exception;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+@Slf4j
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    // 1. DTO 검증 실패 처리 (@Valid / @Validated)
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    protected ResponseEntity<ErrorResponse> handleMethodArgumentNotValid(MethodArgumentNotValidException e) {
+        log.warn("파라미터 입력값 검증 실패: 총 {} 건의 필드 오류 발생", e.getBindingResult().getFieldErrorCount());
+        ErrorResponse response = ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE, e.getBindingResult());
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    // 2. 비즈니스 도메인 예외 처리 (EntityNotFoundException, DuplicateEmail 등)
+    @ExceptionHandler(BusinessException.class)
+    protected ResponseEntity<ErrorResponse> handleBusinessException(BusinessException e) {
+        ErrorCode errorCode = e.getErrorCode();
+        log.warn("비즈니스 예외 발생 [{}] 코드: {}, 메시지: {}", errorCode.name(), errorCode.getCode(), e.getMessage());
+        ErrorResponse response = ErrorResponse.of(errorCode);
+        return new ResponseEntity<>(response, errorCode.getStatus());
+    }
+
+    // 3. Spring Security 접근 권한 예외 처리 (403 Forbidden)
+    @ExceptionHandler(AccessDeniedException.class)
+    protected ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException e) {
+        log.warn("접근 권한 부족 예외 발생: {}", e.getMessage());
+        ErrorResponse response = ErrorResponse.of(ErrorCode.ACCESS_DENIED);
+        return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
+    }
+
+    // 4. 기타 예상치 못한 서버 내부 시스템 예외 처리 (500 Internal Server Error)
+    @ExceptionHandler(Exception.class)
+    protected ResponseEntity<ErrorResponse> handleException(Exception e) {
+        log.error("서버 내부 알 수 없는 예외 발생: ", e); // Uncaught 예외는 스택 트레이스 포함하여 ERROR 레벨로 출력
+        ErrorResponse response = ErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+}</code></pre>
+
+                <h2>3단계: Logback 콘솔 컬러 및 롤링 파일 설정 (logback-spring.xml)</h2>
+                <p>개발 환경용 ANSI 컬러 콘솔 패턴과 운영 환경용 RollingFile / AsyncAppender를 <code>src/main/resources/logback-spring.xml</code>에 작성합니다:</p>
+                <pre><code class="language-xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!-- [logback-spring.xml] Spring Profile과 연동되는 Logback 전역 설정 --&gt;
+&lt;configuration scan="true" scanPeriod="30 seconds"&gt;
+
+    &lt;!-- Spring Boot 기본 ANSI 컬러 변환 규칙 로드 --&gt;
+    &lt;conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter" /&gt;
+    &lt;conversionRule conversionWord="wex" converterClass="org.springframework.boot.logging.logback.WhitespaceThrowableProxyConverter" /&gt;
+
+    &lt;!-- 로그 파일 저장 경로 및 파일명 --&gt;
+    &lt;property name="LOG_PATH" value="./logs" /&gt;
+    &lt;property name="LOG_FILE_NAME" value="application" /&gt;
+
+    &lt;!-- 1. 로컬 개발 환경용 콘솔 컬러 Appender (%highlight, %cyan, %X{traceId} 활용) --&gt;
+    &lt;appender name="CONSOLE_COLOR" class="ch.qos.logback.core.ConsoleAppender"&gt;
+        &lt;encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder"&gt;
+            &lt;!-- 로그 패턴: 시각 %highlight(로그레벨) [%스레드] %cyan(클래스명) [traceId=%X{traceId}] : 메시지 --&gt;
+            &lt;pattern&gt;%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight(%-5level) [%thread] %cyan(%logger{36}) [traceId=%X{traceId}] : %msg%n&lt;/pattern&gt;
+            &lt;charset&gt;UTF-8&lt;/charset&gt;
+        &lt;/encoder&gt;
+    &lt;/appender&gt;
+
+    &lt;!-- 2. 운영 환경용 롤링 파일 Appender (일자별/용량별 자동 압축 분할) --&gt;
+    &lt;appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender"&gt;
+        &lt;file&gt;\${LOG_PATH}/\${LOG_FILE_NAME}.log&lt;/file&gt;
+        &lt;encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder"&gt;
+            &lt;pattern&gt;%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} [traceId=%X{traceId}] : %msg%n&lt;/pattern&gt;
+            &lt;charset&gt;UTF-8&lt;/charset&gt;
+        &lt;/encoder&gt;
+
+        &lt;!-- 롤링 정책: 파일당 최대 100MB, 최대 30일간 보관 후 자동 삭제 --&gt;
+        &lt;rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy"&gt;
+            &lt;fileNamePattern&gt;\${LOG_PATH}/archive/\${LOG_FILE_NAME}-%d{yyyy-MM-dd}.%i.log.gz&lt;/fileNamePattern&gt;
+            &lt;maxFileSize&gt;100MB&lt;/maxFileSize&gt;
+            &lt;maxHistory&gt;30&lt;/maxHistory&gt;
+            &lt;totalSizeCap&gt;10GB&lt;/totalSizeCap&gt;
+        &lt;/rollingPolicy&gt;
+    &lt;/appender&gt;
+
+    &lt;!-- 3. 운영 환경 고성능 비동기(Async) 파일 Appender --&gt;
+    &lt;appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender"&gt;
+        &lt;appender-ref ref="FILE" /&gt;
+        &lt;queueSize&gt;512&lt;/queueSize&gt;
+        &lt;discardingThreshold&gt;0&lt;/discardingThreshold&gt;
+        &lt;includeCallerData&gt;false&lt;/includeCallerData&gt;
+    &lt;/appender&gt;
+
+    &lt;!-- 로컬 개발 환경 프로파일 (dev, local) --&gt;
+    &lt;springProfile name="dev,local"&gt;
+        &lt;root level="INFO"&gt;
+            &lt;appender-ref ref="CONSOLE_COLOR" /&gt;
+        &lt;/root&gt;
+        &lt;logger name="com.example" level="DEBUG" /&gt;
+        &lt;logger name="org.hibernate.SQL" level="DEBUG" /&gt;
+    &lt;/springProfile&gt;
+
+    &lt;!-- 운영 환경 프로파일 (prod) --&gt;
+    &lt;springProfile name="prod"&gt;
+        &lt;root level="INFO"&gt;
+            &lt;appender-ref ref="CONSOLE_COLOR" /&gt;
+            &lt;appender-ref ref="ASYNC_FILE" /&gt;
+        &lt;/root&gt;
+        &lt;logger name="com.example" level="INFO" /&gt;
+    &lt;/springProfile&gt;
+
+&lt;/configuration&gt;</code></pre>
+
+                <h2>4단계: MDC 기반 요청 추적 필터 (MdcLoggingFilter.java)</h2>
+                <p>요청마다 고유 Trace ID를 발행하고 SLF4J MDC 컨텍스트에 주입 후, 반드시 <code>finally</code>에서 정리하는 서블릿 필터를 구현합니다:</p>
+                <pre><code class="language-java">package com.example.config.logging;
+
+import jakarta.servlet.*;
+import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.MDC;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.util.UUID;
+
+// [@Component & @Order] 최우선 순위로 모든 HTTP 요청에 MDC Trace ID를 주입하는 필터
+@Component
+@Order(Ordered.HIGHEST_PRECEDENCE)
+public class MdcLoggingFilter implements Filter {
+
+    private static final String TRACE_ID_HEADER = "X-Trace-Id";
+    private static final String MDC_TRACE_ID_KEY = "traceId";
+
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+        HttpServletRequest httpRequest = (HttpServletRequest) request;
+        
+        // 1. 헤더에서 기존 X-Trace-Id 추출하거나 없으면 새로 8자리 UUID 생성
+        String traceId = httpRequest.getHeader(TRACE_ID_HEADER);
+        if (traceId == null || traceId.trim().isEmpty()) {
+            traceId = UUID.randomUUID().toString().substring(0, 8);
+        }
+
+        try {
+            // 2. ThreadLocal 기반 SLF4J MDC에 traceId 저장
+            MDC.put(MDC_TRACE_ID_KEY, traceId);
+            
+            // 3. 다음 필터 및 컨트롤러 로직 수행
+            chain.doFilter(request, response);
+        } finally {
+            // 4. 필수: 톰캣 스레드 풀 재사용 시 메모리 누수 및 이전 traceId 오염 방지를 위해 clear() 호출!
+            MDC.clear();
+        }
+    }
+}</code></pre>
+
+                <h2>5단계: 컨트롤러 및 서비스 실무 로깅 베스트 프랙티스 (UserService.java)</h2>
+                <p>치환 문자 사용, 비밀번호/민감정보 마스킹, 비즈니스 구간별 로그 레벨 설정 실무 예시입니다:</p>
+                <pre><code class="language-java">package com.example.service;
+
+import com.example.dto.UserRegisterDto;
+import com.example.exception.BusinessException;
+import com.example.exception.ErrorCode;
+import com.example.repository.UserRepository;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Slf4j
+@Service
+public class UserService {
+
+    private final UserRepository userRepository;
+
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    @Transactional
+    public Long registerUser(UserRegisterDto registerDto) {
+        // [INFO 레벨] 치환 문자({}) 사용 - 문자열 덧셈(+) 금지로 불필요한 GC 객체 생성 방지
+        log.info("사용자 회원가입 요청 시작 - 이메일: {}", registerDto.getEmail());
+
+        // 중복 이메일 검증
+        if (userRepository.existsByEmail(registerDto.getEmail())) {
+            // [WARN 레벨] 예상되는 비즈니스 검증 오류 발생 시 WARN으로 기록
+            log.warn("회원가입 실패 - 이미 존재하는 이메일 주소: {}", registerDto.getEmail());
+            throw new BusinessException(ErrorCode.DUPLICATE_EMAIL);
+        }
+
+        // 비밀번호/토큰 등 민감 정보는 마스킹 처리 필수! (절대 평문 로그 출력 금지)
+        log.debug("비밀번호 암호화 검증 완료 (길이: {})", registerDto.getPassword().length());
+
+        // 회원 DB 저장
+        Long userId = userRepository.save(registerDto.toEntity()).getId();
+
+        // [INFO 레벨] 서비스 핵심 마일스톤 성공 기록
+        log.info("사용자 회원가입 성공 완료 - 부여된 userId: {}", userId);
+        return userId;
+    }
+}</code></pre>
+            `
+        }
     }
 };
 
