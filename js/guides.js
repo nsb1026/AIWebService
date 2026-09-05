@@ -658,6 +658,510 @@ const guidesData = {
                 </div>
             `
         }
+    },
+    'spring-boot-jwt': {
+        en: {
+            title: 'Spring Boot 3.3 + Java 21 LTS: Modern JWT Security Implementation Guide',
+            content: `
+                <p>In modern enterprise web architecture, stateless authentication using JSON Web Tokens (JWT) combined with <strong>Spring Boot 3.3.x</strong>, <strong>Spring Security 6.3.x</strong>, and <strong>Java 21 LTS</strong> represents the gold standard for microservices and RESTful API backends.</p>
+                
+                <h2>Technical Environment &amp; Architecture Overview</h2>
+                <ul>
+                    <li><strong>JDK Version:</strong> Java 21 LTS (Virtual Threads &amp; Pattern Matching)</li>
+                    <li><strong>Framework:</strong> Spring Boot 3.3.x / Spring Framework 6.1.x</li>
+                    <li><strong>Security Engine:</strong> Spring Security 6.3.x (Lambda DSL &amp; SecurityFilterChain)</li>
+                    <li><strong>JWT Library:</strong> JJWT 0.12.5 (io.jsonwebtoken)</li>
+                </ul>
+
+                <h2>1. Dependency Configuration (build.gradle)</h2>
+                <p>Add Spring Security and modern JJWT 0.12.5 dependencies to your <code>build.gradle</code> file:</p>
+                <pre><code>plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.3.0'
+    id 'io.spring.dependency-management' version '1.1.5'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    
+    // JJWT 0.12.5 Modern Library
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
+}</code></pre>
+
+                <h2>2. Application Configuration (application.yml)</h2>
+                <p>Define your 256-bit HMAC secret key and token expiration times in <code>application.yml</code>:</p>
+                <pre><code>jwt:
+  secret: "v9y$B&E)H@MbQeThWmZq4t7w!z%C*F-JaNdRfUjXn2r5u8x/A?D(G+KbPeShVkYp" # Min 256-bit secret
+  access-token-expiration: 1800000   # 30 Minutes in Milliseconds
+  refresh-token-expiration: 604800000 # 7 Days in Milliseconds</code></pre>
+
+                <h2>3. JWT Utility Class (JwtTokenProvider.java)</h2>
+                <p>Create a token provider using JJWT 0.12.x fluent builder and parser APIs:</p>
+                <pre><code>package com.example.config.jwt;
+
+import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.stereotype.Component;
+
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
+import java.util.List;
+
+@Component
+public class JwtTokenProvider {
+
+    private final SecretKey secretKey;
+    private final long accessTokenExpiration;
+
+    public JwtTokenProvider(
+            @Value("\${jwt.secret}") String secret,
+            @Value("\${jwt.access-token-expiration}") long accessTokenExpiration) {
+        this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        this.accessTokenExpiration = accessTokenExpiration;
+    }
+
+    // 1. Generate JWT Access Token (JJWT 0.12.x Builder)
+    public String createAccessToken(String username, String role) {
+        Date now = new Date();
+        Date validity = new Date(now.getTime() + accessTokenExpiration);
+
+        return Jwts.builder()
+                .subject(username)
+                .claim("role", role)
+                .issuedAt(now)
+                .expiration(validity)
+                .signWith(secretKey)
+                .compact();
+    }
+
+    // 2. Validate JWT Signature &amp; Expiration
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parser()
+                    .verifyWith(secretKey)
+                    .build()
+                    .parseSignedClaims(token);
+            return true;
+        } catch (JwtException | IllegalArgumentException e) {
+            return false; // Token expired or tampered
+        }
+    }
+
+    // 3. Extract Spring Security Authentication
+    public Authentication getAuthentication(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith(secretKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+
+        String username = claims.getSubject();
+        String role = claims.get("role", String.class);
+        var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
+
+        User principal = new User(username, "", authorities);
+        return new UsernamePasswordAuthenticationToken(principal, token, authorities);
+    }
+}</code></pre>
+
+                <h2>4. Custom Security Filter (JwtAuthenticationFilter.java)</h2>
+                <p>Intercept HTTP requests to extract the Bearer token and populate the SecurityContext:</p>
+                <pre><code>package com.example.config.jwt;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.util.StringUtils;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    private final JwtTokenProvider tokenProvider;
+
+    public JwtAuthenticationFilter(JwtTokenProvider tokenProvider) {
+        this.tokenProvider = tokenProvider;
+    }
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, 
+                                    HttpServletResponse response, 
+                                    FilterChain filterChain) throws ServletException, IOException {
+        String token = resolveToken(request);
+
+        if (StringUtils.hasText(token) &amp;&amp; tokenProvider.validateToken(token)) {
+            Authentication auth = tokenProvider.getAuthentication(token);
+            SecurityContextHolder.getContext().setAuthentication(auth);
+        }
+
+        filterChain.doFilter(request, response);
+    }
+
+    private String resolveToken(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        if (StringUtils.hasText(bearerToken) &amp;&amp; bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+        return null;
+    }
+}</code></pre>
+
+                <h2>5. Spring Security 6 Config (SecurityConfig.java)</h2>
+                <p>Configure stateless session policy and register the JWT filter using Spring Security 6 Lambda DSL:</p>
+                <pre><code>package com.example.config;
+
+import com.example.config.jwt.JwtAuthenticationFilter;
+import com.example.config.jwt.JwtTokenProvider;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    private final JwtTokenProvider tokenProvider;
+
+    public SecurityConfig(JwtTokenProvider tokenProvider) {
+        this.tokenProvider = tokenProvider;
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf(csrf -&gt; csrf.disable())
+            .sessionManagement(session -&gt; session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -&gt; auth
+                .requestMatchers("/api/auth/**", "/public/**").permitAll()
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .anyRequest().authenticated()
+            )
+            .addFilterBefore(new JwtAuthenticationFilter(tokenProvider), UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+}</code></pre>
+
+                <h2>6. Authentication Controller (AuthController.java)</h2>
+                <p>Expose REST endpoints for authenticating user credentials and issuing JWT tokens:</p>
+                <pre><code>package com.example.controller;
+
+import com.example.config.jwt.JwtTokenProvider;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/auth")
+public class AuthController {
+
+    private final JwtTokenProvider tokenProvider;
+
+    public AuthController(JwtTokenProvider tokenProvider) {
+        this.tokenProvider = tokenProvider;
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity&lt;?&gt; login(@RequestBody Map&lt;String, String&gt; loginRequest) {
+        String username = loginRequest.get("username");
+        String password = loginRequest.get("password");
+
+        if ("admin".equals(username) &amp;&amp; "password123".equals(password)) {
+            String token = tokenProvider.createAccessToken(username, "ADMIN");
+            return ResponseEntity.ok(Map.of(
+                "token_type", "Bearer",
+                "access_token", token,
+                "expires_in", 1800
+            ));
+        }
+
+        return ResponseEntity.status(401).body(Map.of("error", "Invalid credentials"));
+    }
+}</code></pre>
+            `
+        },
+        ko: {
+            title: 'Spring Boot 3.3 + Java 21 LTS: Spring Security 6 기반 JWT 토큰 인증 완전 정복 가이드',
+            content: `
+                <p>현대 엔터프라이즈 웹 아키텍처 및 마이크로서비스(MSA) 백엔드에서 <strong>Spring Boot 3.3.x</strong>, <strong>Spring Security 6.3.x</strong>, <strong>Java 21 LTS</strong> 및 무상태(Stateless) <strong>JWT 토큰 인증</strong> 조합은 가장 안정적이고 표준화된 보안 아키텍처입니다.</p>
+                
+                <h2>최신 기술 환경 명세 (2026 Baseline)</h2>
+                <ul>
+                    <li><strong>JDK 버전:</strong> Java 21 LTS (Virtual Threads, Pattern Matching, Sealed Classes 지원)</li>
+                    <li><strong>프레임워크:</strong> Spring Boot 3.3.x / Spring Framework 6.1.x</li>
+                    <li><strong>보안 엔진:</strong> Spring Security 6.3.x (Lambda DSL 및 SecurityFilterChain 빈 구성)</li>
+                    <li><strong>JWT 라이브러리:</strong> io.jsonwebtoken (JJWT 0.12.5) - 최신 Fluent Builder/Parser API</li>
+                </ul>
+
+                <h2>1단계: 프로젝트 의존성 설정 (build.gradle)</h2>
+                <p>최신 Spring Security 6 및 JJWT 0.12.5 라이브러리를 <code>build.gradle</code>에 추가합니다:</p>
+                <pre><code>plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.3.0'
+    id 'io.spring.dependency-management' version '1.1.5'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    
+    // JJWT 0.12.5 최신 암호화 라이브러리
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
+}</code></pre>
+
+                <h2>2단계: application.yml 서명 키 및 만료시간 설정</h2>
+                <p>최소 256비트 이상의 HMAC SHA-256 비밀키와 토큰 유효 기간을 설정합니다:</p>
+                <pre><code>jwt:
+  secret: "v9y$B&E)H@MbQeThWmZq4t7w!z%C*F-JaNdRfUjXn2r5u8x/A?D(G+KbPeShVkYp" # 최소 256비트 암호키
+  access-token-expiration: 1800000   # 30분 (밀리초)
+  refresh-token-expiration: 604800000 # 7일 (밀리초)</code></pre>
+
+                <h2>3단계: JwtTokenProvider.java (토큰 생성, 검증 및 추출)</h2>
+                <p>JJWT 0.12.x의 최신 파서 및 빌더 API를 사용하여 토큰 컴포넌트를 구현합니다:</p>
+                <pre><code>package com.example.config.jwt;
+
+import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.stereotype.Component;
+
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
+import java.util.List;
+
+@Component
+public class JwtTokenProvider {
+
+    private final SecretKey secretKey;
+    private final long accessTokenExpiration;
+
+    public JwtTokenProvider(
+            @Value("\${jwt.secret}") String secret,
+            @Value("\${jwt.access-token-expiration}") long accessTokenExpiration) {
+        this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        this.accessTokenExpiration = accessTokenExpiration;
+    }
+
+    // 1. JWT Access Token 발급 (JJWT 0.12.x 빌더)
+    public String createAccessToken(String username, String role) {
+        Date now = new Date();
+        Date validity = new Date(now.getTime() + accessTokenExpiration);
+
+        return Jwts.builder()
+                .subject(username)
+                .claim("role", role)
+                .issuedAt(now)
+                .expiration(validity)
+                .signWith(secretKey)
+                .compact();
+    }
+
+    // 2. JWT 서명 및 유효성 검증
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parser()
+                    .verifyWith(secretKey)
+                    .build()
+                    .parseSignedClaims(token);
+            return true;
+        } catch (JwtException | IllegalArgumentException e) {
+            return false; // 만료되었거나 변조된 토큰
+        }
+    }
+
+    // 3. 토큰에서 Spring Security Authentication 인증 객체 생성
+    public Authentication getAuthentication(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith(secretKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+
+        String username = claims.getSubject();
+        String role = claims.get("role", String.class);
+        var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
+
+        User principal = new User(username, "", authorities);
+        return new UsernamePasswordAuthenticationToken(principal, token, authorities);
+    }
+}</code></pre>
+
+                <h2>4단계: JwtAuthenticationFilter.java (Spring Security 필터)</h2>
+                <p>HTTP 요청 헤더의 <code>Authorization: Bearer &lt;token&gt;</code>을 추출하고 검증하여 보안 컨텍스트에 등록합니다:</p>
+                <pre><code>package com.example.config.jwt;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.util.StringUtils;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    private final JwtTokenProvider tokenProvider;
+
+    public JwtAuthenticationFilter(JwtTokenProvider tokenProvider) {
+        this.tokenProvider = tokenProvider;
+    }
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, 
+                                    HttpServletResponse response, 
+                                    FilterChain filterChain) throws ServletException, IOException {
+        String token = resolveToken(request);
+
+        if (StringUtils.hasText(token) &amp;&amp; tokenProvider.validateToken(token)) {
+            Authentication auth = tokenProvider.getAuthentication(token);
+            SecurityContextHolder.getContext().setAuthentication(auth);
+        }
+
+        filterChain.doFilter(request, response);
+    }
+
+    private String resolveToken(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        if (StringUtils.hasText(bearerToken) &amp;&amp; bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+        return null;
+    }
+}</code></pre>
+
+                <h2>5단계: SecurityConfig.java (Spring Security 6 Lambda DSL 설정)</h2>
+                <p>무상태 세션 정책과 JWT 필터를 등록하는 보안 체인을 구성합니다:</p>
+                <pre><code>package com.example.config;
+
+import com.example.config.jwt.JwtAuthenticationFilter;
+import com.example.config.jwt.JwtTokenProvider;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    private final JwtTokenProvider tokenProvider;
+
+    public SecurityConfig(JwtTokenProvider tokenProvider) {
+        this.tokenProvider = tokenProvider;
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf(csrf -&gt; csrf.disable()) // REST API 무상태 설정
+            .sessionManagement(session -&gt; session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -&gt; auth
+                .requestMatchers("/api/auth/**", "/public/**").permitAll()
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .anyRequest().authenticated()
+            )
+            .addFilterBefore(new JwtAuthenticationFilter(tokenProvider), UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+}</code></pre>
+
+                <h2>6단계: AuthController.java (로그인 REST API 컨트롤러)</h2>
+                <p>사용자 인증 후 JWT 토큰을 발급하는 REST 엔드포인트를 구현합니다:</p>
+                <pre><code>package com.example.controller;
+
+import com.example.config.jwt.JwtTokenProvider;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/auth")
+public class AuthController {
+
+    private final JwtTokenProvider tokenProvider;
+
+    public AuthController(JwtTokenProvider tokenProvider) {
+        this.tokenProvider = tokenProvider;
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity&lt;?&gt; login(@RequestBody Map&lt;String, String&gt; loginRequest) {
+        String username = loginRequest.get("username");
+        String password = loginRequest.get("password");
+
+        if ("admin".equals(username) &amp;&amp; "password123".equals(password)) {
+            String token = tokenProvider.createAccessToken(username, "ADMIN");
+            return ResponseEntity.ok(Map.of(
+                "token_type", "Bearer",
+                "access_token", token,
+                "expires_in", 1800
+            ));
+        }
+
+        return ResponseEntity.status(401).body(Map.of("error", "Invalid credentials"));
+    }
+}</code></pre>
+            `
+        }
     }
 };
 
@@ -700,8 +1204,8 @@ export function injectArticle(data) {
     content.innerHTML = `
         <h1 class="article-title">${data.title}</h1>
         <div class="article-meta">
-            <span class="read-time">Read time: ~8 min</span> | 
-            <span class="category">Technical Deep Dive</span>
+            <span class="read-time">Read time: ~12 min</span> | 
+            <span class="category">Spring Boot 3.3 &amp; Security</span>
         </div>
         <div class="article-body">
             ${data.content}
@@ -714,3 +1218,4 @@ export function injectArticle(data) {
 export function getArticleData(id) {
     return guidesData[id];
 }
+

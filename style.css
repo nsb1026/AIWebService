@@ -1056,3 +1056,97 @@ button:disabled { cursor: not-allowed; opacity: 0.6; }
     line-height: 1.6;
     color: var(--text-muted);
 }
+
+/* Blog-style Tech Code Container */
+.code-wrapper {
+    position: relative;
+    margin: 1.5rem 0;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #1e1e2e;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.code-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.6rem 1rem;
+    background: #181825;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    color: #a6adc8;
+}
+
+.code-header .lang-tag {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    color: #cdd6f4;
+}
+
+.code-header .code-copy-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #cdd6f4;
+    padding: 0.3rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.code-header .code-copy-btn:hover {
+    background: #2563eb;
+    color: #ffffff;
+    border-color: #3b82f6;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+}
+
+.code-header .code-copy-btn.copied {
+    background: #10b981;
+    color: #ffffff;
+    border-color: #10b981;
+}
+
+.code-wrapper pre {
+    margin: 0;
+    padding: 1.2rem;
+    overflow-x: auto;
+    background: transparent;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: #f3f4f6;
+}
+
+.code-wrapper pre code {
+    font-family: inherit;
+    color: inherit;
+    background: transparent;
+    padding: 0;
+}
+
+/* Custom scrollbar for code blocks */
+.code-wrapper pre::-webkit-scrollbar {
+    height: 8px;
+}
+.code-wrapper pre::-webkit-scrollbar-track {
+    background: #181825;
+}
+.code-wrapper pre::-webkit-scrollbar-thumb {
+    background: #313244;
+    border-radius: 4px;
+}
+.code-wrapper pre::-webkit-scrollbar-thumb:hover {
+    background: #45475a;
+}
+
