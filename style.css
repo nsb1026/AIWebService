@@ -558,9 +558,23 @@ button:disabled { cursor: not-allowed; opacity: 0.6; }
 /* Guides Grid */
 .guides-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 2rem;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 1.5rem;
     margin-top: 2rem;
+}
+
+@media (min-width: 640px) {
+    .guides-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .guides-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.75rem;
+    }
 }
 
 .guide-card {

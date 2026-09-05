@@ -385,15 +385,26 @@ document.addEventListener('DOMContentLoaded', () => {
         let pageDesc = 'Client-side suite of developer tools.';
         let pageKeywords = 'developer tools, string encoder, json parser';
         let pageUrl = window.location.href;
+        let isArticle = false;
+        let articleObj = null;
 
         if (articleId) {
             const articleData = getArticleData(articleId);
-            if (articleData && articleData[lang]) {
-                pageTitle = `${articleData[lang].title} | Parse Utils`;
-                pageDesc = articleData[lang].title;
-            } else if (articleData && articleData['en']) {
-                pageTitle = `${articleData['en'].title} | Parse Utils`;
-                pageDesc = articleData['en'].title;
+            if (articleData) {
+                isArticle = true;
+                articleObj = articleData[lang] || articleData['en'];
+                if (articleObj) {
+                    pageTitle = `${articleObj.title} | Developer Guide | Parse Utils`;
+                    
+                    // Extract clean text snippet for search engine meta description
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = articleObj.content;
+                    const rawText = (tempDiv.textContent || tempDiv.innerText || '').replace(/\s+/g, ' ').trim();
+                    pageDesc = rawText.length > 160 ? rawText.substring(0, 157) + '...' : rawText;
+
+                    // Article specific SEO keywords
+                    pageKeywords = `Spring Boot 3.3, Java 21, Spring Security 6, Developer Guide, REST API, ${articleId.replace(/-/g, ' ')}, ${articleObj.title.replace(/[^a-zA-Z0-9가-힣\s]/g, ' ')}`;
+                }
             }
         } else if (config) {
             pageTitle = config.title[lang] || config.title['en'];
@@ -422,11 +433,21 @@ document.addEventListener('DOMContentLoaded', () => {
         let ogUrl = document.querySelector('meta[property="og:url"]');
         if (ogUrl) ogUrl.setAttribute('content', pageUrl);
 
-        // 5. Canonical Link
+        let ogType = document.querySelector('meta[property="og:type"]');
+        if (ogType) ogType.setAttribute('content', isArticle ? 'article' : 'website');
+
+        // 5. Twitter Card Tags
+        let twTitle = document.querySelector('meta[name="twitter:title"]');
+        if (twTitle) twTitle.setAttribute('content', pageTitle);
+
+        let twDesc = document.querySelector('meta[name="twitter:description"]');
+        if (twDesc) twDesc.setAttribute('content', pageDesc);
+
+        // 6. Canonical Link
         let canonicalEl = document.querySelector('link[rel="canonical"]');
         if (canonicalEl) canonicalEl.setAttribute('href', pageUrl);
 
-        // 6. Dynamic JSON-LD Structured Data
+        // 7. Dynamic JSON-LD Structured Data for Search Engine Indexing
         let jsonLdEl = document.getElementById('dynamic-seo-jsonld');
         if (!jsonLdEl) {
             jsonLdEl = document.createElement('script');
@@ -435,9 +456,31 @@ document.addEventListener('DOMContentLoaded', () => {
             document.head.appendChild(jsonLdEl);
         }
 
-        const jsonLdData = {
+        const jsonLdData = isArticle ? {
             "@context": "https://schema.org",
-            "@type": articleId ? "TechArticle" : "WebApplication",
+            "@type": "TechArticle",
+            "headline": articleObj ? articleObj.title : pageTitle,
+            "description": pageDesc,
+            "url": pageUrl,
+            "inLanguage": lang,
+            "mainEntityOfPage": {
+                "@type": "WebPage",
+                "@id": pageUrl
+            },
+            "author": {
+                "@type": "Organization",
+                "name": "Parse Utils Technical Team"
+            },
+            "publisher": {
+                "@type": "Organization",
+                "name": "Parse Utils",
+                "url": "https://parseutils.com"
+            },
+            "articleSection": "Developer Guides",
+            "keywords": pageKeywords
+        } : {
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
             "name": pageTitle,
             "description": pageDesc,
             "url": pageUrl,
