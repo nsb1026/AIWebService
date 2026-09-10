@@ -2,6 +2,484 @@
 import { switchView } from './utils.js';
 
 const guidesData = {
+    'cors-guide': {
+        en: {
+            title: 'CORS (Cross-Origin Resource Sharing) Resolution Guide: Spring Boot, Express & FastAPI',
+            content: `
+                <p>When developing modern web applications, frontend developers often encounter cross-origin security blocks in their browser dev consoles when making API calls from a client domain (e.g. <code>http://localhost:3000</code>) to a backend API server (e.g. <code>http://localhost:8080</code>):</p>
+                
+                <blockquote class="error-box" style="border-left: 4px solid #ef4444; background: rgba(239, 68, 68, 0.1); padding: 12px 16px; margin: 16px 0; border-radius: 4px;">
+                    <strong>CORS Console Error:</strong><br>
+                    <code>Access to fetch at 'http://localhost:8080/api/v1/users' from origin 'http://localhost:3000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.</code>
+                </blockquote>
+
+                <p>This guide provides a comprehensive overview of CORS mechanisms and copyable configuration snippets for <strong>Spring Boot 3.3 (Spring Security 6)</strong>, <strong>Node.js Express</strong>, and <strong>Python FastAPI</strong>.</p>
+
+                <h2>1. Understanding CORS Core Concepts</h2>
+                <p><strong>CORS (Cross-Origin Resource Sharing)</strong> is an HTTP-header based mechanism that allows a server to indicate any origins (domain, scheme, or port) other than its own from which a browser should permit loading resources.</p>
+
+                <h3>Definition of Origin</h3>
+                <p>In web security, an <strong>Origin</strong> is defined by a tuple of <code>Scheme (Protocol) + Host (Domain/IP) + Port</code>. If any of these three components differ, the request is considered Cross-Origin:</p>
+                <ul>
+                    <li><code>http://example.com:80</code> vs <code>https://example.com:80</code> (Different protocol -&gt; Cross-Origin)</li>
+                    <li><code>http://example.com:8080</code> vs <code>http://api.example.com:8080</code> (Different host -&gt; Cross-Origin)</li>
+                    <li><code>http://localhost:3000</code> vs <code>http://localhost:8080</code> (Different port -&gt; Cross-Origin)</li>
+                </ul>
+
+                <h3>Simple Requests vs Preflight Requests</h3>
+                <p>Browsers handle cross-origin HTTP requests using two primary flows:</p>
+
+                <div class="technical-note" style="background: rgba(37, 99, 235, 0.08); border-left: 4px solid #2563eb; padding: 12px 16px; margin: 16px 0; border-radius: 4px;">
+                    <strong>1. Simple Requests:</strong><br>
+                    Requests using GET, HEAD, or POST methods with standard headers (e.g., <code>Content-Type: application/x-www-form-urlencoded</code>, <code>multipart/form-data</code>, or <code>text/plain</code>) are dispatched immediately without prior handshake.
+                </div>
+
+                <div class="technical-note" style="background: rgba(168, 85, 247, 0.08); border-left: 4px solid #a855f7; padding: 12px 16px; margin: 16px 0; border-radius: 4px;">
+                    <strong>2. Preflighted Requests (OPTIONS):</strong><br>
+                    Requests sending JSON payloads (<code>application/json</code>), using PUT/DELETE/PATCH methods, or including custom headers (such as <code>Authorization</code>) trigger an initial <code>HTTP OPTIONS</code> request. The browser only proceeds with the actual request if the server responds to the OPTIONS preflight with valid CORS approval headers.
+                </div>
+
+                <h3>Key CORS Response Headers</h3>
+                <ul>
+                    <li><code>Access-Control-Allow-Origin</code>: Specifies allowed origins (e.g. <code>https://myapp.com</code>).</li>
+                    <li><code>Access-Control-Allow-Methods</code>: Specifies allowed HTTP verbs (e.g. <code>GET, POST, PUT, DELETE, OPTIONS</code>).</li>
+                    <li><code>Access-Control-Allow-Headers</code>: Specifies allowed request headers (e.g. <code>Content-Type, Authorization</code>).</li>
+                    <li><code>Access-Control-Allow-Credentials</code>: Indicates whether cookies or authorization headers can be included (<code>true</code> / <code>false</code>).</li>
+                    <li><code>Access-Control-Max-Age</code>: Duration (in seconds) that preflight responses can be cached by the browser.</li>
+                </ul>
+
+                <h2>2. Spring Boot 3.3 &amp; Spring Security 6 CORS Setup</h2>
+                <p>For Spring Boot 3.3 applications integrated with Spring Security 6, the recommended solution is configuring a custom <code>CorsConfigurationSource</code> Bean within the Security FilterChain.</p>
+
+                <h3>Production Recommended: Spring Security FilterChain Integration</h3>
+                <pre><code class="language-java">package com.example.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
+
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf(AbstractHttpConfigurer::disable)
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/public/**").permitAll()
+                .anyRequest().authenticated()
+            );
+
+        return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+
+        // 1. Allowed Origins (Specify explicit origins when allowCredentials is true)
+        config.setAllowedOrigins(List.of(
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "https://myapp.example.com"
+        ));
+
+        // 2. Allowed HTTP Methods
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+
+        // 3. Allowed Headers
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With", "Accept"));
+
+        // 4. Exposed Headers for Client Access
+        config.setExposedHeaders(List.of("Authorization", "Set-Cookie"));
+
+        // 5. Allow Credentials (Cookies / Bearer Tokens)
+        config.setAllowCredentials(true);
+
+        // 6. Preflight Cache Duration (1 Hour)
+        config.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
+}
+</code></pre>
+
+                <h3>Global Spring MVC WebMvcConfigurer (Without Security)</h3>
+                <pre><code class="language-java">package com.example.config;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/api/**")
+                .allowedOrigins("http://localhost:3000", "https://myapp.example.com")
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(true)
+                .maxAge(3600);
+    }
+}
+</code></pre>
+
+                <h2>3. Node.js Express CORS Setup</h2>
+                <p>Express applications utilize the official <code>cors</code> middleware package for managing Cross-Origin policies.</p>
+
+                <h3>Installation</h3>
+                <pre><code class="language-bash">npm install cors
+# For TypeScript support:
+npm install --save-dev @types/cors
+</code></pre>
+
+                <h3>Express Middleware Snippet</h3>
+                <pre><code class="language-javascript">const express = require('express');
+const cors = require('cors');
+
+const app = express();
+
+// 1. Dynamic Origin Validation
+const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'https://myapp.example.com'
+];
+
+const corsOptions = {
+    origin: function (origin, callback) {
+        // Allow requests with no origin (e.g., mobile apps, cURL requests)
+        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error('Blocked by CORS security policy'));
+        }
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    exposedHeaders: ['Authorization'],
+    credentials: true, // Allow cookies and credentials
+    maxAge: 3600 // Cache preflight for 1 hour
+};
+
+// 2. Register Global Middleware
+app.use(cors(corsOptions));
+app.use(express.json());
+
+app.get('/api/v1/data', (req, res) => {
+    res.json({ message: 'CORS configured successfully!' });
+});
+
+app.listen(8080, () => {
+    console.log('Express API listening on port 8080');
+});
+</code></pre>
+
+                <h2>4. Python FastAPI CORS Setup</h2>
+                <p>FastAPI provides built-in support for CORS through <code>fastapi.middleware.cors.CORSMiddleware</code>.</p>
+
+                <h3>FastAPI Snippet</h3>
+                <pre><code class="language-python">from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI(title="CORS Configured API")
+
+# List of allowed client origins
+origins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "https://myapp.example.com",
+]
+
+# Add CORS Middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,            # Explicit origin list
+    allow_credentials=True,           # Allow cookies & authorization headers
+    allow_methods=["*"],              # Allow all HTTP verbs (GET, POST, PUT, DELETE, etc.)
+    allow_headers=["*"],              # Allow all headers
+    expose_headers=["Authorization"], # Headers readable by browser JS
+    max_age=3600,                     # Preflight cache time in seconds
+)
+
+@app.get("/api/v1/items")
+def read_items():
+    return {"status": "success", "data": ["item1", "item2"]}
+</code></pre>
+
+                <h2>5. Production Troubleshooting &amp; Common Pitfalls</h2>
+
+                <div class="technical-note" style="border-left: 4px solid #eab308; background: rgba(234, 179, 8, 0.1); padding: 12px 16px; margin: 16px 0; border-radius: 4px;">
+                    <strong>Pitfall 1: Wildcard Origins with Credentials</strong><br>
+                    Per browser specification, setting <code>Access-Control-Allow-Origin: *</code> while <code>Access-Control-Allow-Credentials: true</code> will result in a browser-enforced CORS failure. You must specify exact origin strings when credentials are enabled.
+                </div>
+
+                <div class="technical-note" style="border-left: 4px solid #dc2626; background: rgba(220, 38, 38, 0.1); padding: 12px 16px; margin: 16px 0; border-radius: 4px;">
+                    <strong>Pitfall 2: Duplicate Headers from Nginx Reverse Proxies</strong><br>
+                    Configuring <code>add_header Access-Control-Allow-Origin ...</code> in Nginx while also configuring CORS headers in your backend app results in duplicate response headers, causing browser rejections. Ensure CORS is configured at either the proxy level or application level, but not both.
+                </div>
+
+                <div class="technical-note" style="border-left: 4px solid #2563eb; background: rgba(37, 99, 235, 0.1); padding: 12px 16px; margin: 16px 0; border-radius: 4px;">
+                    <strong>Pitfall 3: Blocking OPTIONS Preflight in Custom Security Filters</strong><br>
+                    When writing custom JWT filters in Spring Security or Express middleware, intercepting and rejecting <code>OPTIONS</code> requests due to missing Bearer tokens causes 401 Unauthorized errors during preflight. Always check <code>CorsUtils.isPreflightRequest(request)</code> or check req.method === 'OPTIONS' to allow preflight requests to pass unauthenticated.
+                </div>
+            `
+        },
+        ko: {
+            title: 'CORS(Cross-Origin Resource Sharing) 해결 가이드: Spring, Express, FastAPI 프레임워크별 설정',
+            content: `
+                <p>웹 개발을 진행하다 보면 프론트엔드(예: <code>http://localhost:3000</code>)에서 백엔드 API(예: <code>http://localhost:8080</code>) 호출 시 다음과 같은 보안 에러를 자주 접하게 됩니다.</p>
+
+                <blockquote class="error-box" style="border-left: 4px solid #ef4444; background: rgba(239, 68, 68, 0.1); padding: 12px 16px; margin: 16px 0; border-radius: 4px;">
+                    <strong>CORS Console Error:</strong><br>
+                    <code>Access to fetch at 'http://localhost:8080/api/v1/users' from origin 'http://localhost:3000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.</code>
+                </blockquote>
+
+                <p>이 가이드에서는 CORS의 기본 동작 개념과 <strong>Spring Boot 3.3 (Spring Security 6)</strong>, <strong>Node.js Express</strong>, <strong>Python FastAPI</strong> 3대 백엔드 프레임워크에서의 완전한 해결 설정 코드 스니펫을 제공합니다.</p>
+
+                <h2>1. CORS 기본 개념 및 동작 원리</h2>
+                <p><strong>CORS(Cross-Origin Resource Sharing)</strong>는 웹 브라우저가 자신의 출처(Origin)와 다른 출처(도메인, 프로토콜, 포트)의 리소스에 접근할 수 있도록 권한을 부여하도록 서버에 요청하는 보안 메커니즘입니다.</p>
+
+                <h3>출처(Origin)의 정의</h3>
+                <p>웹에서의 출처(Origin)는 <code>Scheme(프로토콜) + Host(도메인/IP) + Port(포트번호)</code> 3가지의 조합으로 정의됩니다. 하나라도 다르면 타 출처(Cross-Origin)로 간주됩니다.</p>
+                <ul>
+                    <li><code>http://example.com:80</code> vs <code>https://example.com:80</code> (프로토콜 다름 -&gt; Cross-Origin)</li>
+                    <li><code>http://example.com:8080</code> vs <code>http://api.example.com:8080</code> (호스트 다름 -&gt; Cross-Origin)</li>
+                    <li><code>http://localhost:3000</code> vs <code>http://localhost:8080</code> (포트 다름 -&gt; Cross-Origin)</li>
+                </ul>
+
+                <h3>Simple Request vs Preflight Request (사전 요청)</h3>
+                <p>브라우저는 Cross-Origin 요청 시 보안 안전성을 검증하기 위해 두 가지 방식 중 하나로 처리합니다.</p>
+
+                <div class="technical-note" style="background: rgba(37, 99, 235, 0.08); border-left: 4px solid #2563eb; padding: 12px 16px; margin: 16px 0; border-radius: 4px;">
+                    <strong>1. 단순 요청 (Simple Request):</strong><br>
+                    GET, HEAD, POST 메서드이면서 <code>Content-Type</code>이 <code>application/x-www-form-urlencoded</code>, <code>multipart/form-data</code>, <code>text/plain</code> 인 경우 브라우저가 사전 검증 없이 즉시 본 요청을 보냅니다.
+                </div>
+
+                <div class="technical-note" style="background: rgba(168, 85, 247, 0.08); border-left: 4px solid #a855f7; padding: 12px 16px; margin: 16px 0; border-radius: 4px;">
+                    <strong>2. 사전 요청 (Preflight Request):</strong><br>
+                    <code>application/json</code> 페이로드 전송, PUT/DELETE/PATCH 메서드 사용, 또는 <code>Authorization</code> 등 커스텀 헤더 포함 시 브라우저가 본 요청 직전에 <code>HTTP OPTIONS</code> 메서드로 사전 요청을 전송합니다. 서버가 이 <code>OPTIONS</code> 요청에 적절한 CORS 헤더로 응답해야만 본 요청이 실행됩니다.
+                </div>
+
+                <h3>핵심 CORS 응답 헤더</h3>
+                <ul>
+                    <li><code>Access-Control-Allow-Origin</code>: 허용할 출처 (예: <code>https://myapp.com</code> 또는 <code>*</code>)</li>
+                    <li><code>Access-Control-Allow-Methods</code>: 허용할 HTTP 메서드 (예: <code>GET, POST, PUT, DELETE, OPTIONS</code>)</li>
+                    <li><code>Access-Control-Allow-Headers</code>: 허용할 요청 헤더 (예: <code>Content-Type, Authorization</code>)</li>
+                    <li><code>Access-Control-Allow-Credentials</code>: 쿠키나 Authorization 헤더 등 인증 정보 포함 허용 여부 (<code>true</code> / <code>false</code>)</li>
+                    <li><code>Access-Control-Max-Age</code>: Preflight 요청 결과를 브라우저가 캐싱할 시간(초)</li>
+                </ul>
+
+                <h2>2. Spring Boot 3.3 &amp; Spring Security 6 CORS 설정</h2>
+                <p>Spring Boot 3.3 및 Spring Security 6 환경에서는 MVC 레벨의 설정과 Security FilterChain 레벨의 설정이 올바르게 결합되어야 합니다.</p>
+
+                <h3>실무 추천: Spring Security CorsConfigurationSource Bean 설정</h3>
+                <p>Spring Security를 사용할 때 가장 표준적이고 강력한 해결책은 <code>CorsConfigurationSource</code> 빈을 등록하고 Security FilterChain에 <code>.cors(...)</code>를 연결하는 것입니다.</p>
+
+                <pre><code class="language-java">package com.example.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
+
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+            // CSRF 비활성화 (REST API Stateless 기준)
+            .csrf(AbstractHttpConfigurer::disable)
+            // CORS 설정 적용
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/public/**").permitAll()
+                .anyRequest().authenticated()
+            );
+
+        return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+
+        // 1. 허용할 출처(Origin) 설정 - 특정 도메인 명시 권장
+        config.setAllowedOrigins(List.of(
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "https://myapp.example.com"
+        ));
+
+        // 2. 허용할 HTTP 메서드
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+
+        // 3. 허용할 요청 헤더
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With", "Accept"));
+
+        // 4. 클라이언트가 응답에서 접근할 수 있는 헤더 (Expose Headers)
+        config.setExposedHeaders(List.of("Authorization", "Set-Cookie"));
+
+        // 5. 쿠키 및 인증 헤더 허용 (Allow Credentials)
+        config.setAllowCredentials(true);
+
+        // 6. Preflight 요청 캐싱 시간 (1시간)
+        config.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
+}
+</code></pre>
+
+                <h3>Spring MVC 전역 WebMvcConfigurer 설정 (Security 미사용 시)</h3>
+                <pre><code class="language-java">package com.example.config;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/api/**")
+                .allowedOrigins("http://localhost:3000", "https://myapp.example.com")
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(true)
+                .maxAge(3600);
+    }
+}
+</code></pre>
+
+                <h2>3. Node.js Express CORS 설정</h2>
+                <p>Node.js Express 환경에서는 공식 <code>cors</code> 미들웨어를 사용하여 간편하게 CORS 정책을 적용할 수 있습니다.</p>
+
+                <h3>설치</h3>
+                <pre><code class="language-bash">npm install cors
+# TypeScript 사용 시
+npm install --save-dev @types/cors
+</code></pre>
+
+                <h3>Express 미들웨어 설정 스니펫</h3>
+                <pre><code class="language-javascript">const express = require('express');
+const cors = require('cors');
+
+const app = express();
+
+// 1. 동적 Origin 검증 (다중 환경 지원)
+const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'https://myapp.example.com'
+];
+
+const corsOptions = {
+    origin: function (origin, callback) {
+        // 모바일 앱이나 cURL 요청 등 origin이 없는 경우 허용
+        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS policy'));
+        }
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    exposedHeaders: ['Authorization'],
+    credentials: true, // 쿠키/인증 헤더 허용
+    maxAge: 3600 // Preflight 캐싱 시간 (초)
+};
+
+// 2. 전역 미들웨어 등록
+app.use(cors(corsOptions));
+app.use(express.json());
+
+app.get('/api/v1/data', (req, res) => {
+    res.json({ message: 'CORS configured successfully!' });
+});
+
+app.listen(8080, () => {
+    console.log('Server running on port 8080');
+});
+</code></pre>
+
+                <h2>4. Python FastAPI CORS 설정</h2>
+                <p>Python FastAPI에서는 <code>fastapi.middleware.cors.CORSMiddleware</code>를 통해 즉시 구현 가능합니다.</p>
+
+                <h3>FastAPI 스니펫</h3>
+                <pre><code class="language-python">from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI(title="CORS Configured API")
+
+# 허용할 출처 리스트
+origins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "https://myapp.example.com",
+]
+
+# CORS 미들웨어 추가
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,            # 허용할 출처
+    allow_credentials=True,           # 쿠키 및 인증 헤더 포함 허용
+    allow_methods=["*"],              # 모든 HTTP 메서드 허용 (GET, POST, PUT, DELETE 등)
+    allow_headers=["*"],              # 모든 헤더 허용
+    expose_headers=["Authorization"], # 클라이언트 접근 가능 헤더
+    max_age=3600,                     # Preflight 캐시 시간
+)
+
+@app.get("/api/v1/items")
+def read_items():
+    return {"status": "success", "data": ["item1", "item2"]}
+</code></pre>
+
+                <h2>5. 실무 CORS 함정 &amp; 트러블슈팅 체크리스트</h2>
+
+                <div class="technical-note" style="border-left: 4px solid #eab308; background: rgba(234, 179, 8, 0.1); padding: 12px 16px; margin: 16px 0; border-radius: 4px;">
+                    <strong>함정 1: Access-Control-Allow-Origin: * 와 Credentials: true 충돌</strong><br>
+                    브라우저 보안 표준에 따라 <code>Access-Control-Allow-Credentials</code>가 <code>true</code>일 경우, <code>Access-Control-Allow-Origin</code>으로 와일드카드(<code>*</code>)를 사용할 수 없습니다. 반드시 요청 출처를 명확한 URL(예: <code>http://localhost:3000</code>)로 지정해야 합니다.
+                </div>
+
+                <div class="technical-note" style="border-left: 4px solid #dc2626; background: rgba(220, 38, 38, 0.1); padding: 12px 16px; margin: 16px 0; border-radius: 4px;">
+                    <strong>함정 2: Reverse Proxy (Nginx)와 백엔드의 중복 CORS 헤더</strong><br>
+                    Nginx 리버스 프록시에서도 <code>add_header Access-Control-Allow-Origin ...</code>을 설정하고 백엔드(Spring/Express)에서도 CORS를 설정하면 응답 헤더에 출처가 2개 중복되어 브라우저에서 차단됩니다. CORS 설정 주체를 Nginx 또는 백엔드 애플리케이션 중 한 곳으로 통일하세요.
+                </div>
+
+                <div class="technical-note" style="border-left: 4px solid #2563eb; background: rgba(37, 99, 235, 0.1); padding: 12px 16px; margin: 16px 0; border-radius: 4px;">
+                    <strong>함정 3: Security Filter에서 OPTIONS Preflight 차단</strong><br>
+                    Spring Security의 커스텀 JwtAuthenticationFilter 또는 Interceptor 작성 시 <code>OPTIONS</code> preflight 요청을 통과시키지 않고 인증 토큰을 검사하면 401 Unauthorized 에러가 발생합니다. 필터 상단에서 <code>CorsUtils.isPreflightRequest(request)</code> 조건을 체크하여 사전 요청을 즉시 통과시켜야 합니다.
+                </div>
+            `
+        }
+    },
     'base64': {
         en: {
             title: 'Understanding Base64 Encoding: Deep Dive',
