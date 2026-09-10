@@ -49,14 +49,7 @@ Parse Utils is a high-performance, decentralized developer utility platform. It 
 7.  **[DONE] Glossary Expansion:** Increased technical glossary to 20+ comprehensive terms.
 8.  **[DONE] SEO & Compliance:** Added sitemap.xml and enhanced metadata for all views.
 
-## 7. Current Task Plan: Utility Regular Expressions (Regex) Cheatsheet Guide
-*   **Problem:** Write and publish a technical guide article covering essential regex patterns (Email, Korean Phone Numbers, Password Complexity, Business Registration Number) with copyable code snippets, bilingual support (KO/EN), Dev Hub link, and commit changes to Git.
-*   **Action Plan:**
-    1. Update `views/guides.html` with a new Regex Cheatsheet guide card.
-    2. Add link in Dev Hub dropdown in `index.html`.
-    3. Register translation keys in `js/i18n.js` (both EN and KO).
-    4. Add deep-dive technical article content `'regex-patterns-guide'` in `js/guides.js`.
-    5. Add route to `sitemap.xml`.
-    6. Run `git add` and `git commit` to commit changes to Git repository.
+## 7. Current Task Plan: Utility Regular Expressions (Regex) Cheatsheet Guide [COMPLETED]
+*   **Status:** [DONE] Addressed user request by writing and publishing the full Utility Regular Expressions (Regex) Cheatsheet article covering Email, Korean Phone Numbers, Password Complexity, and Business Registration Number (with checksum), bilingual (KO/EN) translations, Dev Hub link, and committed changes to Git (`98db2e0`).
 
 
