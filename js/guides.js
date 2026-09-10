@@ -2,6 +2,348 @@
 import { switchView } from './utils.js';
 
 const guidesData = {
+    'web-vitals-performance-guide': {
+        en: {
+            title: 'Web Performance Optimization (Core Web Vitals) Checklist: WebP/AVIF, Font Subsetting & Lazy Loading',
+            content: `
+                <p>Web performance is a critical ranking factor for Google SEO and directly impacts user conversion rates. According to HTTP Archive data, media assets (images) and web fonts account for over 75% of total page weight on modern web applications.</p>
+
+                <p>This checklist provides actionable implementation strategies and copyable code snippets to optimize <strong>Core Web Vitals</strong> metrics—specifically <strong>LCP (Largest Contentful Paint)</strong>, <strong>CLS (Cumulative Layout Shift)</strong>, and <strong>INP (Interaction to Next Paint)</strong>—by focusing on 3 core frontend optimizations: Next-Gen Image Formats (WebP/AVIF), Font Subsetting &amp; <code>font-display: swap</code>, and Lazy Loading.</p>
+
+                <h2>1. Core Web Vitals Key Metrics Overview</h2>
+                <ul>
+                    <li><strong>LCP (Largest Contentful Paint):</strong> Measures perceived loading speed. Ideal score: <strong>&le; 2.5s</strong>. Optimized via hero image preloading, AVIF/WebP compression, and CDN caching.</li>
+                    <li><strong>CLS (Cumulative Layout Shift):</strong> Measures visual stability and layout jumps. Ideal score: <strong>&le; 0.1</strong>. Optimized by specifying explicit <code>width</code> and <code>height</code> attributes on images and setting <code>font-display: swap</code>.</li>
+                    <li><strong>INP (Interaction to Next Paint):</strong> Measures page responsiveness to user actions. Ideal score: <strong>&le; 200ms</strong>. Optimized by reducing main thread blocking JS and deferring non-critical assets.</li>
+                </ul>
+
+                <h2>2. Image Format Conversion &amp; Modern Picture Tag</h2>
+                <p>Replacing legacy JPEG and PNG images with next-generation formats like <strong>AVIF</strong> (up to 50% smaller than JPEG) and <strong>WebP</strong> (30% smaller) significantly improves LCP and reduces network bandwidth.</p>
+
+                <h3>Recommended HTML5 Fallback Markup</h3>
+                <pre><code class="language-html">&lt;!-- Modern Responsive Image with AVIF &amp; WebP Fallback --&gt;
+&lt;picture&gt;
+    &lt;!-- 1. AVIF Format (Highest compression ratio for modern browsers) --&gt;
+    &lt;source srcset="hero-image.avif" type="image/avif"&gt;
+    
+    &lt;!-- 2. WebP Format (Universal modern browser support) --&gt;
+    &lt;source srcset="hero-image.webp" type="image/webp"&gt;
+    
+    &lt;!-- 3. Legacy PNG/JPEG Fallback + Explicit Dimensions to prevent CLS --&gt;
+    &lt;img 
+        src="hero-image.jpg" 
+        alt="Core Web Vitals Optimization Illustration" 
+        width="1200" 
+        height="630" 
+        loading="eager" 
+        fetchpriority="high"
+        decoding="async"
+    &gt;
+&lt;/picture&gt;
+</code></pre>
+
+                <div class="technical-note" style="background: rgba(37, 99, 235, 0.08); border-left: 4px solid #2563eb; padding: 12px 16px; margin: 16px 0; border-radius: 4px;">
+                    <strong>Developer Tip (LCP Image Optimization):</strong><br>
+                    The hero image above the fold (the main banner image visible upon landing) should <strong>NEVER</strong> use <code>loading="lazy"</code>. Instead, add <code>fetchpriority="high"</code> and preload it in your HTML <code>&lt;head&gt;</code>:
+                    <br><code>&lt;link rel="preload" as="image" href="hero-image.avif" type="image/avif"&gt;</code>
+                </div>
+
+                <h2>3. Font Subsetting &amp; font-display: swap</h2>
+                <p>Unoptimized web fonts cause <strong>FOIT (Flash of Invisible Text)</strong> or <strong>FOUT (Flash of Unstyled Text)</strong>, degrading user experience and worsening CLS scores. Korean fonts, which often exceed 2MB to 4MB due to thousands of CJK characters, must undergo <strong>font subsetting</strong> to extract only the 2,350 frequently used Korean characters.</p>
+
+                <h3>1. `@font-face` CSS Configuration with WOFF2 &amp; `font-display: swap`</h3>
+                <pre><code class="language-css">/* Subsetting WOFF2 Font with font-display: swap */
+@font-face {
+    font-family: 'Pretendard-Custom';
+    src: url('/fonts/Pretendard-Subset.woff2') format('woff2');
+    font-weight: 400 700;
+    font-style: normal;
+    /* Renders fallback font immediately, then swaps when web font loads */
+    font-display: swap;
+    /* Unicode range restriction for Korean + ASCII */
+    unicode-range: U+0020-007E, U+AC00-D7A3;
+}
+
+body {
+    font-family: 'Pretendard-Custom', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+</code></pre>
+
+                <h3>2. HTML `<head>` Preloading Critical Web Fonts</h3>
+                <pre><code class="language-html">&lt;!-- Preload critical WOFF2 font to initiate download before CSS parsing --&gt;
+&lt;link 
+    rel="preload" 
+    href="/fonts/Pretendard-Subset.woff2" 
+    as="font" 
+    type="font/woff2" 
+    crossorigin="anonymous"
+&gt;
+</code></pre>
+
+                <h2>4. Image &amp; Component Lazy Loading</h2>
+                <p>Off-screen images (images below the fold) should be loaded lazily to conserve bandwidth and accelerate initial page rendering.</p>
+
+                <h3>1. Native HTML5 Attribute (Zero JavaScript)</h3>
+                <pre><code class="language-html">&lt;!-- Native Browser Lazy Loading for Off-screen Images &amp; Iframes --&gt;
+&lt;img 
+    src="product-card.webp" 
+    alt="Product Card" 
+    width="400" 
+    height="300" 
+    loading="lazy" 
+    decoding="async"
+&gt;
+
+&lt;iframe 
+    src="https://www.youtube.com/embed/example" 
+    title="Demo Video" 
+    loading="lazy" 
+    width="560" 
+    height="315"
+&gt;&lt;/iframe&gt;
+</code></pre>
+
+                <h3>2. Intersection Observer API JavaScript Fallback</h3>
+                <pre><code class="language-javascript">/**
+ * High-performance IntersectionObserver Lazy Loader
+ */
+document.addEventListener('DOMContentLoaded', () => {
+    const lazyImages = document.querySelectorAll('img.lazy-load');
+
+    if ('IntersectionObserver' in window) {
+        const imageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    img.src = img.dataset.src;
+                    if (img.dataset.srcset) {
+                        img.srcset = img.dataset.srcset;
+                    }
+                    img.classList.remove('lazy-load');
+                    img.classList.add('loaded');
+                    observer.unobserve(img);
+                }
+            });
+        }, {
+            rootMargin: '200px 0px', // Preload 200px before entering viewport
+            threshold: 0.01
+        });
+
+        lazyImages.forEach(img => imageObserver.observe(img));
+    } else {
+        // Fallback for legacy browsers
+        lazyImages.forEach(img => {
+            img.src = img.dataset.src;
+        });
+    }
+});
+</code></pre>
+
+                <h2>5. Production Web Vitals Checklist Summary</h2>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 16px;">
+                    <thead>
+                        <tr style="background: rgba(6, 182, 212, 0.15); text-align: left;">
+                            <th style="padding: 10px; border: 1px solid var(--border-color);">Category</th>
+                            <th style="padding: 10px; border: 1px solid var(--border-color);">Optimization Action</th>
+                            <th style="padding: 10px; border: 1px solid var(--border-color);">Target Metric</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);"><strong>Images</strong></td>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);">Convert to WebP/AVIF + `&lt;picture&gt;` fallback</td>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);">LCP (&le; 2.5s)</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);"><strong>Layout</strong></td>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);">Explicit `width` &amp; `height` on all `&lt;img&gt;` tags</td>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);">CLS (&le; 0.1)</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);"><strong>Fonts</strong></td>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);">Subset WOFF2 + `font-display: swap` + preload</td>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);">LCP &amp; CLS</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);"><strong>Off-screen</strong></td>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);">Native `loading="lazy"` on below-the-fold assets</td>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);">Initial Load &amp; Bandwidth</td>
+                        </tr>
+                    </tbody>
+                </table>
+            `
+        },
+        ko: {
+            title: '웹 성능 최적화(Core Web Vitals) 체크리스트: WebP/AVIF, 폰트 서브셋팅, Lazy Loading',
+            content: `
+                <p>웹 성능 최적화는 구글 SEO 검색 순위 결정의 핵심 요소이며, 유저 이탈률을 낮추고 전환율(Conversion Rate)을 높이는 직결 과제입니다. HTTP Archive 분석 결과에 따르면 현대 웹 사이트 전체 용량의 75% 이상이 이미지 자산과 웹 폰트 파일에서 발생합니다.</p>
+
+                <p>본 가이드에서는 구글의 핵심 웹 성능 지표인 **Core Web Vitals**—**LCP(최대 콘텐츠 풀 렌더링 시간)**, **CLS(누적 레이아웃 이동)**, **INP(다음 페인트까지의 상호작용)**—를 극대화하기 위한 3대 실무 최적화 기법인 차세대 이미지 포맷 변환(WebP/AVIF), 폰트 용량 감량(서브셋팅 &amp; <code>font-display: swap</code>), 및 Lazy Loading 구현법을 실전 스니펫과 함께 정리합니다.</p>
+
+                <h2>1. Core Web Vitals 3대 핵심 지표 분석</h2>
+                <ul>
+                    <li><strong>LCP (Largest Contentful Paint - 최대 콘텐츠풀 페인트):</strong> 화면에서 가장 큰 영역을 차지하는 주요 요소(메인 이미지, 텍스트 블록)가 렌더링되는 시간입니다. 권장 기준: <strong>2.5초 이하</strong>. (WebP/AVIF 변환, LCP 이미지 Preload로 개선)</li>
+                    <li><strong>CLS (Cumulative Layout Shift - 누적 레이아웃 이동):</strong> 로딩 과정에서 페이지 요소가 갑자기 움직이는 시각적 불안정성 지표입니다. 권장 기준: <strong>0.1 이하</strong>. (이미지 태그 <code>width</code>/<code>height</code> 명시, <code>font-display: swap</code>으로 개선)</li>
+                    <li><strong>INP (Interaction to Next Paint - 다음 페인트까지의 상호작용):</strong> 유저 클릭/키보드 입력 후 화면 응답이 갱신될 때까지의 지연 시간입니다. 권장 기준: <strong>200ms 이하</strong>. (메인 스레드 JS 차단 최소화로 개선)</li>
+                </ul>
+
+                <h2>2. 차세대 이미지 포맷 변환 (WebP / AVIF) 및 Picture 태그</h2>
+                <p>기존 JPEG/PNG 이미지를 차세대 포맷인 **AVIF**(JPEG 대비 최대 50% 용량 절감) 및 **WebP**(30% 절감)로 변환하면 LCP 속도를 극적으로 향상시킬 수 있습니다.</p>
+
+                <h3>실무 표준 HTML5 `<picture>` 크로스 브라우징 마크업</h3>
+                <pre><code class="language-html">&lt;!-- AVIF 및 WebP 차세대 포맷 지원 + 하위 호환 폴백 --&gt;
+&lt;picture&gt;
+    &lt;!-- 1. 최신 브라우저용 AVIF (가장 높은 압축률) --&gt;
+    &lt;source srcset="hero-image.avif" type="image/avif"&gt;
+    
+    &lt;!-- 2. 범용 차세대 포맷 WebP --&gt;
+    &lt;source srcset="hero-image.webp" type="image/webp"&gt;
+    
+    &lt;!-- 3. 레거시 JPG 폴백 + CLS 방지를 위한 명시적 너비/높이 속성 --&gt;
+    &lt;img 
+        src="hero-image.jpg" 
+        alt="웹 성능 최적화 일러스트" 
+        width="1200" 
+        height="630" 
+        loading="eager" 
+        fetchpriority="high"
+        decoding="async"
+    &gt;
+&lt;/picture&gt;
+</code></pre>
+
+                <div class="technical-note" style="background: rgba(37, 99, 235, 0.08); border-left: 4px solid #2563eb; padding: 12px 16px; margin: 16px 0; border-radius: 4px;">
+                    <strong>개발자 팁 (LCP 이미지 최적화):</strong><br>
+                    화면 상단(Above the fold)의 메인 렌더링 이미지(LCP 대상)에는 <strong>절대로 <code>loading="lazy"</code>를 적용하면 안 됩니다.</strong> 대신 <code>fetchpriority="high"</code> 속성을 추가하고, HTML <code>&lt;head&gt;</code>에 다음과 같이 사전 로드(Preload)를 설정하세요.
+                    <br><code>&lt;link rel="preload" as="image" href="hero-image.avif" type="image/avif"&gt;</code>
+                </div>
+
+                <h2>3. 폰트 서브셋팅 (Subsetting) &amp; font-display: swap</h2>
+                <p>웹 폰트 로딩 시 텍스트가 순간적으로 안 보이거나(<strong>FOIT</strong>) 폰트가 갑자기 변경되면서 글자가 튀는 현상(<strong>FOUT</strong>)은 CLS 지표를 악화시킵니다. 수천 자의 한글 글자 수가 포함된 2MB~4MB의 폰트를 **실제 자주 쓰는 2,350자만 추출(서브셋팅)**하여 WOFF2 포맷으로 감량해야 합니다.</p>
+
+                <h3>1. `@font-face` WOFF2 서브셋 &amp; `font-display: swap` CSS 설정</h3>
+                <pre><code class="language-css">/* 서브셋팅된 WOFF2 폰트 및 font-display: swap 적용 */
+@font-face {
+    font-family: 'Pretendard-Custom';
+    src: url('/fonts/Pretendard-Subset.woff2') format('woff2');
+    font-weight: 400 700;
+    font-style: normal;
+    /* 폰트 다운로드 전까지 기본 폰트를 즉시 표시하고, 로딩 완료 시 교체 */
+    font-display: swap;
+    /* 한글 상용 2,350자 및 아스키 영역 유니코드 제한 */
+    unicode-range: U+0020-007E, U+AC00-D7A3;
+}
+
+body {
+    font-family: 'Pretendard-Custom', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+</code></pre>
+
+                <h3>2. HTML `<head>` 핵심 폰트 사전 로드 (Preload)</h3>
+                <pre><code class="language-html">&lt;!-- CSS 파싱 이전 폰트 파일 다운로드를 조기에 시작하도록 Preload 설정 --&gt;
+&lt;link 
+    rel="preload" 
+    href="/fonts/Pretendard-Subset.woff2" 
+    as="font" 
+    type="font/woff2" 
+    crossorigin="anonymous"
+&gt;
+</code></pre>
+
+                <h2>4. 이미지 &amp; 컴포넌트 Lazy Loading 설정법</h2>
+                <p>초기 스크롤 화면 아래(Below the fold)에 위치한 이미지와 &lt;iframe&gt;은 사용자가 해당 위치에 접근할 때 로딩되도록 비동기 처리합니다.</p>
+
+                <h3>1. HTML5 표준 속성을 활용한 브라우저 네이티브 Lazy Loading</h3>
+                <pre><code class="language-html">&lt;!-- 자바스크립트 없이 브라우저 자체 지원 지연 로딩 --&gt;
+&lt;img 
+    src="product-card.webp" 
+    alt="상품 카드 이미지" 
+    width="400" 
+    height="300" 
+    loading="lazy" 
+    decoding="async"
+&gt;
+
+&lt;iframe 
+    src="https://www.youtube.com/embed/example" 
+    title="데모 비디오" 
+    loading="lazy" 
+    width="560" 
+    height="315"
+&gt;&lt;/iframe&gt;
+</code></pre>
+
+                <h3>2. Intersection Observer API 기반 자바스크립트 지연 로더</h3>
+                <pre><code class="language-javascript">/**
+ * high-performance IntersectionObserver Lazy Loader
+ */
+document.addEventListener('DOMContentLoaded', () => {
+    const lazyImages = document.querySelectorAll('img.lazy-load');
+
+    if ('IntersectionObserver' in window) {
+        const imageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    img.src = img.dataset.src;
+                    if (img.dataset.srcset) {
+                        img.srcset = img.dataset.srcset;
+                    }
+                    img.classList.remove('lazy-load');
+                    img.classList.add('loaded');
+                    observer.unobserve(img); // 감시 해제
+                }
+            });
+        }, {
+            rootMargin: '200px 0px', // 화면 진입 200px 전에 미리 로드
+            threshold: 0.01
+        });
+
+        lazyImages.forEach(img => imageObserver.observe(img));
+    } else {
+        // 구형 브라우저 폴백
+        lazyImages.forEach(img => {
+            img.src = img.dataset.src;
+        });
+    }
+});
+</code></pre>
+
+                <h2>5. 실무 웹 성능 최적화 체크리스트 요약</h2>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 16px;">
+                    <thead>
+                        <tr style="background: rgba(6, 182, 212, 0.15); text-align: left;">
+                            <th style="padding: 10px; border: 1px solid var(--border-color);">분야</th>
+                            <th style="padding: 10px; border: 1px solid var(--border-color);">최적화 실행 항목</th>
+                            <th style="padding: 10px; border: 1px solid var(--border-color);">개선 대상 지표</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);"><strong>이미지</strong></td>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);">WebP/AVIF 포맷 변환 + `&lt;picture&gt;` 폴백 마크업</td>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);">LCP (&le; 2.5초)</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);"><strong>레이아웃</strong></td>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);">모든 `&lt;img&gt;` 태그에 explicit `width` / `height` 지정</td>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);">CLS (&le; 0.1)</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);"><strong>웹 폰트</strong></td>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);">WOFF2 서브셋팅 + `font-display: swap` + Preload</td>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);">LCP &amp; CLS</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);"><strong>비동기 로딩</strong></td>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);">Below the fold 자산에 네이티브 `loading="lazy"` 적용</td>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);">초기 로딩 속도 &amp; 대역폭</td>
+                        </tr>
+                    </tbody>
+                </table>
+            `
+        }
+    },
     'regex-patterns-guide': {
         en: {
             title: 'Essential Utility Regular Expressions: Email, Phone, Password & Business Registration No.',

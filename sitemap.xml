@@ -46,6 +46,11 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://parseutils.com/#article-web-vitals-performance-guide</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
+  </url>
+  <url>
     <loc>https://parseutils.com/#article-regex-patterns-guide</loc>
     <changefreq>weekly</changefreq>
     <priority>0.95</priority>

@@ -49,7 +49,14 @@ Parse Utils is a high-performance, decentralized developer utility platform. It 
 7.  **[DONE] Glossary Expansion:** Increased technical glossary to 20+ comprehensive terms.
 8.  **[DONE] SEO & Compliance:** Added sitemap.xml and enhanced metadata for all views.
 
-## 7. Current Task Plan: Utility Regular Expressions (Regex) Cheatsheet Guide [COMPLETED]
-*   **Status:** [DONE] Addressed user request by writing and publishing the full Utility Regular Expressions (Regex) Cheatsheet article covering Email, Korean Phone Numbers, Password Complexity, and Business Registration Number (with checksum), bilingual (KO/EN) translations, Dev Hub link, and committed changes to Git (`98db2e0`).
+## 7. Current Task Plan: Web Performance Optimization (Core Web Vitals) Checklist Guide
+*   **Problem:** Write and publish a technical guide article covering Web Performance (Core Web Vitals, WebP/AVIF images, font subsetting & font-display: swap, native & IntersectionObserver lazy loading) with copyable code snippets, bilingual support (KO/EN), Dev Hub link, and commit & push to Git repository.
+*   **Action Plan:**
+    1. Update `views/guides.html` with a new Web Performance guide card.
+    2. Add link in Dev Hub dropdown in `index.html`.
+    3. Register translation keys in `js/i18n.js` (both EN and KO).
+    4. Add deep-dive technical article content `'web-vitals-performance-guide'` in `js/guides.js`.
+    5. Add route to `sitemap.xml`.
+    6. Run `git add .`, `git commit`, and `git push` to remote Git repository.
 
 
