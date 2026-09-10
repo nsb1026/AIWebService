@@ -51,7 +51,7 @@ const guidesData = {
                 <h2>3. Font Subsetting &amp; font-display: swap</h2>
                 <p>Unoptimized web fonts cause <strong>FOIT (Flash of Invisible Text)</strong> or <strong>FOUT (Flash of Unstyled Text)</strong>, degrading user experience and worsening CLS scores. Korean fonts, which often exceed 2MB to 4MB due to thousands of CJK characters, must undergo <strong>font subsetting</strong> to extract only the 2,350 frequently used Korean characters.</p>
 
-                <h3>1. `@font-face` CSS Configuration with WOFF2 &amp; `font-display: swap`</h3>
+                <h3>1. <code>@font-face</code> CSS Configuration with WOFF2 &amp; <code>font-display: swap</code></h3>
                 <pre><code class="language-css">/* Subsetting WOFF2 Font with font-display: swap */
 @font-face {
     font-family: 'Pretendard-Custom';
@@ -151,22 +151,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     <tbody>
                         <tr>
                             <td style="padding: 10px; border: 1px solid var(--border-color);"><strong>Images</strong></td>
-                            <td style="padding: 10px; border: 1px solid var(--border-color);">Convert to WebP/AVIF + `&lt;picture&gt;` fallback</td>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);">Convert to WebP/AVIF + <code>&lt;picture&gt;</code> fallback</td>
                             <td style="padding: 10px; border: 1px solid var(--border-color);">LCP (&le; 2.5s)</td>
                         </tr>
                         <tr>
                             <td style="padding: 10px; border: 1px solid var(--border-color);"><strong>Layout</strong></td>
-                            <td style="padding: 10px; border: 1px solid var(--border-color);">Explicit `width` &amp; `height` on all `&lt;img&gt;` tags</td>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);">Explicit <code>width</code> &amp; <code>height</code> on all <code>&lt;img&gt;</code> tags</td>
                             <td style="padding: 10px; border: 1px solid var(--border-color);">CLS (&le; 0.1)</td>
                         </tr>
                         <tr>
                             <td style="padding: 10px; border: 1px solid var(--border-color);"><strong>Fonts</strong></td>
-                            <td style="padding: 10px; border: 1px solid var(--border-color);">Subset WOFF2 + `font-display: swap` + preload</td>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);">Subset WOFF2 + <code>font-display: swap</code> + preload</td>
                             <td style="padding: 10px; border: 1px solid var(--border-color);">LCP &amp; CLS</td>
                         </tr>
                         <tr>
                             <td style="padding: 10px; border: 1px solid var(--border-color);"><strong>Off-screen</strong></td>
-                            <td style="padding: 10px; border: 1px solid var(--border-color);">Native `loading="lazy"` on below-the-fold assets</td>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);">Native <code>loading="lazy"</code> on below-the-fold assets</td>
                             <td style="padding: 10px; border: 1px solid var(--border-color);">Initial Load &amp; Bandwidth</td>
                         </tr>
                     </tbody>
@@ -221,7 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <h2>3. 폰트 서브셋팅 (Subsetting) &amp; font-display: swap</h2>
                 <p>웹 폰트 로딩 시 텍스트가 순간적으로 안 보이거나(<strong>FOIT</strong>) 폰트가 갑자기 변경되면서 글자가 튀는 현상(<strong>FOUT</strong>)은 CLS 지표를 악화시킵니다. 수천 자의 한글 글자 수가 포함된 2MB~4MB의 폰트를 **실제 자주 쓰는 2,350자만 추출(서브셋팅)**하여 WOFF2 포맷으로 감량해야 합니다.</p>
 
-                <h3>1. `@font-face` WOFF2 서브셋 &amp; `font-display: swap` CSS 설정</h3>
+                <h3>1. <code>@font-face</code> WOFF2 서브셋 &amp; <code>font-display: swap</code> CSS 설정</h3>
                 <pre><code class="language-css">/* 서브셋팅된 WOFF2 폰트 및 font-display: swap 적용 */
 @font-face {
     font-family: 'Pretendard-Custom';
@@ -321,22 +321,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     <tbody>
                         <tr>
                             <td style="padding: 10px; border: 1px solid var(--border-color);"><strong>이미지</strong></td>
-                            <td style="padding: 10px; border: 1px solid var(--border-color);">WebP/AVIF 포맷 변환 + `&lt;picture&gt;` 폴백 마크업</td>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);">WebP/AVIF 포맷 변환 + <code>&lt;picture&gt;</code> 폴백 마크업</td>
                             <td style="padding: 10px; border: 1px solid var(--border-color);">LCP (&le; 2.5초)</td>
                         </tr>
                         <tr>
                             <td style="padding: 10px; border: 1px solid var(--border-color);"><strong>레이아웃</strong></td>
-                            <td style="padding: 10px; border: 1px solid var(--border-color);">모든 `&lt;img&gt;` 태그에 explicit `width` / `height` 지정</td>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);">모든 <code>&lt;img&gt;</code> 태그에 explicit <code>width</code> / <code>height</code> 지정</td>
                             <td style="padding: 10px; border: 1px solid var(--border-color);">CLS (&le; 0.1)</td>
                         </tr>
                         <tr>
                             <td style="padding: 10px; border: 1px solid var(--border-color);"><strong>웹 폰트</strong></td>
-                            <td style="padding: 10px; border: 1px solid var(--border-color);">WOFF2 서브셋팅 + `font-display: swap` + Preload</td>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);">WOFF2 서브셋팅 + <code>font-display: swap</code> + Preload</td>
                             <td style="padding: 10px; border: 1px solid var(--border-color);">LCP &amp; CLS</td>
                         </tr>
                         <tr>
                             <td style="padding: 10px; border: 1px solid var(--border-color);"><strong>비동기 로딩</strong></td>
-                            <td style="padding: 10px; border: 1px solid var(--border-color);">Below the fold 자산에 네이티브 `loading="lazy"` 적용</td>
+                            <td style="padding: 10px; border: 1px solid var(--border-color);">Below the fold 자산에 네이티브 <code>loading="lazy"</code> 적용</td>
                             <td style="padding: 10px; border: 1px solid var(--border-color);">초기 로딩 속도 &amp; 대역폭</td>
                         </tr>
                     </tbody>
