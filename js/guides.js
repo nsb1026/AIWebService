@@ -2,6 +2,301 @@
 import { switchView } from './utils.js';
 
 const guidesData = {
+    'regex-patterns-guide': {
+        en: {
+            title: 'Essential Utility Regular Expressions: Email, Phone, Password & Business Registration No.',
+            content: `
+                <p>Regular Expressions (Regex) are fundamental tools for input validation, data extraction, and security sanitization in modern web engineering. Having tested, copyable regex patterns for standard form fields saves hours of debugging and prevents malformed data from reaching backend databases.</p>
+                
+                <p>This cheatsheet provides production-ready regex patterns and copyable code snippets in JavaScript and Python for the 4 most commonly requested utility validations: <strong>Email</strong>, <strong>Korean Phone Numbers</strong>, <strong>Strong Password Complexity</strong>, and <strong>Korean Business Registration Numbers (with Checksum)</strong>.</p>
+
+                <h2>1. Email Address Validation Regex</h2>
+                <p>Validating email input requires matching the local username part, the <code>@</code> separator, the domain name, and a valid top-level domain (TLD) extension.</p>
+                
+                <div class="technical-note" style="background: rgba(37, 99, 235, 0.08); border-left: 4px solid #2563eb; padding: 12px 16px; margin: 16px 0; border-radius: 4px;">
+                    <strong>Regex Pattern:</strong><br>
+                    <code>/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$/</code>
+                </div>
+
+                <h3>Pattern Breakdown</h3>
+                <ul>
+                    <li><code>^[a-zA-Z0-9._%+-]+</code>: Local part allowing alphanumerics, dots, underscores, percents, pluses, and hyphens.</li>
+                    <li><code>@</code>: Mandatory separator symbol.</li>
+                    <li><code>[a-zA-Z0-9.-]+</code>: Domain name allowing alphanumerics, dots, and hyphens.</li>
+                    <li><code>\\.[a-zA-Z]{2,}$</code>: Top-Level Domain (TLD) starting with a dot followed by 2 or more letters.</li>
+                </ul>
+
+                <h3>JavaScript Snippet</h3>
+                <pre><code class="language-javascript">function isValidEmail(email) {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$/;
+    return emailRegex.test(String(email).trim());
+}
+
+// Tests
+console.log(isValidEmail("developer@example.com")); // true
+console.log(isValidEmail("invalid.email@domain")); // false
+</code></pre>
+
+                <h2>2. Korean Phone Number Validation Regex</h2>
+                <p>Validating Korean mobile numbers (010, 011, 016, 017, 018, 019) and landline numbers (02, 031, 032, 051, etc.), supporting optional hyphen delimiters.</p>
+
+                <div class="technical-note" style="background: rgba(168, 85, 247, 0.08); border-left: 4px solid #a855f7; padding: 12px 16px; margin: 16px 0; border-radius: 4px;">
+                    <strong>Mobile Number Regex:</strong><br>
+                    <code>/^01[016789]-?\\d{3,4}-?\\d{4}$/</code><br><br>
+                    <strong>Integrated (Mobile + Landline) Regex:</strong><br>
+                    <code>/^(01[016789]|02|0[3-9]{1}\\d{1})-?\\d{3,4}-?\\d{4}$/</code>
+                </div>
+
+                <h3>JavaScript Snippet</h3>
+                <pre><code class="language-javascript">function isValidKoreanPhone(phone) {
+    // Supports 010-1234-5678, 01012345678, 02-123-4567, 031-123-4567
+    const phoneRegex = /^(01[016789]|02|0[3-9]{1}\\d{1})-?\\d{3,4}-?\\d{4}$/;
+    return phoneRegex.test(String(phone).trim());
+}
+
+// Tests
+console.log(isValidKoreanPhone("010-1234-5678")); // true
+console.log(isValidKoreanPhone("021234567"));     // true
+console.log(isValidKoreanPhone("010-123-45"));    // false
+</code></pre>
+
+                <h2>3. Password Complexity Regex (Letters + Numbers + Special Characters, Min 8 Chars)</h2>
+                <p>Enforcing strong security credentials requiring at least one English letter, at least one digit, at least one special character, and a minimum length of 8 characters.</p>
+
+                <div class="technical-note" style="background: rgba(234, 179, 8, 0.08); border-left: 4px solid #eab308; padding: 12px 16px; margin: 16px 0; border-radius: 4px;">
+                    <strong>Regex Pattern:</strong><br>
+                    <code>/^(?=.*[a-zA-Z])(?=.*\\d)(?=.*[@$!%*?&#])[A-Za-z\\d@$!%*?&#]{8,}$/</code>
+                </div>
+
+                <h3>Pattern Breakdown</h3>
+                <ul>
+                    <li><code>(?=.*[a-zA-Z])</code>: Positive lookahead ensuring at least one uppercase or lowercase letter.</li>
+                    <li><code>(?=.*\\d)</code>: Positive lookahead ensuring at least one numeric digit.</li>
+                    <li><code>(?=.*[@$!%*?&#])</code>: Positive lookahead ensuring at least one special symbol.</li>
+                    <li><code>[A-Za-z\\d@$!%*?&#]{8,}</code>: Matches allowed characters with a total length of 8 or more.</li>
+                </ul>
+
+                <h3>JavaScript Snippet</h3>
+                <pre><code class="language-javascript">function isStrongPassword(password) {
+    const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\\d)(?=.*[@$!%*?&#])[A-Za-z\\d@$!%*?&#]{8,}$/;
+    return passwordRegex.test(password);
+}
+
+// Tests
+console.log(isStrongPassword("P@ssword123")); // true
+console.log(isStrongPassword("password123"));  // false (missing special char)
+console.log(isStrongPassword("P@ss1"));        // false (too short, min 8 chars)
+</code></pre>
+
+                <h2>4. Korean Business Registration Number (사업자등록번호) Regex & Checksum</h2>
+                <p>Korean Business Registration Numbers consist of 10 digits formatted as <code>XXX-XX-XXXXX</code>. In production applications, simple regex formatting check must be combined with the official modulus 10 checksum algorithm.</p>
+
+                <div class="technical-note" style="background: rgba(34, 197, 94, 0.08); border-left: 4px solid #22c55e; padding: 12px 16px; margin: 16px 0; border-radius: 4px;">
+                    <strong>Format Regex:</strong><br>
+                    <code>/^\\d{3}-?\\d{2}-?\\d{5}$/</code>
+                </div>
+
+                <h3>Complete Checksum Validation Function</h3>
+                <pre><code class="language-javascript">/**
+ * Validates Korean Business Registration Number (10 digits)
+ * Includes checksum verification using weight matrix [1, 3, 7, 1, 3, 7, 1, 3, 5]
+ */
+function isValidBusinessNo(bizNo) {
+    // Remove hyphens and whitespace
+    const cleanNo = String(bizNo).replace(/[^0-9]/g, '');
+
+    // Must be exactly 10 digits
+    if (cleanNo.length !== 10) return false;
+
+    const checksumWeights = [1, 3, 7, 1, 3, 7, 1, 3, 5];
+    let totalSum = 0;
+
+    for (let i = 0; i < 9; i++) {
+        totalSum += parseInt(cleanNo.charAt(i), 10) * checksumWeights[i];
+    }
+
+    // Additional calculation for the 9th digit
+    totalSum += Math.floor((parseInt(cleanNo.charAt(8), 10) * 5) / 10);
+    
+    const remainder = totalSum % 10;
+    const checkDigit = (10 - remainder) % 10;
+
+    return checkDigit === parseInt(cleanNo.charAt(9), 10);
+}
+
+// Tests
+console.log(isValidBusinessNo("120-88-00767")); // true (Valid Checksum)
+console.log(isValidBusinessNo("123-45-67890")); // false (Invalid Checksum)
+</code></pre>
+
+                <h3>Python Implementation Snippet</h3>
+                <pre><code class="language-python">import re
+
+def validate_biz_no(biz_no: str) -> bool:
+    clean_no = re.sub(r'[^0-9]', '', str(biz_no))
+    if len(clean_no) != 10:
+        return False
+    
+    weights = [1, 3, 7, 1, 3, 7, 1, 3, 5]
+    total_sum = sum(int(clean_no[i]) * weights[i] for i in range(9))
+    total_sum += (int(clean_no[8]) * 5) // 10
+    
+    check_digit = (10 - (total_sum % 10)) % 10
+    return check_digit == int(clean_no[9])
+
+# Test
+print(validate_biz_no("120-88-00767")) # True
+</code></pre>
+            `
+        },
+        ko: {
+            title: '자주 쓰는 유틸리티 정규식(Regex) 모음: 이메일, 전화번호, 비밀번호, 사업자등록번호',
+            content: `
+                <p>정규표현식(Regular Expression, Regex)은 입력 폼 검증, 데이터 정제 및 보안 필터링을 위한 핵심 도구입니다. 자주 쓰이는 유틸리티 검증식을 정확하게 파악하고 복사 가능한 코드로 관리하면 개발 시간을 대폭 단축하고 잘못된 데이터 유입을 사전에 방지할 수 있습니다.</p>
+
+                <p>본 가이드에서는 실무에서 가장 많이 요청되는 <strong>이메일 주소</strong>, <strong>한국 전화번호(휴대폰/일반전화)</strong>, <strong>비밀번호 복잡도(영문+숫자+특수문자 8자 이상)</strong>, <strong>사업자등록번호 10자리(체크섬 알고리즘 포함)</strong> 검증식의 정규식 패턴과 바로 복사해 사용할 수 있는 JavaScript 및 Python 코드 스니펫을 제공합니다.</p>
+
+                <h2>1. 이메일 주소 검증 정규식</h2>
+                <p>이메일 입력 폼에서 사용자 아이디 파트, <code>@</code> 구분자, 도메인 이름, 2자리 이상의 최상위 도메인(TLD)을 검증하는 정규표현식입니다.</p>
+
+                <div class="technical-note" style="background: rgba(37, 99, 235, 0.08); border-left: 4px solid #2563eb; padding: 12px 16px; margin: 16px 0; border-radius: 4px;">
+                    <strong>정규식 패턴:</strong><br>
+                    <code>/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$/</code>
+                </div>
+
+                <h3>패턴 구조 상세 분석</h3>
+                <ul>
+                    <li><code>^[a-zA-Z0-9._%+-]+</code>: 영문, 숫자, 마침표(.), 언더바(_), 퍼센트(%), 플러스(+), 하이픈(-) 문자를 허용하는 로컬 아이디 파트.</li>
+                    <li><code>@</code>: 이메일 필수 구분 기호.</li>
+                    <li><code>[a-zA-Z0-9.-]+</code>: 도메인 호스트명 (영문, 숫자, 마침표, 하이픈).</li>
+                    <li><code>\\.[a-zA-Z]{2,}$</code>: 마침표로 시작하는 2자리 이상의 알파벳 TLD 확장자 (예: .com, .kr, .io).</li>
+                </ul>
+
+                <h3>JavaScript 코드 스니펫</h3>
+                <pre><code class="language-javascript">function isValidEmail(email) {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$/;
+    return emailRegex.test(String(email).trim());
+}
+
+// 검증 테스트
+console.log(isValidEmail("developer@example.com")); // true
+console.log(isValidEmail("invalid.email@domain")); // false (TLD 미달)
+</code></pre>
+
+                <h2>2. 한국 전화번호 검증 정규식 (휴대폰 & 일반전화)</h2>
+                <p>대한민국 휴대폰 번호(010, 011, 016, 017, 018, 019) 및 지역번호(02, 031, 032, 051 등)가 포함된 전화번호를 검증하며, 하이픈(<code>-</code>) 입력 유무를 선택적으로 지원합니다.</p>
+
+                <div class="technical-note" style="background: rgba(168, 85, 247, 0.08); border-left: 4px solid #a855f7; padding: 12px 16px; margin: 16px 0; border-radius: 4px;">
+                    <strong>휴대폰 번호 전용 정규식:</strong><br>
+                    <code>/^01[016789]-?\\d{3,4}-?\\d{4}$/</code><br><br>
+                    <strong>통합(휴대폰 + 일반전화) 정규식:</strong><br>
+                    <code>/^(01[016789]|02|0[3-9]{1}\\d{1})-?\\d{3,4}-?\\d{4}$/</code>
+                </div>
+
+                <h3>JavaScript 코드 스니펫</h3>
+                <pre><code class="language-javascript">function isValidKoreanPhone(phone) {
+    // 010-1234-5678, 01012345678, 02-123-4567, 031-123-4567 모두 검증
+    const phoneRegex = /^(01[016789]|02|0[3-9]{1}\\d{1})-?\\d{3,4}-?\\d{4}$/;
+    return phoneRegex.test(String(phone).trim());
+}
+
+// 검증 테스트
+console.log(isValidKoreanPhone("010-1234-5678")); // true
+console.log(isValidKoreanPhone("021234567"));     // true
+console.log(isValidKoreanPhone("010-123-45"));    // false
+</code></pre>
+
+                <h2>3. 비밀번호 복잡도 정규식 (영문 + 숫자 + 특수문자 8자 이상)</h2>
+                <p>보안 강화를 위해 회원가입 및 비밀번호 변경 시 <strong>영문 자음/모음, 숫자, 특수문자(@$!%*?&#)를 각각 최소 1개 이상 포함하여 총 8자 이상</strong>으로 구성되도록 정방향 전방탐색(Positive Lookahead)을 활용한 정규식입니다.</p>
+
+                <div class="technical-note" style="background: rgba(234, 179, 8, 0.08); border-left: 4px solid #eab308; padding: 12px 16px; margin: 16px 0; border-radius: 4px;">
+                    <strong>정규식 패턴:</strong><br>
+                    <code>/^(?=.*[a-zA-Z])(?=.*\\d)(?=.*[@$!%*?&#])[A-Za-z\\d@$!%*?&#]{8,}$/</code>
+                </div>
+
+                <h3>패턴 구조 상세 분석</h3>
+                <ul>
+                    <li><code>(?=.*[a-zA-Z])</code>: 문자열 내 영문자(대소문자) 최소 1개 포함 조건.</li>
+                    <li><code>(?=.*\\d)</code>: 문자열 내 숫자(0-9) 최소 1개 포함 조건.</li>
+                    <li><code>(?=.*[@$!%*?&#])</code>: 문자열 내 지정된 특수문자 최소 1개 포함 조건.</li>
+                    <li><code>[A-Za-z\\d@$!%*?&#]{8,}</code>: 허용된 문자로 구성된 최소 8자 이상의 길이 조건.</li>
+                </ul>
+
+                <h3>JavaScript 코드 스니펫</h3>
+                <pre><code class="language-javascript">function isStrongPassword(password) {
+    const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\\d)(?=.*[@$!%*?&#])[A-Za-z\\d@$!%*?&#]{8,}$/;
+    return passwordRegex.test(password);
+}
+
+// 검증 테스트
+console.log(isStrongPassword("P@ssword123")); // true (조건 충족)
+console.log(isStrongPassword("password123"));  // false (특수문자 누락)
+console.log(isStrongPassword("P@ss1"));        // false (8자 미만)
+</code></pre>
+
+                <h2>4. 사업자등록번호 정규식 및 체크섬(Modulus 10) 알고리즘</h2>
+                <p>한국 사업자등록번호는 10자리 숫자(<code>XXX-XX-XXXXX</code>) 형태를 가집니다. 단순 자릿수 정규식 검증 외에 실무 환경에서는 홈택스 규격의 **체크섬(Modulus 10) 가중치 알고리즘**을 반드시 함께 거쳐야 유효한 사업자번호인지 정확히 판별할 수 있습니다.</p>
+
+                <div class="technical-note" style="background: rgba(34, 197, 94, 0.08); border-left: 4px solid #22c55e; padding: 12px 16px; margin: 16px 0; border-radius: 4px;">
+                    <strong>포맷 검증 정규식:</strong><br>
+                    <code>/^\\d{3}-?\\d{2}-?\\d{5}$/</code>
+                </div>
+
+                <h3>사업자등록번호 체크섬 검증 완벽 함수</h3>
+                <pre><code class="language-javascript">/**
+ * 대한민국 사업자등록번호 10자리 체크섬 검증 함수
+ * 가중치 배열 [1, 3, 7, 1, 3, 7, 1, 3, 5] 활용
+ */
+function isValidBusinessNo(bizNo) {
+    // 숫자 외의 하이픈 및 공백 제거
+    const cleanNo = String(bizNo).replace(/[^0-9]/g, '');
+
+    // 10자리 숫자가 아닌 경우 실패
+    if (cleanNo.length !== 10) return false;
+
+    const checksumWeights = [1, 3, 7, 1, 3, 7, 1, 3, 5];
+    let totalSum = 0;
+
+    for (let i = 0; i < 9; i++) {
+        totalSum += parseInt(cleanNo.charAt(i), 10) * checksumWeights[i];
+    }
+
+    // 9번째 자릿수에 대한 추가 연산
+    totalSum += Math.floor((parseInt(cleanNo.charAt(8), 10) * 5) / 10);
+    
+    const remainder = totalSum % 10;
+    const checkDigit = (10 - remainder) % 10;
+
+    // 계산된 검증 번호와 마지막 10번째 자릿수가 일치하는지 비교
+    return checkDigit === parseInt(cleanNo.charAt(9), 10);
+}
+
+// 검증 테스트
+console.log(isValidBusinessNo("120-88-00767")); // true (유효한 사업자등록번호)
+console.log(isValidBusinessNo("123-45-67890")); // false (체크섬 불일치)
+</code></pre>
+
+                <h3>Python 백엔드 검증 스니펫</h3>
+                <pre><code class="language-python">import re
+
+def validate_biz_no(biz_no: str) -> bool:
+    clean_no = re.sub(r'[^0-9]', '', str(biz_no))
+    if len(clean_no) != 10:
+        return False
+    
+    weights = [1, 3, 7, 1, 3, 7, 1, 3, 5]
+    total_sum = sum(int(clean_no[i]) * weights[i] for i in range(9))
+    total_sum += (int(clean_no[8]) * 5) // 10
+    
+    check_digit = (10 - (total_sum % 10)) % 10
+    return check_digit == int(clean_no[9])
+
+# 검증 테스트
+print(validate_biz_no("120-88-00767")) # True
+</code></pre>
+            `
+        }
+    },
     'cors-guide': {
         en: {
             title: 'CORS (Cross-Origin Resource Sharing) Resolution Guide: Spring Boot, Express & FastAPI',

@@ -49,7 +49,14 @@ Parse Utils is a high-performance, decentralized developer utility platform. It 
 7.  **[DONE] Glossary Expansion:** Increased technical glossary to 20+ comprehensive terms.
 8.  **[DONE] SEO & Compliance:** Added sitemap.xml and enhanced metadata for all views.
 
-## 7. Current Task Plan: CORS (Cross-Origin Resource Sharing) Resolution Guide [COMPLETED]
-*   **Status:** [DONE] Addressed user request by writing and publishing the full CORS Resolution Guide article with Spring Boot 3.3, Express.js, and FastAPI snippets, bilingual (KO/EN) translations, and Dev Hub navigation.
+## 7. Current Task Plan: Utility Regular Expressions (Regex) Cheatsheet Guide
+*   **Problem:** Write and publish a technical guide article covering essential regex patterns (Email, Korean Phone Numbers, Password Complexity, Business Registration Number) with copyable code snippets, bilingual support (KO/EN), Dev Hub link, and commit changes to Git.
+*   **Action Plan:**
+    1. Update `views/guides.html` with a new Regex Cheatsheet guide card.
+    2. Add link in Dev Hub dropdown in `index.html`.
+    3. Register translation keys in `js/i18n.js` (both EN and KO).
+    4. Add deep-dive technical article content `'regex-patterns-guide'` in `js/guides.js`.
+    5. Add route to `sitemap.xml`.
+    6. Run `git add` and `git commit` to commit changes to Git repository.
 
 
