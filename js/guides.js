@@ -69,7 +69,7 @@ body {
 }
 </code></pre>
 
-                <h3>2. HTML `<head>` Preloading Critical Web Fonts</h3>
+                <h3>2. HTML <code>&lt;head&gt;</code> Preloading Critical Web Fonts</h3>
                 <pre><code class="language-html">&lt;!-- Preload critical WOFF2 font to initiate download before CSS parsing --&gt;
 &lt;link 
     rel="preload" 
@@ -190,7 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <h2>2. 차세대 이미지 포맷 변환 (WebP / AVIF) 및 Picture 태그</h2>
                 <p>기존 JPEG/PNG 이미지를 차세대 포맷인 **AVIF**(JPEG 대비 최대 50% 용량 절감) 및 **WebP**(30% 절감)로 변환하면 LCP 속도를 극적으로 향상시킬 수 있습니다.</p>
 
-                <h3>실무 표준 HTML5 `<picture>` 크로스 브라우징 마크업</h3>
+                <h3>실무 표준 HTML5 <code>&lt;picture&gt;</code> 크로스 브라우징 마크업</h3>
                 <pre><code class="language-html">&lt;!-- AVIF 및 WebP 차세대 포맷 지원 + 하위 호환 폴백 --&gt;
 &lt;picture&gt;
     &lt;!-- 1. 최신 브라우저용 AVIF (가장 높은 압축률) --&gt;
@@ -239,7 +239,7 @@ body {
 }
 </code></pre>
 
-                <h3>2. HTML `<head>` 핵심 폰트 사전 로드 (Preload)</h3>
+                <h3>2. HTML <code>&lt;head&gt;</code> 핵심 폰트 사전 로드 (Preload)</h3>
                 <pre><code class="language-html">&lt;!-- CSS 파싱 이전 폰트 파일 다운로드를 조기에 시작하도록 Preload 설정 --&gt;
 &lt;link 
     rel="preload" 
